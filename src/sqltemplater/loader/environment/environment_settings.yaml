@@ -1,0 +1,25 @@
+# Jinja2 Environment default configuration
+
+# -------------------------
+# Syntax configuration
+# -------------------------
+block_start_string: "{%"
+block_end_string: "%}"
+variable_start_string: "{{"
+variable_end_string: "}}"
+comment_start_string: "{#"
+comment_end_string: "#}"
+
+line_statement_prefix: null
+line_comment_prefix: null
+
+trim_blocks: false
+lstrip_blocks: false
+newline_sequence: "\n"
+keep_trailing_newline: false
+
+# -------------------------
+# Optimization / behavior
+# -------------------------
+optimized: true
+enable_async: false

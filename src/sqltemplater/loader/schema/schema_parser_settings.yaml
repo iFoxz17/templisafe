@@ -1,0 +1,13 @@
+default_diagnostic_policy: RAISE_WARNINGS
+parser_type: YAML
+
+schema_key: schema
+type_key: type
+default_key: default
+allowed_types: [bool, int, float, real, str, list, object]
+type_aliases: 
+  bool: [boolean]
+  int: [integer]
+  real: [number]
+  str: [string]
+  object: [any]

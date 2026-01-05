@@ -1,0 +1,5 @@
+default_diagnostic_policy: RAISE_WARNINGS
+parser_type: YAML
+
+params_key: params
+default_parameterization_name: parameterization

@@ -1,0 +1,71 @@
+import pytest
+from sqltemplater.loader.schema.schema_parser_manager import SchemaParserFactory, SchemaParserManager
+from sqltemplater.loader.schema.yaml_schema_parser import YamlSchemaParser
+from sqltemplater.settings.parser.schema_parser_settings import SchemaParserSettings, YamlSchemaParserSettings
+from sqltemplater.util.util import ContentType
+from sqltemplater.exceptions.schema_error import UnimplementedSchemaParserError
+
+# -----------------------
+# Factory tests
+# -----------------------
+def test_factory_create_known():
+    settings = YamlSchemaParserSettings(
+        schema_key="schema",
+        type_key="type",
+        default_key="default",
+        allowed_types=("int",)
+    )
+    factory = SchemaParserFactory()
+    parser = factory.create(settings)
+    assert isinstance(parser, YamlSchemaParser)
+    assert parser._settings == settings
+
+def test_factory_create_unknown():
+    class DummySettings(SchemaParserSettings):
+        @property
+        def content_type(self):
+            return ContentType.YAML
+
+    settings = DummySettings(
+        schema_key="schema",
+        type_key="type",
+        default_key="default",
+        allowed_types=("int",)
+    )
+    factory = SchemaParserFactory()
+    with pytest.raises(UnimplementedSchemaParserError):
+        factory.create(settings)
+
+# -----------------------
+# Manager tests
+# -----------------------
+def test_manager_get_or_create_and_contains():
+    manager = SchemaParserManager()
+
+    # Create parser with default settings
+    default_settings = YamlSchemaParserSettings(
+        schema_key="schema",
+        type_key="type",
+        default_key="default",
+        allowed_types=("str", "float")
+    )
+    parser1 = manager.get_or_create(default_settings)
+    assert isinstance(parser1, YamlSchemaParser)
+    assert parser1._settings == default_settings
+    assert default_settings in manager
+
+    # Create parser with custom settings
+    custom_settings = YamlSchemaParserSettings(
+        schema_key="custom_schema",
+        type_key="custom_type",
+        default_key="custom_default",
+        allowed_types=("int",)
+    )
+    parser2 = manager.get_or_create(custom_settings)
+    assert isinstance(parser2, YamlSchemaParser)
+    assert parser2._settings == custom_settings
+    assert custom_settings in manager
+
+    # Ensure the same instance is returned on repeated get_or_create
+    parser1_again = manager.get_or_create(default_settings)
+    assert parser1 is parser1_again

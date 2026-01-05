@@ -1,0 +1,42 @@
+[build-system]
+# Use setuptools and wheel as the build backend
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sqltemplater"
+version = "0.1.0"
+description = """
+    A small library to load YAML/SQL templates and render SQL queries with parameters, 
+    providing optional schema enforcement for parameters"""
+readme = "README.md"
+authors = [{name = "Mattia Volpato"}]
+license = {text = "MIT"}
+requires-python = ">=3.10"
+
+# Runtime dependencies
+dependencies = [
+    "PyYAML>=6.0",
+    "Jinja2>=3.0",
+    "pydantic>=2.0",
+    "overrides>=7.3"
+]
+
+# Optional development dependencies
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-mock",
+    "black",
+    "isort",
+    "mypy",
+]
+notebook = [
+    "notebook>=7.0",          # Jupyter Notebook
+    "jupyterlab>=4.0",        # JupyterLab interface (optional)
+    "ipykernel>=6.0",         # Kernel for running Python
+]
+
+[tool.setuptools]
+# Include packages under src/
+packages = {find = {where = ["src"]}}

@@ -1,0 +1,2 @@
+default_diagnostic_policy: RAISE_WARNINGS
+parser_type: JINJA
