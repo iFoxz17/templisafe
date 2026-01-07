@@ -14,8 +14,9 @@ optimized: true
 """
 
 class EnvironmentLoader:
+    """Loads and manages Jinja2 environments from configuration sources."""
 
-    __slots__ = ("_default_settings", "_default_settings_source", "_manager")
+    __slots__: tuple[str, ...] = ("_default_settings", "_default_settings_source", "_manager")
 
     @staticmethod
     def _get_default_settings_source() -> ContentSource:
@@ -50,7 +51,6 @@ class EnvironmentLoader:
             raise IllegalEnvironmentDefinitionError(
                 f"Invalid environment configuration: {e}"
             ) from e
-
 
     def _create_settings(self, env_settings_source: Source | None = None) -> EnvironmentSettings:
         env_settings: EnvironmentSettings

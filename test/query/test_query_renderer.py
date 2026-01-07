@@ -1,12 +1,12 @@
 import pytest
 from sqltemplater.query.query_renderer import QueryRenderer, RenderingOutcome
 from sqltemplater.query.query_model import (
-    QueryTemplate,
-    QuerySchema,
-    ParamSchema,
-    QueryParam,
-    QueryParams,
-    CompiledQuery
+    QTemplate,
+    QSchema,
+    QVar,
+    QBinding,
+    QVariant,
+    QCompilationSpec
 )
 
 # -------------------------
@@ -14,25 +14,25 @@ from sqltemplater.query.query_model import (
 # -------------------------
 @pytest.fixture
 def simple_template():
-    return QueryTemplate(
+    return QTemplate(
         template="SELECT * FROM table WHERE id={{ id }} AND name='{{ name }}'",
-        params={"id", "name"}
+        vars={"id", "name"}
     )
 
 
 @pytest.fixture
 def schema():
-    return QuerySchema(params=[
-        ParamSchema(index=0, name="id", type_=int),
-        ParamSchema(index=1, name="name", type_=str),
+    return QSchema(schema=[
+        QVar(index=0, name="id", type_=int),
+        QVar(index=1, name="name", type_=str),
     ])
 
 
 @pytest.fixture
 def schema_with_defaults():
-    return QuerySchema(params=[
-        ParamSchema(index=0, name="id", type_=int, default=0),
-        ParamSchema(index=1, name="name", type_=str, default="anonymous"),
+    return QSchema(schema=[
+        QVar(index=0, name="id", type_=int, default=0),
+        QVar(index=1, name="name", type_=str, default="anonymous"),
     ])
 
 
@@ -45,10 +45,10 @@ def renderer():
 # Success case: all params provided
 # -------------------------
 def test_render_success(renderer, simple_template, schema):
-    compiled = CompiledQuery(template=simple_template, schema=schema)
-    params = QueryParams(params=[
-        QueryParam(index=0, name="id", value=42),
-        QueryParam(index=1, name="name", value="Alice"),
+    compiled = QCompilationSpec(template=simple_template, schema=schema)
+    params = QVariant(bindings=[
+        QBinding(index=0, name="id", value=42),
+        QBinding(index=1, name="name", value="Alice"),
     ])
 
     result = renderer.render(compiled, params)
@@ -64,9 +64,9 @@ def test_render_success(renderer, simple_template, schema):
 # Success case: missing params, but schema has defaults
 # -------------------------
 def test_render_success_with_defaults(renderer, simple_template, schema_with_defaults):
-    compiled = CompiledQuery(template=simple_template, schema=schema_with_defaults)
-    params = QueryParams(params=[
-        QueryParam(index=0, name="id", value=42),  # 'name' missing → default
+    compiled = QCompilationSpec(template=simple_template, schema=schema_with_defaults)
+    params = QVariant(bindings=[
+        QBinding(index=0, name="id", value=42),  # 'name' missing → default
     ])
 
     result = renderer.render(compiled, params)
@@ -82,11 +82,11 @@ def test_render_success_with_defaults(renderer, simple_template, schema_with_def
 # Warning case: extra parameter
 # -------------------------
 def test_render_warning_extra_param(renderer, simple_template, schema):
-    compiled = CompiledQuery(template=simple_template, schema=schema)
-    params = QueryParams(params=[
-        QueryParam(index=0, name="id", value=42),
-        QueryParam(index=1, name="name", value="Alice"),
-        QueryParam(index=2, name="extra", value="foo"),  # extra
+    compiled = QCompilationSpec(template=simple_template, schema=schema)
+    params = QVariant(bindings=[
+        QBinding(index=0, name="id", value=42),
+        QBinding(index=1, name="name", value="Alice"),
+        QBinding(index=2, name="extra", value="foo"),  # extra
     ])
 
     result = renderer.render(compiled, params)
@@ -102,9 +102,9 @@ def test_render_warning_extra_param(renderer, simple_template, schema):
 # Error case: missing parameter without default
 # -------------------------
 def test_render_error_missing_param(renderer, simple_template, schema):
-    compiled = CompiledQuery(template=simple_template, schema=schema)
-    params = QueryParams(params=[
-        QueryParam(index=0, name="id", value=42),  # missing 'name'
+    compiled = QCompilationSpec(template=simple_template, schema=schema)
+    params = QVariant(bindings=[
+        QBinding(index=0, name="id", value=42),  # missing 'name'
     ])
 
     result = renderer.render(compiled, params)
@@ -120,11 +120,11 @@ def test_render_error_missing_param(renderer, simple_template, schema):
 # Validate method independently
 # -------------------------
 def test_validate_only(renderer, simple_template, schema):
-    compiled = CompiledQuery(template=simple_template, schema=schema)
-    params = QueryParams(params=[
-        QueryParam(index=0, name="id", value=42),
-        QueryParam(index=1, name="name", value="Alice"),
-        QueryParam(index=2, name="unused", value="foo"),
+    compiled = QCompilationSpec(template=simple_template, schema=schema)
+    params = QVariant(bindings=[
+        QBinding(index=0, name="id", value=42),
+        QBinding(index=1, name="name", value="Alice"),
+        QBinding(index=2, name="unused", value="foo"),
     ])
 
     result = renderer.validate(compiled, params)

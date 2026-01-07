@@ -1,92 +1,92 @@
-from dataclasses import dataclass
-
-
 from sqltemplater.query.query_model import (
-    CompiledQuery,
-    QueryTemplate,
-    QuerySchema,
-    ParamSchema,
-    BuildOutcome,
-    BuildDiagnostic,
-    CompilationResult
+    QCompilationSpec,
+    QTemplate,
+    QSchema,
+    QVar,
+    QOutcome,
+    QDiagnostic,
+    QCompilation
 )
 
 class QueryCompiler:
-    __slots__ = ()
+    """Compiles a query template against a schema, producing a QCompilation with diagnostics."""
 
-    def _create_empty_schema(self, params: set[str]) -> QuerySchema:
-        return QuerySchema(
-            params=[
-                ParamSchema(index=i, name=p, type_=object, default=None)
-                for i, p in enumerate(params)
+    __slots__: tuple[str, ...] = ()
+
+    def _create_empty_schema(self, var_names: set[str]) -> QSchema:
+        return QSchema(
+            vars=[
+                QVar(index=i, name=p, type_=object, default=None)
+                for i, p in enumerate(var_names)
             ]
         )
 
     def compile(
         self,
-        template: QueryTemplate,
-        schema: QuerySchema | None = None,
-    ) -> CompilationResult:
+        template: QTemplate,
+        schema: QSchema | None = None,
+    ) -> QCompilation:
+        """Compile a template with an optional schema, returning a QCompilation with warnings/errors."""
 
-        template_params: set[str] = set(template.params)
+        template_vars: set[str] = template.vars
 
         if schema is None:
-            schema = self._create_empty_schema(template_params)
-            return CompilationResult(
-                outcome=BuildOutcome.SUCCESS,
+            schema = self._create_empty_schema(template_vars)
+            return QCompilation(
+                outcome=QOutcome.SUCCESS,
                 message="Query successfully compiled with empty schema",
-                compiled_query=CompiledQuery(template=template, schema=schema),
+                _spec=QCompilationSpec(template=template, schema=schema),
             )
 
-        schema_params: set[str] = set(schema.names)
+        schema_vars: set[str] = schema.names
 
-        undeclared: set[str] = template_params - schema_params
-        unused: set[str] = schema_params - template_params
+        undeclared_vars: set[str] = template_vars - schema_vars
+        unused_vars: set[str] = schema_vars - template_vars
 
-        diagnostics: list[BuildDiagnostic] = []
+        diagnostics: list[QDiagnostic] = []
         outcome = (
-            BuildOutcome.ERROR
-            if undeclared
-            else BuildOutcome.WARNING
-            if unused
-            else BuildOutcome.SUCCESS
+            QOutcome.ERROR
+            if undeclared_vars
+            else QOutcome.WARNING
+            if unused_vars
+            else QOutcome.SUCCESS
         )
 
-        # Unused parameters (provided in schema but not in template)
-        for param in sorted(unused):
-            param_schema: ParamSchema = schema[param]
+        # Unused variables (provided in schema but not in template)
+        for var_name in sorted(unused_vars):
+            var: QVar = schema[var_name]
             diagnostics.append(
-                BuildDiagnostic(
-                    level=BuildOutcome.WARNING,
-                    message=f"Unused parameter: '{param}'",
-                    param=param,
-                    index=param_schema.index
+                QDiagnostic(
+                    level=QOutcome.WARNING,
+                    message=f"Unused variable: '{var_name}'",
+                    name=var.name,
+                    index=var.index
                 )
             )
 
         # Undeclared parameters (in template but missing in schema)
-        for param in sorted(undeclared):
+        for var_name in sorted(undeclared_vars):
             diagnostics.append(
-                BuildDiagnostic(
-                    level=BuildOutcome.ERROR,
-                    message=f"Undeclared parameter: '{param}'",
-                    param=param,
+                QDiagnostic(
+                    level=QOutcome.ERROR,
+                    message=f"Undeclared variable: '{var_name}'",
+                    name=var_name,
                     index=None
                 )
             )
 
-        if outcome is BuildOutcome.ERROR:
-            return CompilationResult(
+        if outcome is QOutcome.ERROR:
+            return QCompilation(
                 outcome=outcome,
                 message="Query compilation failed",
-                compiled_query=None,
+                _spec=None,
                 diagnostics=tuple(diagnostics),
             )
 
-        return CompilationResult(
+        return QCompilation(
             outcome=outcome,
             message="Query successfully compiled with schema",
-            compiled_query=CompiledQuery(template=template, schema=schema),
+            _spec=QCompilationSpec(template=template, schema=schema),
             diagnostics=tuple(diagnostics),
         )
 

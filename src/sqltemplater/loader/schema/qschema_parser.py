@@ -2,20 +2,22 @@ from typing import Any, Iterable
 from abc import ABC, abstractmethod
 from numbers import Real
 
-from sqltemplater.loader.parser import Parser
-from sqltemplater.settings.parser.schema_parser_settings import SchemaParserSettings
-from sqltemplater.settings.parser.parser_settings import ParserSettings
-from sqltemplater.query.query_model import QuerySchema, ParamSchema
+from sqltemplater.loader.qparser import QParser
+from sqltemplater.settings.parser.qschema_parser_settings import QSchemaParserSettings
+from sqltemplater.settings.parser.qparser_settings import QParserSettings
+from sqltemplater.query.query_model import QSchema, QVar
 from sqltemplater.exceptions.schema_error import (
     IllegalType,
     IllegalSchemaError, 
     IllegalParamType,
     DuplicatedParamError
 )
-from sqltemplater.exceptions.schema_warnings import DefaultParamTypeMismatchWarning
+from sqltemplater.exceptions.schema_warnings import DefaultVarTypeMismatchWarning
 
 class TypeParser:
-    __slots__ = ('_allowed', '_aliases')
+    """Parses and validates type names, including handling aliases."""
+
+    __slots__: tuple[str, ...] = ('_allowed', '_aliases')
 
     _TYPE_MAP: dict[str, type] = {
             'bool': bool,
@@ -54,12 +56,10 @@ class TypeParser:
     def validate(self, name: str) -> bool:
         return name in self._allowed or name in self._aliases
 
-class SchemaParser(Parser, ABC):
-    """
-    Abstract base class for parsing and validating schemas.
-    """
+class QSchemaParser(QParser, ABC):
+    """Abstract base class for parsing and validating schema definitions."""
 
-    __slots__ = ('_settings', '_type_parser')
+    __slots__: tuple[str, ...] = ('_settings', '_type_parser')
     
     @staticmethod
     def _reverse_aliases(type_aliases: frozenset[tuple[str, tuple[str, ...]]]) -> dict[str, str]:
@@ -72,11 +72,11 @@ class SchemaParser(Parser, ABC):
 
         return aliases_map
 
-    def __init__(self, settings: SchemaParserSettings) -> None:
+    def __init__(self, settings: QSchemaParserSettings) -> None:
         super().__init__(settings)
         self._type_parser: TypeParser = TypeParser(
             settings.allowed_types,
-            SchemaParser._reverse_aliases(settings.type_aliases)
+            QSchemaParser._reverse_aliases(settings.type_aliases)
         )
        
     def _parse_type(self, p_index: int, p_name: str, p_type: str) -> type:
@@ -86,13 +86,13 @@ class SchemaParser(Parser, ABC):
         
         return parser.parse(p_type)
 
-    def _parse_short(self, p_index: int, p_name: str, p_type: str) -> ParamSchema:
+    def _parse_short(self, p_index: int, p_name: str, p_type: str) -> QVar:
         type_: type = self._type_parser.parse(p_type)
-        return ParamSchema(index=p_index, name=p_name, type_=type_)
+        return QVar(index=p_index, name=p_name, type_=type_)
 
-    def _parse_complete(self, p_index: int, p_name: str, p_schema: dict[str, Any]) -> ParamSchema:
-        settings: ParserSettings = self._settings
-        assert isinstance(settings, SchemaParserSettings)
+    def _parse_complete(self, p_index: int, p_name: str, p_schema: dict[str, Any]) -> QVar:
+        settings: QParserSettings = self._settings
+        assert isinstance(settings, QSchemaParserSettings)
 
         type_key: str = settings.type_key
         if type_key not in p_schema:
@@ -105,17 +105,17 @@ class SchemaParser(Parser, ABC):
 
         p_default: Any = p_schema.get(settings.default_key)
         if p_default is None:
-            return ParamSchema(index=p_index, name=p_name, type_=type_)
+            return QVar(index=p_index, name=p_name, type_=type_)
         
         default_type: type = type(p_default)
         if default_type != type_:
-            self._handle_warning(DefaultParamTypeMismatchWarning(p_index, p_name, type_, default_type))
+            self._handle_warning(DefaultVarTypeMismatchWarning(p_index, p_name, type_, default_type))
 
-        return ParamSchema(index=p_index, name=p_name, type_=type_, default=p_default)
+        return QVar(index=p_index, name=p_name, type_=type_, default=p_default)
             
-    def _parse_schema(self, schema_dict: dict[str, Any]) -> QuerySchema:
-        settings: ParserSettings = self._settings
-        assert isinstance(settings, SchemaParserSettings)
+    def _parse_schema(self, schema_dict: dict[str, Any]) -> QSchema:
+        settings: QParserSettings = self._settings
+        assert isinstance(settings, QSchemaParserSettings)
         
         schema_key: str = settings.schema_key
         if schema_key not in schema_dict:
@@ -125,8 +125,8 @@ class SchemaParser(Parser, ABC):
         if not isinstance(params_dict, dict):
             raise IllegalSchemaError(f'Illegal schema definition')
 
-        params: dict[str, ParamSchema] = {}
-        param_schema: ParamSchema
+        params: dict[str, QVar] = {}
+        param_schema: QVar
         
         for i, (p_name, p_schema) in enumerate(params_dict.items()):
             if not isinstance(p_name, str):
@@ -142,12 +142,14 @@ class SchemaParser(Parser, ABC):
                 raise DuplicatedParamError(p_name, params[p_name].index, i)
             params[p_name] = param_schema
 
-        return QuerySchema(params.values())
+        return QSchema(params.values())
     
     @abstractmethod
     def _parse_raw(self, schema: str) -> dict[str, Any]:
         pass
 
-    def parse(self, schema: str) -> QuerySchema:
+    def parse(self, schema: str) -> QSchema:
+        """Parse a schema string into a QSchema with validated variables."""
+
         return self._parse_schema(self._parse_raw(schema))
         

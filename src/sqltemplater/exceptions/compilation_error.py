@@ -1,19 +1,34 @@
-from sqltemplater.query.query_compiler import CompilationResult
+from abc import ABC
+from sqltemplater.query.query_compiler import QCompilation
 
-class CompilationError(Exception):
+class CompilationError(Exception, ABC):
+    """Raised when query compilation fails or violates diagnostic policy."""
+    __slots__: tuple[str, ...] = ()
+    pass
+
+class CompilationFailureError(CompilationError):
     """Raised when query compilation fails or violates diagnostic policy."""
 
-    def __init__(self, compilation_result: CompilationResult):
-        self.compilation_result: CompilationResult = compilation_result
-        # Collect messages including diagnostics
-        diag_msgs = [
-            f"[{d.level.name}] param={d.param} index={d.index}: {d.message}"
-            for d in compilation_result.diagnostics
+    __slots__: tuple[str, ...] = ("compilation",)
+
+    def __init__(self, compilation: QCompilation) -> None:
+        self.compilation: QCompilation = compilation
+
+        # Base message
+        message_lines = [
+            f"Query compilation failed with outcome {compilation.outcome.name}: "
+            f"{compilation.message}"
         ]
-        message = (
-            f"Query compilation failed with outcome {compilation_result.outcome.name}: "
-            f"{compilation_result.message}\nDiagnostics:\n" + "\n".join(diag_msgs)
-            if diag_msgs else f"Query compilation failed with outcome {compilation_result.outcome.name}: "
-            f"{compilation_result.message}"
-        )
-        super().__init__(message)
+
+        # Append diagnostics if any
+        if compilation.diagnostics:
+            message_lines.append("Diagnostics:")
+            for diag in compilation.diagnostics:
+                message_lines.append(
+                    f"[{diag.level.name}] variable={diag.name}: {diag.message}"
+                )
+
+        # Join all lines into the final message
+        full_message: str = "\n".join(message_lines)
+
+        super().__init__(full_message)

@@ -4,9 +4,9 @@ from typing import Dict, List, Tuple, Any
 from pydantic import Field, model_validator
 
 from sqltemplater.util.util import ContentType
-from sqltemplater.settings.parser.parser_settings import ParserSettings
+from sqltemplater.settings.parser.qparser_settings import QParserSettings
 
-class SchemaParserSettings(ParserSettings, ABC):
+class QSchemaParserSettings(QParserSettings, ABC):
     schema_key: str
     type_key: str
     default_key: str
@@ -38,7 +38,7 @@ class SchemaParserSettings(ParserSettings, ABC):
         """Return a normal dict[str, list[str]] for user convenience."""
         return {k: list(v) for k, v in self.type_aliases}
     
-class YamlSchemaParserSettings(SchemaParserSettings):
+class YamlQSchemaParserSettings(QSchemaParserSettings):
     @property
     @overrides
     def content_type(self) -> ContentType:

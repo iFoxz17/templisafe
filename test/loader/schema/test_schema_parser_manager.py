@@ -1,7 +1,7 @@
 import pytest
-from sqltemplater.loader.schema.schema_parser_manager import SchemaParserFactory, SchemaParserManager
-from sqltemplater.loader.schema.yaml_schema_parser import YamlSchemaParser
-from sqltemplater.settings.parser.schema_parser_settings import SchemaParserSettings, YamlSchemaParserSettings
+from sqltemplater.loader.schema.qschema_parser_manager import QSchemaParserFactory, QSchemaParserManager
+from sqltemplater.loader.schema.yaml_qschema_parser import QYamlSchemaParser
+from sqltemplater.settings.parser.qschema_parser_settings import QSchemaParserSettings, YamlQSchemaParserSettings
 from sqltemplater.util.util import ContentType
 from sqltemplater.exceptions.schema_error import UnimplementedSchemaParserError
 
@@ -9,19 +9,19 @@ from sqltemplater.exceptions.schema_error import UnimplementedSchemaParserError
 # Factory tests
 # -----------------------
 def test_factory_create_known():
-    settings = YamlSchemaParserSettings(
+    settings = YamlQSchemaParserSettings(
         schema_key="schema",
         type_key="type",
         default_key="default",
         allowed_types=("int",)
     )
-    factory = SchemaParserFactory()
+    factory = QSchemaParserFactory()
     parser = factory.create(settings)
-    assert isinstance(parser, YamlSchemaParser)
+    assert isinstance(parser, QYamlSchemaParser)
     assert parser._settings == settings
 
 def test_factory_create_unknown():
-    class DummySettings(SchemaParserSettings):
+    class DummySettings(QSchemaParserSettings):
         @property
         def content_type(self):
             return ContentType.YAML
@@ -32,7 +32,7 @@ def test_factory_create_unknown():
         default_key="default",
         allowed_types=("int",)
     )
-    factory = SchemaParserFactory()
+    factory = QSchemaParserFactory()
     with pytest.raises(UnimplementedSchemaParserError):
         factory.create(settings)
 
@@ -40,29 +40,29 @@ def test_factory_create_unknown():
 # Manager tests
 # -----------------------
 def test_manager_get_or_create_and_contains():
-    manager = SchemaParserManager()
+    manager = QSchemaParserManager()
 
     # Create parser with default settings
-    default_settings = YamlSchemaParserSettings(
+    default_settings = YamlQSchemaParserSettings(
         schema_key="schema",
         type_key="type",
         default_key="default",
         allowed_types=("str", "float")
     )
     parser1 = manager.get_or_create(default_settings)
-    assert isinstance(parser1, YamlSchemaParser)
+    assert isinstance(parser1, QYamlSchemaParser)
     assert parser1._settings == default_settings
     assert default_settings in manager
 
     # Create parser with custom settings
-    custom_settings = YamlSchemaParserSettings(
+    custom_settings = YamlQSchemaParserSettings(
         schema_key="custom_schema",
         type_key="custom_type",
         default_key="custom_default",
         allowed_types=("int",)
     )
     parser2 = manager.get_or_create(custom_settings)
-    assert isinstance(parser2, YamlSchemaParser)
+    assert isinstance(parser2, QYamlSchemaParser)
     assert parser2._settings == custom_settings
     assert custom_settings in manager
 

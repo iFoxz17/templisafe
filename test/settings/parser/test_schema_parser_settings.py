@@ -1,10 +1,10 @@
 import pytest
 from pydantic import ValidationError
 from sqltemplater.util.util import DiagnosticPolicy
-from sqltemplater.settings.parser.schema_parser_settings import YamlSchemaParserSettings
+from sqltemplater.settings.parser.qschema_parser_settings import YamlQSchemaParserSettings
 
 def test_initialization():
-    settings = YamlSchemaParserSettings(
+    settings = YamlQSchemaParserSettings(
         schema_key="schema",
         type_key="type",
         default_key="default",
@@ -18,7 +18,7 @@ def test_initialization():
 
 def test_initialization_with_values():
     policy = DiagnosticPolicy.ERRORS_ONLY
-    settings = YamlSchemaParserSettings(
+    settings = YamlQSchemaParserSettings(
         schema_key="s",
         type_key="t",
         default_key="d",
@@ -31,7 +31,7 @@ def test_initialization_with_values():
     assert settings.policy == policy
 
 def test_immutable():
-    settings = YamlSchemaParserSettings(
+    settings = YamlQSchemaParserSettings(
         schema_key="s",
         type_key="t",
         default_key="d"
@@ -42,7 +42,7 @@ def test_immutable():
 def test_validation_error():
     # Example: passing wrong type
     with pytest.raises(ValidationError):
-        YamlSchemaParserSettings(
+        YamlQSchemaParserSettings(
             schema_key=123,  # type: ignore     
             type_key="t",
             default_key="d"

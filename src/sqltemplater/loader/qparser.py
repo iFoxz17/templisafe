@@ -1,15 +1,16 @@
 from abc import ABC
 import warnings
 
-from sqltemplater.settings.parser.parser_settings import ParserSettings
+from sqltemplater.settings.parser.qparser_settings import QParserSettings
 from sqltemplater.util.util import DiagnosticPolicy
 
-class Parser(ABC):
+class QParser(ABC):
+    """Abstract base class for parsers with configurable diagnostic policies."""
     
-    __slots__ = ('_settings')
+    __slots__: tuple[str, ...] = ('_settings',)
     
-    def __init__(self, settings: ParserSettings) -> None:
-        self._settings: ParserSettings = settings
+    def __init__(self, settings: QParserSettings) -> None:
+        self._settings: QParserSettings = settings
 
     def _handle_warning(self, warning: Warning) -> None:
         match self._settings.policy:

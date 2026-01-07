@@ -8,10 +8,9 @@ from sqltemplater.settings.environment_settings import EnvironmentSettings
 # ---------------------------------------------------------------------------------------------
 
 class EnvironmentFactory:
-    """
-    Factory class to create jinja2.Environment instances
-    from a parsed EnvironmentSettings object.
-    """
+    """Creates Jinja2 Environment instances from EnvironmentSettings."""
+
+    __slots__: tuple[str, ...] = ()
 
     def __init__(self) -> None:
         pass
@@ -25,7 +24,9 @@ class EnvironmentFactory:
 # ---------------------------------------------------------------------------------------------
 
 class EnvironmentManager:
-    __slots__ = ("_factory", "_environments")
+    """Manages cached Jinja2 Environment instances by their settings."""
+
+    __slots__: tuple[str, ...] = ("_factory", "_environments")
 
     def __init__(
             self, 

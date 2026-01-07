@@ -4,12 +4,13 @@
 
 class EnvironmentDefinitionError(Exception):
     """Base class for environment definition related errors."""
+    __slots__: tuple[str, ...] = ()
     pass
 
 class IllegalEnvironmentDefinitionError(EnvironmentDefinitionError):
     """Raised when an entire environment is illegal."""
     
-    __slots__ = ("msg",)
+    __slots__: tuple[str, ...] = ("msg",)
 
     def __init__(self, msg: str) -> None:
         self.msg = msg

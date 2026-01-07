@@ -2,18 +2,21 @@ from sqltemplater.util.util import ContentType
 from typing import Type
 
 #---------------------------------------------------------------------------------------------
-# Template parser
+# QTemplateParser
 #---------------------------------------------------------------------------------------------
 
-class TemplateParserError(Exception):
-    """Base class for template parser related errors."""
+class QTemplateParserError(Exception):
+    """Base class for QTemplateParser related errors."""
+    __slots__: tuple[str, ...] = ()
     pass
 
-class TemplateParserCreationError(Exception):
+class QTemplateParserCreationError(Exception):
     """
-    Raised when a TemplateParser cannot be created due to
+    Raised when a QTemplateParser cannot be created due to
     invalid or missing loader context.
     """
+
+    __slots__: tuple[str, ...] = ('parser_type', 'expected_context', 'actual_context', 'message')
 
     def __init__(
         self,
@@ -29,7 +32,7 @@ class TemplateParserCreationError(Exception):
         super().__init__(message)
 
     def _build_message(self) -> str:
-        parts: list[str] = ["Failed to create template parser"]
+        parts: list[str] = ["Failed to create qtemplate parser"]
 
         if self.parser_type is not None:
             parts.append(f"for parser type '{self.parser_type.name}'")
@@ -46,10 +49,10 @@ class TemplateParserCreationError(Exception):
 
         return " ".join(parts)
 
-class UnimplementedTemplateParserError(TemplateParserError):
-    """Raised when trying to instantiate a template parser that is not implemented."""
+class UnsupportedQTemplateParserError(QTemplateParserError):
+    """Raised when trying to instantiate a QTemplateParser that is not supported."""
     
-    __slots__ = ("content_type",)
+    __slots__: tuple[str, ...] = ("content_type",)
 
     def __init__(self, content_type: ContentType) -> None:
         self.content_type = content_type
@@ -59,17 +62,18 @@ class UnimplementedTemplateParserError(TemplateParserError):
         return f"{self.__class__.__name__}(content_type={self.content_type!r})"
 
 #---------------------------------------------------------------------------------------------
-# Template definition
+# QTemplate definition
 #---------------------------------------------------------------------------------------------
 
-class TemplateDefinitionError(Exception):
+class QTemplateDefinitionError(Exception):
     """Base class for template definition related errors."""
+    __slots__: tuple[str, ...] = ()
     pass
 
-class IllegalTemplateDefinitionError(TemplateDefinitionError):
+class IllegalQTemplateDefinitionError(QTemplateDefinitionError):
     """Raised when an entire template is illegal."""
     
-    __slots__ = ("msg",)
+    __slots__: tuple[str, ...] = ("msg",)
 
     def __init__(self, msg: str) -> None:
         self.msg = msg

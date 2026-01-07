@@ -1,8 +1,8 @@
 import pytest
 
 from sqltemplater.util.util import ContentType
-from sqltemplater.loader.schema.schema_parser import SchemaParser
-from sqltemplater.loader.schema.schema_parser_manager import SchemaParserFactory, SchemaParserManager
+from sqltemplater.loader.schema.qschema_parser import QSchemaParser
+from sqltemplater.loader.schema.qschema_parser_manager import QSchemaParserFactory, QSchemaParserManager
 
 # -----------------------
 # DummyParser fixture

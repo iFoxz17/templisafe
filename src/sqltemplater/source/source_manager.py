@@ -2,7 +2,7 @@ from sqltemplater.settings.source_settings import LocalSourceSettings, ContentSo
 from sqltemplater.source.source import Source, SourceSettings
 from sqltemplater.source.local_source import LocalSource
 from sqltemplater.source.content_source import ContentSource, ContentSourceSettings
-from sqltemplater.exceptions.source_error import UnimplementedSourceError
+from sqltemplater.exceptions.source_error import UnsupportedSourceError
 
 #---------------------------------------------------------------------------------------------
 # Factory
@@ -18,7 +18,7 @@ class SourceFactory:
     def create(self, settings: SourceSettings) -> Source:
         source_type: type[Source] | None = SourceFactory._SOURCE_MAP.get(type(settings))
         if source_type is None:
-            raise UnimplementedSourceError(settings)
+            raise UnsupportedSourceError(settings)
         return source_type(settings)
 
 #---------------------------------------------------------------------------------------------

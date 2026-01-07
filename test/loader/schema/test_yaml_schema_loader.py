@@ -1,11 +1,11 @@
 import pytest
 import warnings
 from numbers import Real
-from sqltemplater.loader.schema.schema_parser import TypeParser, SchemaParser
+from sqltemplater.loader.schema.qschema_parser import TypeParser, QSchemaParser
 
-from sqltemplater.loader.schema.yaml_schema_parser import YamlSchemaParser
-from sqltemplater.settings.parser.schema_parser_settings import YamlSchemaParserSettings
-from sqltemplater.query.query_model import ParamSchema, QuerySchema
+from sqltemplater.loader.schema.yaml_qschema_parser import QYamlSchemaParser
+from sqltemplater.settings.parser.qschema_parser_settings import YamlQSchemaParserSettings
+from sqltemplater.query.query_model import QVar, QSchema
 from sqltemplater.util.util import DiagnosticPolicy
 from sqltemplater.exceptions.schema_error import (
     IllegalType,
@@ -13,7 +13,7 @@ from sqltemplater.exceptions.schema_error import (
     IllegalParamType,
     DuplicatedParamError
 )
-from sqltemplater.exceptions.schema_warnings import DefaultParamTypeMismatchWarning
+from sqltemplater.exceptions.schema_warnings import DefaultVarTypeMismatchWarning
 
 # -----------------------
 # TypeParser tests
@@ -59,14 +59,14 @@ def test_reverse_aliases():
         ("int", ("i", "integer")), 
         ("str", ("s",))
     ])
-    reversed_aliases = SchemaParser._reverse_aliases(aliases)
+    reversed_aliases = QSchemaParser._reverse_aliases(aliases)
     assert reversed_aliases["i"] == "int"
     assert reversed_aliases["integer"] == "int"
     assert reversed_aliases["s"] == "str"
     
     # duplicate alias should raise
     with pytest.raises(IllegalSchemaError):
-        SchemaParser._reverse_aliases(
+        QSchemaParser._reverse_aliases(
             frozenset([
                 ("int", ("i",)), 
                 ("str", ("i",))
@@ -74,22 +74,22 @@ def test_reverse_aliases():
         )
 
 def test_parse_type_with_invalid_type():
-    settings = YamlSchemaParserSettings(schema_key="schema", type_key="type", default_key="default", allowed_types=("int",))
-    class DummyParser(SchemaParser):
+    settings = YamlQSchemaParserSettings(schema_key="schema", type_key="type", default_key="default", allowed_types=("int",))
+    class DummyParser(QSchemaParser):
         def _parse_raw(self, schema: str): return {}
     parser = DummyParser(settings)
     with pytest.raises(IllegalParamType):
         parser._parse_type(0, "p", "str")
 
 def test_parse_short_and_complete():
-    settings = YamlSchemaParserSettings(schema_key="schema", type_key="type", default_key="default", allowed_types=("int",))
-    class DummyParser(SchemaParser):
+    settings = YamlQSchemaParserSettings(schema_key="schema", type_key="type", default_key="default", allowed_types=("int",))
+    class DummyParser(QSchemaParser):
         def _parse_raw(self, schema: str): return {}
     parser = DummyParser(settings)
     
     # _parse_short returns ParamSchema
     p = parser._parse_short(0, "x", "int")
-    assert isinstance(p, ParamSchema)
+    assert isinstance(p, QVar)
     assert p.index == 0 and p.name == "x" and p.type_ is int
 
     # _parse_complete with correct type
@@ -99,24 +99,24 @@ def test_parse_short_and_complete():
     assert p2.default == 5
 
 def test_parse_complete_with_warning():
-    settings = YamlSchemaParserSettings(schema_key="schema", type_key="type", default_key="default",
+    settings = YamlQSchemaParserSettings(schema_key="schema", type_key="type", default_key="default",
                                     allowed_types=("int",), policy=DiagnosticPolicy.LOG_WARNINGS)
-    class DummyParser(SchemaParser):
+    class DummyParser(QSchemaParser):
         def _parse_raw(self, schema: str): return {}
     parser = DummyParser(settings)
     
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         p = parser._parse_complete(0, "x", {"type": "int", "default": "wrong_type"})
-        assert any(issubclass(warn.category, DefaultParamTypeMismatchWarning) for warn in w)
+        assert any(issubclass(warn.category, DefaultVarTypeMismatchWarning) for warn in w)
 
 # -----------------------
 # _parse_schema and parse
 # -----------------------
 def test_parse_schema():
-    settings = YamlSchemaParserSettings(schema_key="schema", type_key="type", default_key="default",
+    settings = YamlQSchemaParserSettings(schema_key="schema", type_key="type", default_key="default",
                                     allowed_types=("int",))
-    class DummyParser(SchemaParser):
+    class DummyParser(QSchemaParser):
         def _parse_raw(self, schema: str):
             return {
                 "schema": {
@@ -126,16 +126,16 @@ def test_parse_schema():
             }
     parser = DummyParser(settings)
     qs = parser.parse("dummy")
-    assert isinstance(qs, QuerySchema)
+    assert isinstance(qs, QSchema)
     assert set(qs.names) == {"a", "b"}
 
 # -----------------------
 # YamlSchemaParser
 # -----------------------
 def test_yaml_schema_parser_valid_and_invalid():
-    settings = YamlSchemaParserSettings(schema_key="schema", type_key="type", default_key="default",
+    settings = YamlQSchemaParserSettings(schema_key="schema", type_key="type", default_key="default",
                                     allowed_types=("int",))
-    parser = YamlSchemaParser(settings)
+    parser = QYamlSchemaParser(settings)
     
     valid_yaml = """
 schema:
@@ -145,7 +145,7 @@ schema:
     default: 5
 """
     qs = parser.parse(valid_yaml)
-    assert isinstance(qs, QuerySchema)
+    assert isinstance(qs, QSchema)
     assert set(qs.names) == {"a", "b"}
 
     invalid_yaml = "!!yaml invalid"

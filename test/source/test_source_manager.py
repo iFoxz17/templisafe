@@ -3,7 +3,7 @@ from sqltemplater.util.util import ContentType
 from sqltemplater.source.source_manager import SourceFactory, SourceManager
 from sqltemplater.source.source import SourceSettings
 from sqltemplater.source.local_source import LocalSource, LocalSourceSettings
-from sqltemplater.exceptions.source_error import UnimplementedSourceError
+from sqltemplater.exceptions.source_error import UnsupportedSourceError
 
 def test_source_factory_create_known():
     settings = LocalSourceSettings(content_type=ContentType.YAML, path="/tmp/file.txt")
@@ -18,7 +18,7 @@ def test_source_factory_create_unknown():
 
     settings = DummySettings(content_type=ContentType.JINJA)
     factory = SourceFactory()
-    with pytest.raises(UnimplementedSourceError) as exc_info:
+    with pytest.raises(UnsupportedSourceError) as exc_info:
         factory.create(settings)
     assert str(settings) in str(exc_info.value)
 

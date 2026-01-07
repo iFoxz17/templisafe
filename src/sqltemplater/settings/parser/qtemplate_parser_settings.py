@@ -3,16 +3,16 @@ from overrides import overrides
 from jinja2 import Environment
 
 from sqltemplater.util.util import ContentType
-from sqltemplater.settings.parser.parser_settings import ParserSettings
+from sqltemplater.settings.parser.qparser_settings import QParserSettings
 
-class TemplateParserSettings(ParserSettings, ABC):
+class QTemplateParserSettings(QParserSettings, ABC):
 
     model_config = {
         "frozen": True,
         "arbitrary_types_allowed": True
     }
 
-class JinjaTemplateParserSettings(TemplateParserSettings):
+class JinjaQTemplateParserSettings(QTemplateParserSettings):
     environment: Environment
 
     @property

@@ -1,15 +1,15 @@
 import pytest
 from sqltemplater.util.util import DiagnosticPolicy, ContentType
 from sqltemplater.query.query_model import (
-    ParamSchema,
-    QuerySchema,
-    QueryTemplate,
-    CompiledQuery,
-    QueryParam,
-    QueryParams,
-    RenderedQuery
+    QVar,
+    QSchema,
+    QTemplate,
+    QCompilationSpec,
+    QBinding,
+    QVariant,
+    QRenderingSpec
 )
-from sqltemplater.exceptions.param_error import MissingParamError
+from sqltemplater.exceptions.var_error import MissingVarError
 
 # -----------------------
 # DiagnosticPolicy & ContentType
@@ -29,7 +29,7 @@ def test_content_type_enum():
 # ParamSchema
 # -----------------------
 def test_param_schema_frozen():
-    p = ParamSchema(index=0, name="param", type_=int, default=5)
+    p = QVar(index=0, name="param", type_=int, default=5)
     assert p.index == 0
     with pytest.raises(AttributeError):
         p.index = 1  # type: ignore
@@ -39,32 +39,32 @@ def test_param_schema_frozen():
 # QuerySchema
 # -----------------------
 def test_query_schema_basic():
-    p1 = ParamSchema(0, "a", int, 1)
-    p2 = ParamSchema(1, "b", str, "x")
-    schema = QuerySchema([p1, p2])
+    p1 = QVar(0, "a", int, 1)
+    p2 = QVar(1, "b", str, "x")
+    schema = QSchema([p1, p2])
 
     # Test names and params
     assert schema.names == {"a", "b"}
-    assert set(schema.params) == {p1, p2}
+    assert set(schema.vars) == {p1, p2}
 
     # Test param lookup
-    assert schema.param("a") == p1
-    assert schema.param("missing", default=p2) == p2
+    assert schema.get("a") == p1
+    assert schema.get("missing", default=p2) == p2
     assert schema["a"] == p1
     assert "a" in schema
     assert "missing" not in schema
 
     # Test add_param
-    p3 = ParamSchema(2, "c", float)
+    p3 = QVar(2, "c", float)
     schema.add_param(p3)
-    assert schema.param("c") == p3
+    assert schema.get("c") == p3
 
     # Test delete
     del schema["c"]
     assert "c" not in schema
-    with pytest.raises(MissingParamError):
+    with pytest.raises(MissingVarError):
         del schema["c"]
-    with pytest.raises(MissingParamError):
+    with pytest.raises(MissingVarError):
         _ = schema["c"]
 
     # Test iteration
@@ -73,8 +73,8 @@ def test_query_schema_basic():
 
 
 def test_query_schema_repr():
-    p1 = ParamSchema(0, "a", int)
-    schema = QuerySchema([p1])
+    p1 = QVar(0, "a", int)
+    schema = QSchema([p1])
     r = repr(schema)
     assert "QuerySchema" in r
     assert "a" in r
@@ -84,9 +84,9 @@ def test_query_schema_repr():
 # QueryTemplate
 # -----------------------
 def test_query_template():
-    tmpl = QueryTemplate(template="SELECT * FROM table", params={"a", "b"})
+    tmpl = QTemplate(template="SELECT * FROM table", vars={"a", "b"})
     assert tmpl.template == "SELECT * FROM table"
-    assert tmpl.params == {"a", "b"}
+    assert tmpl.vars == {"a", "b"}
     assert "QueryTemplate" in repr(tmpl)
 
 
@@ -94,9 +94,9 @@ def test_query_template():
 # CompiledQuery
 # -----------------------
 def test_compiled_query():
-    tmpl = QueryTemplate(template="SELECT *", params=set())
-    schema = QuerySchema()
-    cq = CompiledQuery(template=tmpl, schema=schema)
+    tmpl = QTemplate(template="SELECT *", vars=set())
+    schema = QSchema()
+    cq = QCompilationSpec(template=tmpl, schema=schema)
     assert cq.template == tmpl
     assert cq.schema == schema
 
@@ -105,29 +105,29 @@ def test_compiled_query():
 # QueryParams
 # -----------------------
 def test_query_params():
-    qp = QueryParams(params=[
-        QueryParam(index=0, name="a", value=1),
-        QueryParam(index=1, name="b", value=2),
+    qp = QVariant(bindings=[
+        QBinding(index=0, name="a", value=1),
+        QBinding(index=1, name="b", value=2),
     ])
 
-    assert len(qp.params) == 2
-    assert qp.params[0].index == 0
-    assert qp.params[0].name == "a"
-    assert qp.params[0].value == 1
+    assert len(qp.binding_by_name) == 2
+    assert qp.binding_by_name[0].index == 0
+    assert qp.binding_by_name[0].name == "a"
+    assert qp.binding_by_name[0].value == 1
 
 
 # -----------------------
 # RenderedQuery
 # -----------------------
 def test_rendered_query():
-    tmpl = QueryTemplate(template="SELECT *", params=set())
-    schema = QuerySchema()
-    cq = CompiledQuery(template=tmpl, schema=schema)
-    qp = QueryParams(params=[
-        QueryParam(index=0, name="x", value=1)
+    tmpl = QTemplate(template="SELECT *", vars=set())
+    schema = QSchema()
+    cq = QCompilationSpec(template=tmpl, schema=schema)
+    qp = QVariant(bindings=[
+        QBinding(index=0, name="x", value=1)
     ])
 
-    rq = RenderedQuery(compiled=cq, params=qp, rendered="SELECT *")
+    rq = QRenderingSpec(compiled=cq, params=qp, rendered="SELECT *")
     assert rq.compiled == cq
     assert rq.params == qp
     assert rq.rendered == "SELECT *"

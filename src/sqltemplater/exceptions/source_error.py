@@ -19,8 +19,8 @@ class LocalSourceError(SourceError):
         return f"{self.__class__.__name__}(path={self.path!r})"
 
 
-class UnimplementedSourceError(SourceError):
-    """Raised when trying to instantiate a source that is not implemented."""
+class UnsupportedSourceError(SourceError):
+    """Raised when trying to instantiate a source that is not supported."""
     
     __slots__ = ("settings",)
 

@@ -5,25 +5,27 @@ from dataclasses import dataclass
 
 from sqltemplater.source.source import Source
 from sqltemplater.util.util import DiagnosticPolicy, ContentType
-from sqltemplater.settings.parser.parser_settings import ParserSettings
+from sqltemplater.settings.parser.qparser_settings import QParserSettings
 
 @dataclass(frozen=True, slots=True)
-class LoaderContext(ABC):
+class QLoaderContext(ABC):
+    """Base class representing the context in which a loader operates."""
     pass
 
+class QLoader(ABC):
+    """Abstract base class for loaders that parse and manage configuration sources."""
 
-class Loader(ABC):
+    __slots__: tuple[str, ...] = ('_default_settings_source', '_default_settings')
+
     _PARSER_TYPE_KEY: str = 'parser_type'
     _DEFAULT_POLICY_KEY: str = 'default_diagnostic_policy'
 
-    __slots__ = ('_default_settings_source', '_default_settings')
-
     def __init__(self, default_settings_source: Source) -> None:
         self._default_settings_source: Source = default_settings_source
-        self._default_settings: ParserSettings = self._load_parser_settings(default_settings_source)
+        self._default_settings: QParserSettings = self._load_parser_settings(default_settings_source)
         
     @abstractmethod
-    def _load_parser_settings(self, settings_source: Source, context: LoaderContext | None = None) -> ParserSettings:
+    def _load_parser_settings(self, settings_source: Source, context: QLoaderContext | None = None) -> QParserSettings:
         pass
 
     def _load_config(self, raw: str, error_type: type[Exception]) -> dict[str, Any]:
@@ -39,7 +41,7 @@ class Loader(ABC):
 
     def _load_parser_type(self, config: dict[str, Any], error_type: type[Exception]) -> ContentType:
         parser_type: ContentType
-        key: str = Loader._PARSER_TYPE_KEY 
+        key: str = QLoader._PARSER_TYPE_KEY 
         if key not in config:
             raise error_type(f"No parser type found: define a value for key '{key}'")
         parser_type_str: str = config[key]
@@ -52,7 +54,7 @@ class Loader(ABC):
 
     def _load_diagnostic_policy(self, config: dict[str, Any], error_type: type[Exception]) -> DiagnosticPolicy:       
         policy: DiagnosticPolicy
-        key: str = Loader._DEFAULT_POLICY_KEY 
+        key: str = QLoader._DEFAULT_POLICY_KEY 
         if key in config:
             policy_str: str = config[key]
             try:
