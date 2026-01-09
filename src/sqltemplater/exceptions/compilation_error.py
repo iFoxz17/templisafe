@@ -1,5 +1,5 @@
 from abc import ABC
-from sqltemplater.query.query_compiler import QCompilation
+# from sqltemplater.query.query_compiler import QCompilation
 
 class CompilationError(Exception, ABC):
     """Raised when query compilation fails or violates diagnostic policy."""
@@ -11,8 +11,8 @@ class CompilationFailureError(CompilationError):
 
     __slots__: tuple[str, ...] = ("compilation",)
 
-    def __init__(self, compilation: QCompilation) -> None:
-        self.compilation: QCompilation = compilation
+    def __init__(self, compilation) -> None:
+        self.compilation = compilation
 
         # Base message
         message_lines = [

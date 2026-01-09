@@ -1,83 +1,108 @@
 import pytest
-from dataclasses import FrozenInstanceError
+from pathlib import Path
+from pydantic import ValidationError
 
-from sqltemplater.settings.source_settings import SourceSettings, LocalSourceSettings
 from sqltemplater.util.util import ContentType
+from sqltemplater.settings.source_settings import (
+    SourceSettings,
+    SourceKind,
+)
+from sqltemplater.source.local_source import LocalSource
+from sqltemplater.settings.source_settings import (
+    LocalSourceSettings, 
+    InlineSourceSettings
+)
+from sqltemplater.exceptions.source_error import LocalSourceError
 
+def test_factory_creates_local_source_settings(tmp_path):
+    """Test that the factory creates LocalSourceSettings correctly."""
+    file_path = tmp_path / "test.yaml"
+    file_path.write_text("dummy content")
 
-@pytest.fixture
-def content_type():
-    # Pick any valid ContentType member
-    return next(iter(ContentType))
-
-
-def test_source_settings_is_abstract(content_type):
-    """
-    SourceSettings inherits from ABC and should not be directly instantiable.
-    However, since it does not declare any abstract method, it is not forced to be abstract.
-    """
-    # with pytest.raises(Exception):
-    #   a = SourceSettings(content_type=content_type)
-    pass
-
-
-def test_local_source_settings_creation(content_type):
-    """
-    LocalSourceSettings should correctly store path and content_type.
-    """
-    settings = LocalSourceSettings(
-        content_type=content_type,
-        path="/tmp/example.sql",
+    settings = SourceSettings.create(
+        kind="local",
+        path=str(file_path),
     )
+    assert isinstance(settings, LocalSourceSettings)
+    assert settings.kind == SourceKind.LOCAL
+    assert settings.path == str(file_path)
+    assert settings.content_type is None
 
-    assert settings.content_type is content_type
-    assert settings.path == "/tmp/example.sql"
+    # Ensure frozen
+    with pytest.raises(Exception):
+        settings.path = "/tmp/other.yaml"
 
 
-def test_local_source_settings_is_instance_of_source_settings(content_type):
+def test_factory_creates_inline_source_settings():
+    """Test that the factory creates InlineSourceSettings correctly."""
+    content = "SELECT 1"
+    context: dict[str, object] = {
+        "kind": "inline",
+        "content": content,
+        "content_type": ContentType.JINJA,
+    }
+    settings = SourceSettings.create(**context)
+
+    assert isinstance(settings, InlineSourceSettings)
+    assert settings.kind == SourceKind.INLINE
+    assert settings.content == content
+    assert settings.content_type == ContentType.JINJA
+
+    # Ensure frozen
+    with pytest.raises(Exception):
+        settings.content = "new content"
+
+
+def test_factory_invalid_kind():
+    """Test that creating with an invalid kind raises a ValueError."""
+    with pytest.raises(ValueError, match="Invalid kind"):
+        SourceSettings.create(kind="invalid", path="dummy.txt")
+
+
+def test_factory_missing_required_fields():
+    """Test that missing required fields raises a ValueError."""
+    # LocalSourceSettings missing 'path'
+    with pytest.raises(ValueError, match="Invalid fields"):
+        SourceSettings.create(kind="local", content_type=ContentType.YAML)
+
+    # InlineSourceSettings missing 'content'
+    with pytest.raises(ValueError, match="Invalid fields"):
+        SourceSettings.create(kind="inline", content_type=ContentType.JINJA)
+
+
+def test_local_source_read_file(tmp_path):
+    """Test that LocalSource reads the file content correctly."""
+    file_path = tmp_path / "hello.txt"
+    content = """schema:
+        id: int
     """
-    LocalSourceSettings must be a subclass of SourceSettings.
-    """
-    settings = LocalSourceSettings(
-        content_type=content_type,
-        path="some/path",
+    file_path.write_text(content)
+
+    settings = SourceSettings.create(
+        kind="local",
+        path=str(file_path),
+        content_type=ContentType.YAML,
     )
+    assert isinstance(settings, LocalSourceSettings)
+    local_source = LocalSource(settings=settings)
 
-    assert isinstance(settings, SourceSettings)
+    # read should return content
+    assert local_source.read() == content
 
 
-def test_source_settings_are_frozen(content_type):
-    """
-    Both SourceSettings and its subclasses are frozen dataclasses.
-    """
-    settings = LocalSourceSettings(
-        content_type=content_type,
-        path="immutable/path",
+def test_local_source_file_not_found(tmp_path):
+    """Test that reading a non-existent file raises LocalSourceError."""
+    file_path = tmp_path / "missing.txt"
+    settings = SourceSettings.create(
+        kind="local",
+        path=str(file_path),
+        content_type=ContentType.YAML,
     )
+    assert isinstance(settings, LocalSourceSettings)
+    local_source = LocalSource(settings=settings)
 
-    with pytest.raises(FrozenInstanceError):
-        settings.path = "new/path"  # type: ignore
+    with pytest.raises(LocalSourceError) as exc_info:
+        local_source.read()
 
-    with pytest.raises(FrozenInstanceError):
-        settings.content_type = content_type        # type: ignore
-
-
-def test_local_source_settings_equality(content_type):
-    """
-    Frozen dataclasses should support structural equality.
-    """
-    s1 = LocalSourceSettings(
-        content_type=content_type,
-        path="/a/b",
-    )
-    s2 = LocalSourceSettings(
-        content_type=content_type,
-        path="/a/b",
-    )
-    s3 = LocalSourceSettings(
-        content_type=content_type,
-        path="/different",
-    )
-
-    assert s1 == s2
-    assert s1 != s3
+    # Ensure filename appears in the error message
+    assert file_path.name in str(exc_info.value)

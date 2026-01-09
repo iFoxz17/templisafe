@@ -1,36 +1,59 @@
 import pytest
 from pathlib import Path
+
 from sqltemplater.util.util import ContentType
 from sqltemplater.source.source import Source
 from sqltemplater.source.local_source import LocalSource
-from sqltemplater.settings.source_settings import SourceSettings, LocalSourceSettings
+from sqltemplater.settings.source_settings import (
+    SourceSettings, 
+    LocalSourceSettings
+)
 from sqltemplater.exceptions.source_error import LocalSourceError
 
-def test_source_instantiation_abstract():
-    # Source cannot be instantiated directly
-    with pytest.raises(TypeError):
-        Source(settings=SourceSettings(content_type="dummy"))  # type: ignore
 
-def test_local_source_initialization(tmp_path):
-    # Create a temporary file
+# -----------------------------
+# Abstract Source cannot be instantiated
+# -----------------------------
+def test_source_instantiation_abstract():
+    settings = SourceSettings.create(kind="local", path="dummy.txt", content_type=ContentType.YAML)
+    with pytest.raises(TypeError):
+        Source(settings=settings)  # type: ignore
+
+
+# -----------------------------
+# LocalSource tests
+# -----------------------------
+def test_local_source_read(tmp_path):
     file = tmp_path / "test.txt"
-    text: str = "hello world: test"
+    text = "hello world: test"
     file.write_text(text)
 
-    settings = LocalSourceSettings(content_type=ContentType.YAML, path=str(file))
+    settings: SourceSettings = SourceSettings.create(
+        kind="local",
+        path=str(file),
+        content_type=ContentType.YAML
+    )
+    assert isinstance(settings, LocalSourceSettings)
     local_source = LocalSource(settings=settings)
 
-    # Test path property
-    # assert local_source.path == str(file)
-
-    # Test read method
+    # read should return file content
     assert local_source.read() == text
 
+    # path property
+    assert local_source.path == file
+
+
 def test_local_source_file_not_found(tmp_path):
-    settings = LocalSourceSettings(content_type=ContentType.YAML, path=str(tmp_path / "nonexistent.txt"))
+    file_path = tmp_path / "nonexistent.txt"
+    settings: SourceSettings = SourceSettings.create(
+        kind="local",
+        path=str(file_path),
+        content_type=ContentType.YAML
+    )
+    assert isinstance(settings, LocalSourceSettings)
     local_source = LocalSource(settings=settings)
 
-    # read should raise LocalSourceError if file does not exist
+    # read should raise LocalSourceError
     with pytest.raises(LocalSourceError) as exc_info:
         local_source.read()
-    assert str("nonexistent.txt") in str(exc_info.value)
+    assert file_path.name in str(exc_info.value)

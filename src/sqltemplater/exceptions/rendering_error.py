@@ -1,5 +1,5 @@
 from abc import ABC
-from sqltemplater.query.query_model import QRendering
+# from sqltemplater.query.query_model import QRendering
 
 class RenderingError(Exception, ABC):
     """Raised when query rendering fails or violates diagnostic policy."""
@@ -9,8 +9,8 @@ class RenderingFailureError(RenderingError):
 
     __slots__: tuple[str, ...] = ("rendering",)
 
-    def __init__(self, rendering: QRendering) -> None:
-        self.rendering: QRendering = rendering
+    def __init__(self, rendering) -> None:
+        self.rendering = rendering
 
         # Base message
         message_lines = [

@@ -39,4 +39,4 @@ schema:
     type: bool
     default: true
 
-  metric_threshold: number
+  metric_threshold: float

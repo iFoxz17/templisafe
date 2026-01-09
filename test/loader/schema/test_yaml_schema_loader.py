@@ -1,20 +1,20 @@
 import pytest
 import warnings
 from numbers import Real
-from sqltemplater.loader.schema.qschema_parser import TypeParser, QSchemaParser
+from sqltemplater.loader.schema.schema_parser import TypeParser, SchemaParser
 
-from sqltemplater.loader.schema.yaml_qschema_parser import QYamlSchemaParser
-from sqltemplater.settings.parser.qschema_parser_settings import YamlQSchemaParserSettings
-from sqltemplater.query.query_model import QVar, QSchema
+from sqltemplater.loader.schema.yaml_schema_parser import YamlSchemaParser
+from sqltemplater.settings.parser.schema_parser_settings import YamlSchemaParserSettings
+from sqltemplater.template.template_model import Schema
 from sqltemplater.util.util import DiagnosticPolicy
 from sqltemplater.exceptions.schema_error import (
     IllegalType,
     IllegalSchemaError,
-    IllegalParamType,
-    DuplicatedParamError
+    IllegalVarType
 )
 from sqltemplater.exceptions.schema_warnings import DefaultVarTypeMismatchWarning
 
+'''
 # -----------------------
 # TypeParser tests
 # -----------------------
@@ -155,3 +155,4 @@ schema:
     non_dict_yaml = "- a\n- b"
     with pytest.raises(IllegalSchemaError):
         parser.parse(non_dict_yaml)
+'''

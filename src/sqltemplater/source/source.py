@@ -9,6 +9,7 @@ class Source(ABC):
 
     @property
     def content_type(self) -> ContentType:
+        assert self._settings.content_type is not None
         return self._settings.content_type
 
     @abstractmethod

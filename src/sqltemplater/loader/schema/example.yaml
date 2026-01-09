@@ -1,9 +1,0 @@
-params:
-  table_name: "VENDITE"
-  fields: ["ID", "SUM(IMPORTO) AS IMPORTO_TOTALE"]
-  where_clause: "WHERE CODICE = XXXXX"
-  group_by: "GROUP BY ID"
-  having_field: "HAVING IMPORTO_TOTALE > 10000"
-  operator: "str"
-  id: int
-  threshold: float

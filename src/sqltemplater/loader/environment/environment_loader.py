@@ -4,8 +4,8 @@ from jinja2 import Environment
 from sqltemplater.settings.environment_settings import EnvironmentSettings
 from sqltemplater.loader.environment.environment_manager import EnvironmentManager
 from sqltemplater.source.source import Source
-from sqltemplater.source.content_source import ContentSource
-from sqltemplater.settings.source_settings import ContentSourceSettings
+from sqltemplater.source.inline_source import InlineSource
+from sqltemplater.settings.source_settings import InlineSourceSettings
 from sqltemplater.util.util import ContentType
 from sqltemplater.exceptions.environment_error import IllegalEnvironmentDefinitionError
 
@@ -19,9 +19,12 @@ class EnvironmentLoader:
     __slots__: tuple[str, ...] = ("_default_settings", "_default_settings_source", "_manager")
 
     @staticmethod
-    def _get_default_settings_source() -> ContentSource:
-        settings: ContentSourceSettings = ContentSourceSettings(ContentType.YAML, ENV_PARSER_SETTINGS)
-        return ContentSource(settings)
+    def _get_default_settings_source() -> InlineSource:
+        settings: InlineSourceSettings = InlineSourceSettings(
+            content_type=ContentType.YAML, 
+            content=ENV_PARSER_SETTINGS
+            )
+        return InlineSource(settings)
 
     def __init__(self, default_settings_source: Source | None = None) -> None:
         self._default_settings_source: Source = (

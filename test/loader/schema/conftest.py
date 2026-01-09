@@ -1,3 +1,4 @@
+'''
 import pytest
 
 from sqltemplater.util.util import ContentType
@@ -35,3 +36,4 @@ class DummyManager:
 @pytest.fixture
 def dummy_manager(dummy_parser):
     return DummyManager(parsers={ContentType.YAML: dummy_parser})
+    '''

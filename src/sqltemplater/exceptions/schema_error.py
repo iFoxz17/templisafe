@@ -1,4 +1,5 @@
 from sqltemplater.util.util import ContentType 
+from typing import Any
 
 #---------------------------------------------------------------------------------------------
 # Schema definition
@@ -11,7 +12,7 @@ class SchemaDefinitionError(Exception):
 class IllegalSchemaDefinitionError(SchemaDefinitionError):
     """Raised when an entire schema is illegal."""
     
-    __slots__ = ("msg",)
+    __slots__: tuple[str, ...] = ("msg",)
 
     def __init__(self, msg: str) -> None:
         self.msg = msg
@@ -20,10 +21,10 @@ class IllegalSchemaDefinitionError(SchemaDefinitionError):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(msg={self.msg!r})"
 
-class UnimplementedSchemaParserError(Exception):
+class UnsupportedSchemaParserError(Exception):
     """Raised when trying to instantiate a schema parser that is not implemented."""
     
-    __slots__ = ("content_type",)
+    __slots__: tuple[str, ...] = ("content_type",)
 
     def __init__(self, content_type: ContentType) -> None:
         self.content_type = content_type
@@ -33,7 +34,7 @@ class UnimplementedSchemaParserError(Exception):
         return f"{self.__class__.__name__}(content_type={self.content_type!r})"
 
 #---------------------------------------------------------------------------------------------
-# Schema
+# Schema parsing
 #---------------------------------------------------------------------------------------------
 
 class SchemaError(Exception):
@@ -43,7 +44,7 @@ class SchemaError(Exception):
 class IllegalSchemaError(SchemaError):
     """Raised when an entire schema is illegal."""
     
-    __slots__ = ("msg",)
+    __slots__: tuple[str, ...] = ("msg",)
 
     def __init__(self, msg: str) -> None:
         self.msg = msg
@@ -56,7 +57,7 @@ class IllegalSchemaError(SchemaError):
 class IllegalType(SchemaError):
     """Raised when a parameter has a type not in the allowed types."""
     
-    __slots__ = ("type_", "allowed_types", "aliases")
+    __slots__: tuple[str, ...] = ("type_", "allowed_types", "aliases")
 
     def __init__(self, type_: str, allowed_types: set[str], aliases: list[str] | None = None) -> None:
         """
@@ -86,69 +87,59 @@ class IllegalType(SchemaError):
             f"aliases={self.aliases!r})"
         )
 
-class IllegalParam(SchemaError):
-    """Raised for an illegal parameter in a schema."""
+class IllegalVar(SchemaError):
+    """Raised for an illegal variable in a schema."""
     
-    __slots__ = ("p_index", "p_name", "p_type")
+    __slots__: tuple[str, ...] = ("var_index", "var_name", "var_type")
 
-    def __init__(self, p_index: int, p_name: str, p_type: str, msg: str) -> None:
-        self.p_index = p_index
-        self.p_name = p_name
-        self.p_type = p_type
+    def __init__(self, var_index: int, var_name: str, var_type: str, msg: str) -> None:
+        self.var_index = var_index
+        self.var_name = var_name
+        self.var_type = var_type
         super().__init__(msg)
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(p_index={self.p_index}, "
-            f"p_name={self.p_name!r}, p_type={self.p_type!r}, msg={self.args[0]!r})"
+            f"{self.__class__.__name__}(var_index={self.var_index}, "
+            f"var_name={self.var_name!r}, var_type={self.var_type!r}, msg={self.args[0]!r})"
         )
 
 
-class IllegalParamType(IllegalParam):
-    """Raised when a parameter has a type not in the allowed types."""
+class IllegalVarType(IllegalVar):
+    """Raised when a variable has a type not in the allowed types."""
     
-    __slots__ = ("allowed_types",)
+    __slots__: tuple[str, ...] = ("allowed_types",)
 
-    def __init__(self, p_index: int, p_name: str, p_type: str, allowed_types: list[str]) -> None:
+    def __init__(self, var_index: int, var_name: str, var_type: str, allowed_types: list[str]) -> None:
         self.allowed_types = allowed_types
         msg = (
-            f"Illegal type for parameter {p_index} ('{p_name}'): {p_type}. "
+            f"Illegal type for variable '{var_name}' at index {var_index}: {var_type}. "
             f"Allowed types: {allowed_types}"
         )
-        super().__init__(p_index, p_name, p_type, msg)
+        super().__init__(var_index, var_name, var_type, msg)
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(p_index={self.p_index}, p_name={self.p_name!r}, "
-            f"p_type={self.p_type!r}, allowed_types={self.allowed_types!r})"
+            f"{self.__class__.__name__}(var_index={self.var_index}, var_name={self.var_name!r}, "
+            f"var_type={self.var_type!r}, allowed_types={self.allowed_types!r})"
         )
     
+class IllegalVarDefault(IllegalVar):
+    """Raised when a variable has a default not of the type indicated."""
     
-class DuplicatedParamError(SchemaError):
-    """Error when a parameter is duplicated in the schema."""
-    __slots__ = ("p_name", "first_index", "second_index")
+    __slots__: tuple[str, ...] = ("var_default",)
 
-    def __init__(self, p_name: str, first_index: int, second_index: int) -> None:
-        """
-        Args:
-            p_name: Name of the duplicated parameter.
-            first_index: Index or position of the first occurrence.
-            second_index: Index or position of the second occurrence.
-        """
-        self.p_name = p_name
-        self.first_index = first_index
-        self.second_index = second_index
-        message = (
-            f"Parameter '{p_name}' is duplicated: "
-            f"first occurrence at index {first_index}, "
-            f"second occurrence at index {second_index}"
+    def __init__(self, var_index: int, var_name: str, var_type: type, var_default: Any) -> None:
+        self.var_default = var_default
+        msg = (
+            f"Illegal default value for variable '{var_name}' at index {var_index}: {var_default}. "
+            f"Expecting type {var_type.__name__}, got {type(var_default).__name__}"
         )
-        super().__init__(message)
+        super().__init__(var_index, var_name, var_type.__name__, msg)
 
     def __repr__(self) -> str:
         return (
-            f"{self.__class__.__name__}(p_name={self.p_name!r}, "
-            f"first_index={self.first_index}, second_index={self.second_index})"
+            f"{self.__class__.__name__}(var_index={self.var_index}, var_name={self.var_name!r}, "
+            f"var_type={self.var_type!r}, default={self.var_default!r})"
         )
-
 

@@ -79,27 +79,3 @@ class IllegalParam(BindingError):
             f"{self.__class__.__name__}(p_index={self.p_index}, "
             f"p_name={self.p_name!r}, p_value={self.p_value!r}, msg={self.args[0]!r})"
         )
-
-
-class DuplicatedBindingError(BindingError):
-    """Error when a binding is duplicated in the definition."""
-    __slots__: tuple[str, ...] = ("b_name", "first_index", "second_index")
-
-    def __init__(self, b_name: str, first_index: int, second_index: int) -> None:
-        self.b_name = b_name
-        self.first_index = first_index
-        self.second_index = second_index
-        message = (
-            f"Binding '{b_name}' is duplicated: "
-            f"first occurrence at index {first_index}, "
-            f"second occurrence at index {second_index}"
-        )
-        super().__init__(message)
-
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}(b_name={self.b_name!r}, "
-            f"first_index={self.first_index}, second_index={self.second_index})"
-        )
-
-
