@@ -2,7 +2,7 @@ import pytest
 from pydantic import BaseModel
 from typing import Any
 from types import SimpleNamespace
-from sqltemplater.template.template_model import (
+from templisafe.template.template_model import (
     Outcome,
     Diagnostic,
     Schema,
@@ -17,11 +17,11 @@ from sqltemplater.template.template_model import (
     Rendering,
     Build,
 )
-from sqltemplater.exceptions.var_error import MissingVarError
-from sqltemplater.exceptions.binding_error import MissingBindingError
-from sqltemplater.exceptions.parameterization_error import MissingParameterizationError
-from sqltemplater.exceptions.compilation_error import CompilationFailureError
-from sqltemplater.exceptions.rendering_error import RenderingFailureError
+from templisafe.exceptions.var_error import MissingVarError
+from templisafe.exceptions.binding_error import MissingBindingError
+from templisafe.exceptions.parameterization_error import MissingParameterizationError
+from templisafe.exceptions.compilation_error import CompilationFailureError
+from templisafe.exceptions.rendering_error import RenderingFailureError
 
 
 # ========================

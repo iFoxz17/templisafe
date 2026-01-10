@@ -1,18 +1,18 @@
 import pytest
 import warnings
 from numbers import Real
-from sqltemplater.loader.schema.schema_parser import TypeParser, SchemaParser
+from templisafe.loader.schema.schema_parser import TypeParser, SchemaParser
 
-from sqltemplater.loader.schema.yaml_schema_parser import YamlSchemaParser
-from sqltemplater.settings.parser.schema_parser_settings import YamlSchemaParserSettings
-from sqltemplater.template.template_model import Schema
-from sqltemplater.util.util import DiagnosticPolicy
-from sqltemplater.exceptions.schema_error import (
+from templisafe.loader.schema.yaml_schema_parser import YamlSchemaParser
+from templisafe.settings.parser.schema_parser_settings import YamlSchemaParserSettings
+from templisafe.template.template_model import Schema
+from templisafe.util.util import DiagnosticPolicy
+from templisafe.exceptions.schema_error import (
     IllegalType,
     IllegalSchemaError,
     IllegalVarType
 )
-from sqltemplater.exceptions.schema_warnings import DefaultVarTypeMismatchWarning
+from templisafe.exceptions.schema_warnings import DefaultVarTypeMismatchWarning
 
 '''
 # -----------------------

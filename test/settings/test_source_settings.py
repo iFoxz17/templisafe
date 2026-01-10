@@ -2,17 +2,17 @@ import pytest
 from pathlib import Path
 from pydantic import ValidationError
 
-from sqltemplater.util.util import ContentType
-from sqltemplater.settings.source_settings import (
+from templisafe.util.util import ContentType
+from templisafe.settings.source_settings import (
     SourceSettings,
     SourceKind,
 )
-from sqltemplater.source.local_source import LocalSource
-from sqltemplater.settings.source_settings import (
+from templisafe.source.local_source import LocalSource
+from templisafe.settings.source_settings import (
     LocalSourceSettings, 
     InlineSourceSettings
 )
-from sqltemplater.exceptions.source_error import LocalSourceError
+from templisafe.exceptions.source_error import LocalSourceError
 
 def test_factory_creates_local_source_settings(tmp_path):
     """Test that the factory creates LocalSourceSettings correctly."""

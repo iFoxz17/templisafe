@@ -1,13 +1,13 @@
 import pytest
 from pathlib import Path
 
-from sqltemplater.util.util import ContentType
-from sqltemplater.settings.source_settings import SourceSettings, SourceKind
-from sqltemplater.source.source import Source
-from sqltemplater.source.local_source import LocalSource
-from sqltemplater.source.inline_source import InlineSource
-from sqltemplater.exceptions.source_error import UnsupportedSourceError, ContentTypeResolutionError
-from sqltemplater.source.source_manager import ContentTypeResolver, SourceFactory, SourceManager
+from templisafe.util.util import ContentType
+from templisafe.settings.source_settings import SourceSettings, SourceKind
+from templisafe.source.source import Source
+from templisafe.source.local_source import LocalSource
+from templisafe.source.inline_source import InlineSource
+from templisafe.exceptions.source_error import UnsupportedSourceError, ContentTypeResolutionError
+from templisafe.source.source_manager import ContentTypeResolver, SourceFactory, SourceManager
 
 
 # -----------------------------

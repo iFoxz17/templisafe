@@ -1,6 +1,6 @@
-from sqltemplater.source.inline_source import InlineSource
-from sqltemplater.settings.source_settings import SourceSettings, InlineSourceSettings
-from sqltemplater.util.util import ContentType
+from templisafe.source.inline_source import InlineSource
+from templisafe.settings.source_settings import SourceSettings, InlineSourceSettings
+from templisafe.util.util import ContentType
 
 
 def test_inline_source_initialization_and_read():

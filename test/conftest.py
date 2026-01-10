@@ -1,7 +1,7 @@
 import pytest
-from sqltemplater.source.source import Source
-from sqltemplater.settings.source_settings import SourceSettings, LocalSourceSettings
-from sqltemplater.util.util import ContentType
+from templisafe.source.source import Source
+from templisafe.settings.source_settings import SourceSettings, LocalSourceSettings
+from templisafe.util.util import ContentType
 
 # -----------------------
 # DummySource fixture

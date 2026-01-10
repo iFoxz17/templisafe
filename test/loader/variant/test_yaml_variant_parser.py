@@ -1,8 +1,8 @@
 import pytest
-from sqltemplater.loader.variant.yaml_variant_parser import YamlVariantParser
-from sqltemplater.settings.parser.variant_parser_settings import YamlVariantParserSettings
-from sqltemplater.template.template_model import Binding, VariantSet
-from sqltemplater.exceptions.binding_error import IllegalVariantError
+from templisafe.loader.variant.yaml_variant_parser import YamlVariantParser
+from templisafe.settings.parser.variant_parser_settings import YamlVariantParserSettings
+from templisafe.template.template_model import Binding, VariantSet
+from templisafe.exceptions.binding_error import IllegalVariantError
 
 @pytest.fixture
 def settings() -> YamlVariantParserSettings:

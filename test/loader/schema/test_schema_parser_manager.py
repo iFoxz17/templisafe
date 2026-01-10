@@ -1,9 +1,9 @@
 import pytest
-from sqltemplater.loader.schema.schema_parser_manager import SchemaParserFactory, SchemaParserManager
-from sqltemplater.loader.schema.yaml_schema_parser import YamlSchemaParser
-from sqltemplater.settings.parser.schema_parser_settings import SchemaParserSettings, YamlSchemaParserSettings
-from sqltemplater.util.util import ContentType
-from sqltemplater.exceptions.schema_error import UnsupportedSchemaParserError
+from templisafe.loader.schema.schema_parser_manager import SchemaParserFactory, SchemaParserManager
+from templisafe.loader.schema.yaml_schema_parser import YamlSchemaParser
+from templisafe.settings.parser.schema_parser_settings import SchemaParserSettings, YamlSchemaParserSettings
+from templisafe.util.util import ContentType
+from templisafe.exceptions.schema_error import UnsupportedSchemaParserError
 
 '''
 # -----------------------

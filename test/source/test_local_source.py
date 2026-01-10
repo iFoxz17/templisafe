@@ -1,14 +1,14 @@
 import pytest
 from pathlib import Path
 
-from sqltemplater.util.util import ContentType
-from sqltemplater.source.source import Source
-from sqltemplater.source.local_source import LocalSource
-from sqltemplater.settings.source_settings import (
+from templisafe.util.util import ContentType
+from templisafe.source.source import Source
+from templisafe.source.local_source import LocalSource
+from templisafe.settings.source_settings import (
     SourceSettings, 
     LocalSourceSettings
 )
-from sqltemplater.exceptions.source_error import LocalSourceError
+from templisafe.exceptions.source_error import LocalSourceError
 
 
 # -----------------------------

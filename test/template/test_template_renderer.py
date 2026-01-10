@@ -3,7 +3,7 @@ from typing import Any, Optional
 from pydantic import Field, create_model
 from jinja2 import Environment
 
-from sqltemplater.template.template_model import (
+from templisafe.template.template_model import (
     CompilationSpec,
     Schema,
     Binding,
@@ -12,7 +12,7 @@ from sqltemplater.template.template_model import (
     Template,
     Outcome,
 )
-from sqltemplater.template.template_renderer import TemplateRenderer
+from templisafe.template.template_renderer import TemplateRenderer
 
 
 @pytest.fixture

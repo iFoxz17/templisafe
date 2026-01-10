@@ -1,9 +1,9 @@
 '''
 import pytest
 
-from sqltemplater.util.util import ContentType
-from sqltemplater.loader.schema.qschema_parser import QSchemaParser
-from sqltemplater.loader.schema.qschema_parser_manager import QSchemaParserFactory, QSchemaParserManager
+from templisafe.util.util import ContentType
+from templisafe.loader.schema.qschema_parser import QSchemaParser
+from templisafe.loader.schema.qschema_parser_manager import QSchemaParserFactory, QSchemaParserManager
 
 # -----------------------
 # DummyParser fixture

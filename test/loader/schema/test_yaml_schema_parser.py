@@ -1,12 +1,12 @@
 import pytest
 from pydantic import BaseModel
-from sqltemplater.exceptions.schema_error import (
+from templisafe.exceptions.schema_error import (
     IllegalSchemaError,
     IllegalVarType,
     IllegalVarDefault
 )
-from sqltemplater.loader.schema.yaml_schema_parser import YamlSchemaParser
-from sqltemplater.settings.parser.schema_parser_settings import YamlSchemaParserSettings
+from templisafe.loader.schema.yaml_schema_parser import YamlSchemaParser
+from templisafe.settings.parser.schema_parser_settings import YamlSchemaParserSettings
 
 
 @pytest.fixture

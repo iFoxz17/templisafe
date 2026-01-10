@@ -1,4 +1,4 @@
-# SQLTemplater
+# Templisafe
 
 ## Installation
 

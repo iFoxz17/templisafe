@@ -1,6 +1,6 @@
 from typing import Any
 from pydantic import create_model, Field
-from sqltemplater.template.template_model import (
+from templisafe.template.template_model import (
     Template,
     Schema,
     Compilation,
@@ -8,7 +8,7 @@ from sqltemplater.template.template_model import (
     Template,
     Diagnostic
 )
-from sqltemplater.template.template_compiler import TemplateCompiler
+from templisafe.template.template_compiler import TemplateCompiler
 
 def test_compile_no_schema_creates_empty_schema():
     compiler = TemplateCompiler("_index")
@@ -43,8 +43,8 @@ def test_compile_with_matching_schema_success():
 
 def test_compile_with_defaults_and_constraints():
     from pydantic import create_model, Field
-    from sqltemplater.template.template_model import Template, Schema, Outcome
-    from sqltemplater.template.template_compiler import TemplateCompiler
+    from templisafe.template.template_model import Template, Schema, Outcome
+    from templisafe.template.template_compiler import TemplateCompiler
 
     # Create a schema with defaults and constraints
     fields: dict[str, Any] = {
