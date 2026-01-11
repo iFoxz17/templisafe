@@ -1,6 +1,6 @@
 from typing import Any
 from abc import ABC, abstractmethod
-from pydantic import BaseModel, model_validator, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 from templisafe.loader.parser import Parser
 from templisafe.settings.parser.variant_parser_settings import VariantParserSettings
@@ -8,96 +8,90 @@ from templisafe.settings.parser.parser_settings import ParserSettings
 from templisafe.template.template_model import VariantSet, Variant, Binding
 from templisafe.exceptions.binding_error import IllegalVariantError
 
-VARIANT_DEFAULT_NAME: str = "default"
+# ---------------------------------------------------------------------------
+# Variant models (validation only)
+# ---------------------------------------------------------------------------
 
-class VariantModel(BaseModel):
-    """Accepts either a single variant or a set of them."""
+class VariantExplicitModel(BaseModel):
+    """Represents a named variant with its bindings (explicit)."""
+    name: str
+    bindings: dict[str, Any] = Field(...)
 
-    variant_by_name: dict[str, dict[str, Any]] = Field(default_factory=dict)
-    default_name: str
+    model_config = ConfigDict(frozen=True)
 
-    model_config = ConfigDict({
-        "frozen": True
-    })
-
-    @model_validator(mode="before")
-    def normalize_variants(cls, values: Any) -> Any:
-        if not isinstance(values, dict):
-            raise TypeError("No dict provided")
-        
-        input_data = values.get("variant_by_name", {})
-        default_name = values.get("default_name", VARIANT_DEFAULT_NAME)
-
-        if not isinstance(input_data, dict):
-            raise TypeError("variant_by_name must be a dict")
-
-        # Detect if it's a single parameterization (values are not dicts)
-        if all(not isinstance(v, dict) for v in input_data.values()):
-            values["variant_by_name"] = {default_name: input_data}
-        # If it's already dict of dicts, leave as is
-        elif all(isinstance(v, dict) for v in input_data.values()):
-            values["variant_by_name"] = input_data
-        else:
-            raise TypeError("Mixed types in variant_by_name dict are not allowed")
-
-        return values
+# ---------------------------------------------------------------------------
+# Variant parser
+# ---------------------------------------------------------------------------
 
 class VariantParser(Parser, ABC):
-    """Abstract base class for parsing and validating QVariants."""
+    """Abstract base class for parsing and validating variants."""
 
-    __slots__: tuple[str, ...] = ('_settings',)
-    
+    __slots__: tuple[str, ...] = ("_settings",)
+
     def __init__(self, settings: VariantParserSettings) -> None:
         super().__init__(settings)
-       
+
     def _parse(self, b_index: int, b_name: str, b_value: Any) -> Binding:
         return Binding(index=b_index, name=b_name, value=b_value)
-        
-    def _parse_variants(self, variants_definition_dict: dict[str, Any]) -> VariantSet:
+
+    def _parse_variants(self, variants_definition_list: list[dict[str, Any]]) -> VariantSet:
         settings: ParserSettings = self._settings
         assert isinstance(settings, VariantParserSettings)
-        
+
         variants_key: str = settings.variants_key
-        if variants_key not in variants_definition_dict:
-            raise IllegalVariantError(f"Missing top-level variants key '{variants_key}'")
-        
-        variants_context_dict: Any = variants_definition_dict[variants_key]
-        if not isinstance(variants_context_dict, dict):
-            raise IllegalVariantError(f'Illegal variants definition')
-        
-        variants_models: VariantModel
-        try:
-            variants_models = VariantModel(
-                variant_by_name=variants_context_dict,
-                default_name=settings.default_variants_name
-            )
-        except Exception as e:
-            raise IllegalVariantError(f'Illegal variants definition') from e 
+        implicit_counter: int = 1
+        all_variants: dict[str, VariantExplicitModel] = {}
 
-        variants_by_name: dict[str, Variant] = {}
+        for variant_definition in variants_definition_list:
+            if variants_key not in variant_definition:
+                raise IllegalVariantError(
+                    f"Missing top-level variants key '{variants_key}' in definition {variant_definition}"
+                )
 
-        for (variant_name, bindings_dict) in variants_models.variant_by_name.items():
-            bindings_by_name: dict[str, Binding] = {}
+            variant_context: Any = variant_definition[variants_key]
+            if not isinstance(variant_context, dict):
+                raise IllegalVariantError("Top-level variants context must be a dict")
 
-            for i, (b_name, b_value) in enumerate(bindings_dict.items()):
-                if not isinstance(b_name, str):
-                    raise IllegalVariantError(f'Illegal definition of binding {i}: {b_name} is not a string')
-                binding: Binding = self._parse(i, b_name, b_value)
-                
-                # b_name cannot be duplicated since it is a dict key
-                bindings_by_name[b_name] = binding
+            # If top-level keys look like variant names
+            for key, val in variant_context.items():
+                if isinstance(val, dict):
+                    # Explicit variant
+                    var_name: str = key
+                    bindings: dict[str, Any] = val
+                else:
+                    # Implicit variant: key is a binding name
+                    var_name: str = f"{settings.default_variants_name}_{implicit_counter}"
+                    bindings: dict[str, Any] = variant_context
+                    implicit_counter += 1
+                    
+                    # Only one implicit variant per top-level dict
+                    if var_name in all_variants:
+                        raise IllegalVariantError(f"Duplicated variant: {var_name}")
+                    all_variants[var_name] = VariantExplicitModel(name=var_name, bindings=bindings)
+                    break
 
-            variants_by_name[variant_name] = Variant(
-                name=variant_name,
-                bindings=bindings_by_name.values()
-            )
+                if var_name in all_variants:
+                    raise IllegalVariantError(f"Duplicated variant: {var_name}")
 
-        return VariantSet(list(variants_by_name.values()))
-    
+                all_variants[var_name] = VariantExplicitModel(name=var_name, bindings=bindings)
+
+        # Convert to VariantSet
+        variant_objs: list[Variant] = []
+        for v_model in all_variants.values():
+            bindings_list: list[Binding] = [
+                self._parse(i, b_name, b_value)
+                for i, (b_name, b_value) in enumerate(v_model.bindings.items())
+            ]
+            variant_objs.append(Variant(name=v_model.name, bindings=bindings_list))
+
+        return VariantSet(variant_objs)
+
+
     @abstractmethod
     def _parse_raw(self, variants: str) -> dict[str, Any]:
+        """Parse a raw variant string into a dictionary with the top-level variants key."""
         pass
 
-    def parse(self, variants: str) -> VariantSet:
-        return self._parse_variants(self._parse_raw(variants))
-        
+    def parse(self, variants: list[str]) -> VariantSet:
+        variants_dicts: list[dict[str, Any]] = [self._parse_raw(v) for v in variants]
+        return self._parse_variants(variants_dicts)

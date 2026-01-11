@@ -2,9 +2,9 @@ import yaml
 from overrides import overrides
 from typing import Any
 
-from templisafe.settings.parser.variant_parser_settings import YamlVariantParserSettings
 from templisafe.exceptions.binding_error import IllegalVariantError
 from templisafe.loader.variant.variant_parser import VariantParser
+from templisafe.settings.parser.variant_parser_settings import YamlVariantParserSettings
 
 class YamlVariantParser(VariantParser):
 

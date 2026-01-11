@@ -68,7 +68,8 @@ class VariantLoader(Loader):
         assert isinstance(parser_settings, VariantParserSettings)
         return parser_settings
 
-    def load(self, params_source: Source, parser_settings_source: Source | None = None) -> VariantSet:
+    def load(self, variants_sources: list[Source], parser_settings_source: Source | None = None) -> VariantSet:
         parser_settings: VariantParserSettings = self._create_settings(parser_settings_source)
         parser: VariantParser = self._manager.get_or_create(parser_settings)
-        return parser.parse(params_source.read())
+        variants_str: list[str] = [vs.read() for vs in variants_sources]
+        return parser.parse(variants_str)

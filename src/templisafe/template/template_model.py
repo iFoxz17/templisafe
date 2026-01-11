@@ -41,11 +41,11 @@ class Schema:
 class Template:
     """Represents a template and its referenced variables."""
 
-    template: str
+    template_str: str
     vars: set[str]
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(template={self.template!r}, vars={self.vars!r})"
+        return f"{self.__class__.__name__}(template_str={self.template_str!r}, vars={self.vars!r})"
 
 @dataclass(frozen=True, slots=True)
 class CompilationSpec:
@@ -149,7 +149,7 @@ class VariantSet:
 class Parameterization:
     """Holds a variant with its effectively rendered template."""
     variant: Variant
-    rendered: str
+    rendered_str: str
 
 @dataclass(frozen=True, slots=True)
 class RenderingSpec:

@@ -6,5 +6,6 @@ class DiagnosticPolicy(IntEnum):
     RAISE_WARNINGS = 2
 
 class ContentType(Enum):
+    TEXT = "text"
     YAML = "yaml"
     JINJA = "j2"

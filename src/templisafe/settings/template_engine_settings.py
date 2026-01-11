@@ -2,12 +2,10 @@ from typing import Any, Callable
 from pydantic import BaseModel, ConfigDict, ValidationError
 from enum import Enum
 
-
 class TemplateEngineKind(str, Enum):
     JINJA = "jinja"
     DJANGO = "django"
     CUSTOM = "custom"
-
 
 class TemplateEngineSettings(BaseModel):
     kind: TemplateEngineKind
@@ -33,11 +31,20 @@ class TemplateEngineSettings(BaseModel):
                 kwargs["kind"] = TemplateEngineKind(kind)
             except ValueError:
                 raise ValueError(f"Invalid template engine kind: {kind!r}")
-
-        # Ensure 'config' exists and is a dict
+            
+        # If config is a string, parse it
         config: Any = kwargs.get("config", {})
+        if isinstance(config, str):
+            import yaml
+            try:
+                config = yaml.safe_load(kwargs['config'])
+            except yaml.YAMLError as e:
+                raise e
+
+        # At this point 'config' must exist and be a dict    
         if not isinstance(config, dict):
             raise ValueError(f"Expected 'config' to be a dict, found {type(config).__name__}")
+        kwargs["config"] = config
 
         # Determine correct subclass if kind is CUSTOM
         if kwargs["kind"] == TemplateEngineKind.CUSTOM:
@@ -59,8 +66,32 @@ class TemplateEngineSettings(BaseModel):
 
 
 class CustomTemplateEngineSettings(TemplateEngineSettings):
-    extract_variables_func: Callable[[str], set[str]]
-    render_func: Callable[[str, dict[str, Any]], str]
+    """
+    Settings for a custom template engine backed by user-provided callables.
+
+    This settings class allows users to plug in arbitrary template logic
+    without implementing a concrete `TemplateEngine` subclass.
+
+    Required callables:
+
+    - `extract_variables_func(template: str, config: dict[str, Any]) -> set[str]`
+        A callable that receives the template string and the engine configuration,
+        and returns the set of variable names used by the template.
+
+    - `render_func(
+            template: str,
+            variables: dict[str, Any],
+            config: dict[str, Any]
+        ) -> str`
+        A callable that receives the template string, a mapping of variable values,
+        and the engine configuration, and returns the rendered string.
+
+    The `config` field is passed unchanged to both callables and can be used
+    to control custom rendering behavior.
+    """
+
+    extract_variables_func: Callable[[str, dict[str, Any]], set[str]]
+    render_func: Callable[[str, dict[str, Any], dict[str, Any]], str]
 
     # Make the model immutable and forbid extra fields
     model_config = ConfigDict(

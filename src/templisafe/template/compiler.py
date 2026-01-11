@@ -10,7 +10,7 @@ from templisafe.template.template_model import (
     Compilation
 )
 
-class TemplateCompiler:
+class Compiler:
     """Compiles a template against a schema, producing a compilation result with diagnostics."""
 
     __slots__: tuple[str, ...] = ("_index_key",)

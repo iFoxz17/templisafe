@@ -14,11 +14,11 @@ from templisafe.engine.custom_template_engine import CustomTemplateEngine
 def custom_settings() -> CustomTemplateEngineSettings:
     """Custom settings for testing the CustomTemplateEngine."""
     
-    def extract_vars(template: str) -> Set[str]:
+    def extract_vars(template: str, config: dict[str, Any]) -> Set[str]:
         # Trivial extraction: find '{{a}}' as a variable
         return {"a"} if "{{a}}" in template else set()
     
-    def render(template: str, values: Dict[str, Any]) -> str:
+    def render(template: str, values: Dict[str, Any], config: dict[str, Any]) -> str:
         # Trivial render: replace '{{a}}' with values['a'] or '1'
         return template.replace("{{a}}", str(values.get("a", 1)))
 

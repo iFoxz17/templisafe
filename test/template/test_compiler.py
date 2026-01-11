@@ -8,11 +8,11 @@ from templisafe.template.template_model import (
     Template,
     Diagnostic
 )
-from templisafe.template.template_compiler import TemplateCompiler
+from templisafe.template.compiler import Compiler
 
 def test_compile_no_schema_creates_empty_schema():
-    compiler = TemplateCompiler("_index")
-    template = Template(template="SELECT {{ a }}, {{ b }} FROM Table", vars=set(["a", "b"]))
+    compiler = Compiler("_index")
+    template = Template(template_str="SELECT {{ a }}, {{ b }} FROM Table", vars=set(["a", "b"]))
     compilation: Compilation = compiler.compile(template)
 
     assert compilation.outcome == Outcome.SUCCESS
@@ -30,9 +30,9 @@ def test_compile_with_matching_schema_success():
     fields: dict[str, Any] = {"a": (int, ...), "b": (str, ...)}
     model_cls = create_model("TestSchema", **fields)
     schema = Schema(model_cls=model_cls)
-    template = Template(template="SELECT {{ a }}, {{ b }} FROM Table", vars=set(["a", "b"]))
+    template = Template(template_str="SELECT {{ a }}, {{ b }} FROM Table", vars=set(["a", "b"]))
     
-    compiler = TemplateCompiler("_index")
+    compiler = Compiler("_index")
     compilation = compiler.compile(template, schema)
 
     assert compilation.outcome == Outcome.SUCCESS
@@ -44,7 +44,7 @@ def test_compile_with_matching_schema_success():
 def test_compile_with_defaults_and_constraints():
     from pydantic import create_model, Field
     from templisafe.template.template_model import Template, Schema, Outcome
-    from templisafe.template.template_compiler import TemplateCompiler
+    from templisafe.template.compiler import Compiler
 
     # Create a schema with defaults and constraints
     fields: dict[str, Any] = {
@@ -56,11 +56,11 @@ def test_compile_with_defaults_and_constraints():
     schema = Schema(model_cls=model_cls)
 
     template = Template(
-        template="SELECT {{ age }}, {{ name }}, {{ score }} FROM Users",
+        template_str="SELECT {{ age }}, {{ name }}, {{ score }} FROM Users",
         vars=set(["age", "name", "score"])
     )
 
-    compiler = TemplateCompiler("_index")
+    compiler = Compiler("_index")
     compilation = compiler.compile(template, schema)
 
     # Compilation should succeed with no diagnostics
@@ -103,9 +103,9 @@ def test_compile_with_unused_variables_generates_warnings():
     }
     model_cls = create_model("TestSchema", **fields)
     schema = Schema(model_cls=model_cls)
-    template = Template(template="SELECT {{ x }}, {{ y }} FROM Table", vars=set(["x", "y"]))
+    template = Template(template_str="SELECT {{ x }}, {{ y }} FROM Table", vars=set(["x", "y"]))
 
-    compiler = TemplateCompiler("_index")
+    compiler = Compiler("_index")
     compilation = compiler.compile(template, schema)
 
     assert compilation.outcome == Outcome.WARNING
@@ -121,9 +121,9 @@ def test_compile_with_undeclared_variables_generates_error():
     fields: dict[str, Any] = {"x": (int, Field(..., json_schema_extra={"_index": 0}))}
     model_cls = create_model("TestSchema", **fields)
     schema = Schema(model_cls=model_cls)
-    template = Template(template="SELECT {{ x }}, {{ y }} FROM Table", vars=set(["x", "y"]))
+    template = Template(template_str="SELECT {{ x }}, {{ y }} FROM Table", vars=set(["x", "y"]))
 
-    compiler = TemplateCompiler("_index")
+    compiler = Compiler("_index")
     compilation = compiler.compile(template, schema)
 
     assert compilation.outcome == Outcome.ERROR
@@ -142,9 +142,9 @@ def test_compile_with_unused_and_undeclared_mixed():
     }
     model_cls = create_model("TestSchema", **fields)
     schema = Schema(model_cls=model_cls)
-    template = Template(template="SELECT {{ x }}, {{ y }} FROM Table", vars=set(["x", "y"]))
+    template = Template(template_str="SELECT {{ x }}, {{ y }} FROM Table", vars=set(["x", "y"]))
 
-    compiler = TemplateCompiler("_index")
+    compiler = Compiler("_index")
     compilation = compiler.compile(template, schema)
 
     # If there are any undeclared vars, outcome is ERROR

@@ -38,7 +38,7 @@ def schema_model():
 
 @pytest.fixture
 def compiled(schema_model):
-    template = Template(template="{{ a }} {{ b }}", vars={"a", "b"})
+    template = Template(template_str="{{ a }} {{ b }}", vars={"a", "b"})
     spec = CompilationSpec(template=template, schema=schema_model)
     return Compilation(outcome=Outcome.SUCCESS, message="ok", _spec=spec)
 
@@ -88,7 +88,7 @@ def test_qrenderingspec_basic():
     p1 = Parameterization(v1, "rendered1")
     spec = RenderingSpec([p1])
     assert spec.names == {"v1"}
-    assert spec["v1"].rendered == "rendered1"
+    assert spec["v1"].rendered_str == "rendered1"
     assert list(spec) == [p1]
     assert spec.get("v1") == p1
     assert spec.get("missing") is None
@@ -140,7 +140,7 @@ def test_qbuild_outcome():
     p1 = Parameterization(v1, "rendered")
     spec = RenderingSpec([p1])
     rendering = Rendering(Outcome.WARNING, "warn", _spec=spec)
-    template = Template(template="{{ a }}", vars={"a"})
+    template = Template(template_str="{{ a }}", vars={"a"})
     schema = Schema(model_cls=BaseModel)
     comp_spec = CompilationSpec(template, schema)
     compilation = Compilation(Outcome.SUCCESS, "ok", _spec=comp_spec)

@@ -49,7 +49,7 @@ class TemplateEngineManager:
     def __init__(self) -> None:
         self._factory: TemplateEngineFactory = TemplateEngineFactory()
 
-    def create(self, settings: TemplateEngineSettings) -> TemplateEngine:
+    def get_or_create(self, settings: TemplateEngineSettings) -> TemplateEngine:
         """
         Create a new TemplateEngine instance for the given settings.
         """

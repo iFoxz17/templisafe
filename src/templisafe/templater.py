@@ -1,21 +1,23 @@
 import logging
-from jinja2 import Environment
 import warnings
+from typing import Any, Iterable
 
 from templisafe.util.util import DiagnosticPolicy, ContentType
 
-from templisafe.source.source_manager import SourceManager
 from templisafe.settings.source_settings import SourceSettings
+from templisafe.settings.template_engine_settings import TemplateEngineSettings, TemplateEngineKind
+
+from templisafe.source.source_manager import SourceManager
 from templisafe.source.source import Source
 
 from templisafe.exceptions.template_error import UnsupportedQTemplateParserError
 from templisafe.exceptions.compilation_error import CompilationFailureError
 from templisafe.exceptions.rendering_error import RenderingError
 
-from templisafe.loader.loader import LoaderContext
-from templisafe.loader.loader_facade import QLoaderFacade
-from templisafe.loader.template.template_loader import JinjaTemplateLoaderContext
-from templisafe.loader.environment.environment_loader import EnvironmentLoader
+from templisafe.engine.template_engine import TemplateEngine
+from templisafe.engine.template_engine_manager import TemplateEngineManager
+
+from templisafe.loader.loader_facade import LoaderFacade
 from templisafe.loader.template.template_loader import TemplateLoader
 from templisafe.loader.schema.schema_loader import SchemaLoader
 from templisafe.loader.variant.variant_loader import VariantLoader
@@ -30,85 +32,28 @@ from templisafe.template.template_model import (
     Rendering,
     Build
 )
-from templisafe.template.template_compiler import TemplateCompiler
-from templisafe.template.template_renderer import TemplateRenderer
-
-class TemplisafeFactory:
-    def create_env_loader(self) -> EnvironmentLoader:
-        return EnvironmentLoader()    
-
-    def _create_loader_facade(
-        self,
-        env: Environment,
-        env_loader: EnvironmentLoader,
-        template_loader_settings_source: Source | None = None,
-        schema_loader_settings_source: Source | None = None,
-        variant_loader_settings_source: Source | None = None
-    ) -> QLoaderFacade:
-        return QLoaderFacade(
-            env_loader=env_loader,
-            template_loader=TemplateLoader(default_env=env, default_settings_source=template_loader_settings_source),
-            schema_loader=SchemaLoader(schema_loader_settings_source),
-            variant_loader=VariantLoader(variant_loader_settings_source)
-        ) 
-    
-    def create(
-            self,
-            env_loader_settings_source: Source | None = None,
-            template_loader_settings_source: Source | None = None,
-            schema_loader_settings_source: Source | None = None,
-            variant_loader_settings_source: Source | None = None,
-            policy: DiagnosticPolicy | None = None
-            ) -> Templisafe:
-        
-        source_manager: SourceManager = SourceManager()
-        
-        env_loader: EnvironmentLoader = EnvironmentLoader(env_loader_settings_source)
-        env: Environment = env_loader.load()
-        loader_facade: QLoaderFacade = QLoaderFacade(
-            env_loader=env_loader,
-            template_loader=TemplateLoader(default_env=env, default_settings_source=template_loader_settings_source),
-            schema_loader=SchemaLoader(schema_loader_settings_source),
-            variant_loader=VariantLoader(variant_loader_settings_source)
-        )
-
-        compiler: TemplateCompiler = TemplateCompiler("_index")      # TODO: fix
-        renderer: TemplateRenderer = TemplateRenderer(env, "_index")   # TODO: fix
-    
-        return Templisafe(
-            source_manager=source_manager,
-            loader_facade=loader_facade,
-            compiler=compiler,
-            renderer=renderer,
-            policy=policy or DiagnosticPolicy.LOG_WARNINGS,
-            env=env 
-        )
+from templisafe.template.compiler import Compiler
+from templisafe.template.renderer import Renderer
 
 
-class Templisafe:
-    __slots__ = ("_source_manager", "_loader_facade", "_compiler", "_renderer", "_policy", "_env")
+class Templater:
+    __slots__ = ("_source_manager", "_template_engine_manager", "_loader_facade", "_compiler", "_renderer", "_policy")
     
     def __init__(
         self,
         source_manager: SourceManager,
-        loader_facade: QLoaderFacade,
-        compiler: TemplateCompiler,
-        renderer: TemplateRenderer,
-        policy: DiagnosticPolicy,
-        env: Environment | None = None
+        template_engine_manager: TemplateEngineManager,
+        loader_facade: LoaderFacade,
+        compiler: Compiler,
+        renderer: Renderer,
+        policy: DiagnosticPolicy
     ) -> None:
         self._source_manager: SourceManager = source_manager
-        self._loader_facade: QLoaderFacade = loader_facade
-        self._compiler: TemplateCompiler = compiler
-        self._renderer: TemplateRenderer = renderer
+        self._template_engine_manager: TemplateEngineManager = template_engine_manager
+        self._loader_facade: LoaderFacade = loader_facade
+        self._compiler: Compiler = compiler
+        self._renderer: Renderer = renderer
         self._policy: DiagnosticPolicy = policy
-        self._env: Environment = env or loader_facade.load_environemnt()
-
-    def _resolve_env(self, env_settings_source: Source | SourceSettings | None = None) -> Environment:
-        return (
-            self._loader_facade.load_environemnt(self._resolve_source(env_settings_source))
-            if env_settings_source else self._env
-        )
 
     def _handle_outcome(
         self,
@@ -141,32 +86,50 @@ class Templisafe:
         if isinstance(source_or_settings, SourceSettings):
             return self._source_manager.get_or_create(source_or_settings)
         return source_or_settings
+    
+    def _resolve_sources(
+            self,
+            sources: Source | SourceSettings | list[Source | SourceSettings],
+            ) -> list[Source]:
+        if not isinstance(sources, list):
+            sources = [sources]
+        
+        resolved: list[Source] = []
+        for s in sources:
+            src: Source | None = self._resolve_source(s)
+            if src is None:
+                raise ValueError(f"Could not resolve source: {s!r}")
+            resolved.append(src)
+
+        return resolved
+    
+    def _resolve_template_engine(self, template_engine_settings_source: Source | None) -> TemplateEngine | None:
+        if template_engine_settings_source is None:
+            return None
+        
+        config_str: str = template_engine_settings_source.read()
+        template_engine_settings = TemplateEngineSettings.create(config=config_str)
+        return self._template_engine_manager.get_or_create(template_engine_settings)
+            
         
     def compile(
         self, 
         template_source: Source | SourceSettings,
+        *,
         schema_source: Source | SourceSettings | None = None,
-        env_settings_source: Source | SourceSettings | None = None,
-        template_parser_settings_source: Source | SourceSettings | None = None,
+        template_engine_settings_source: Source | SourceSettings | None = None,
         schema_parser_settings_source: Source | SourceSettings | None = None
     ) -> Compilation:
-        env: Environment = self._resolve_env(self._resolve_source(env_settings_source))
-
+        
         template_actual_source: Source | None = self._resolve_source(template_source)
         assert template_actual_source is not None
-        match template_actual_source.content_type:
-            case ContentType.JINJA:
-                context: LoaderContext = JinjaTemplateLoaderContext(env=env)
-            case _:
-                content_type: ContentType | None = template_actual_source.content_type
-                assert content_type is not None
-                raise UnsupportedQTemplateParserError(content_type)
-
+        
+        template_engine_settings_actual_source: Source | None = self._resolve_source(template_engine_settings_source)
+        engine: TemplateEngine | None = self._resolve_template_engine(template_engine_settings_actual_source)
         template: Template = self._loader_facade.load_template(
-            template_source=template_actual_source,
-            context=context,
-            parser_settings_source=self._resolve_source(template_parser_settings_source)
-        )
+                template_source=template_actual_source,
+                engine=engine
+            )
 
         schema_actual_source: Source | None = self._resolve_source(schema_source)
         schema: Schema | None = (
@@ -195,23 +158,26 @@ class Templisafe:
     def render(
         self, 
         compiled: CompilationSpec,
-        variants_source: Source | SourceSettings,
-        env_settings_source: Source | SourceSettings | None = None,
+        variants_sources: Source | SourceSettings | list[Source | SourceSettings],
+        *,
+        template_engine_settings_source: Source | SourceSettings | None = None,
         variant_parser_settings_source: Source | SourceSettings | None = None
     ) -> Rendering:
 
-        variants_actual_source: Source | None = self._resolve_source(variants_source)
-        assert variants_actual_source is not None
+        variants_actual_sources: list[Source] = self._resolve_sources(variants_sources)
+        
         parameterizations: VariantSet = self._loader_facade.load_variants(
-            variants_source=variants_actual_source,
+            variants_sources=variants_actual_sources,
             parser_settings_source=self._resolve_source(variant_parser_settings_source)
         )
 
-        env: Environment = self._resolve_env(env_settings_source)
+        template_engine_settings_actual_source: Source | None = self._resolve_source(template_engine_settings_source)
+        engine: TemplateEngine | None = self._resolve_template_engine(template_engine_settings_actual_source)
+        
         rendering: Rendering = self._renderer.render(
             compiled=compiled, 
             variants_set=parameterizations, 
-            env=env
+            engine=engine
             )
 
         self._handle_outcome(
@@ -230,14 +196,15 @@ class Templisafe:
     def validate(
         self, 
         compiled: CompilationSpec,
-        variants_source: Source | SourceSettings,
+        variants_sources: Source | SourceSettings | list[Source | SourceSettings],
+        *,
         variant_parser_settings_source: Source | SourceSettings | None = None
     ) -> Rendering:
 
-        variants_actual_source: Source | None = self._resolve_source(variants_source)
-        assert variants_actual_source is not None
+        variants_actual_sources: list[Source] = self._resolve_sources(variants_sources)
+        
         variant_set: VariantSet = self._loader_facade.load_variants(
-            variants_source=variants_actual_source,
+            variants_sources=variants_actual_sources,
             parser_settings_source=self._resolve_source(variant_parser_settings_source)
         )
 
@@ -259,9 +226,10 @@ class Templisafe:
     def build(
         self, 
         template_source: Source | SourceSettings,
-        variants_source: Source | SourceSettings,
+        variants_sources: Source | SourceSettings | list[Source | SourceSettings],
         schema_source: Source | SourceSettings | None = None,
-        template_parser_settings_source: Source | SourceSettings | None = None,
+        *,
+        template_engine_settings_source: Source | SourceSettings | None = None,
         schema_parser_settings_source: Source | SourceSettings | None = None,
         variant_parser_settings_source: Source | SourceSettings | None = None,
     ) -> Build:
@@ -269,7 +237,7 @@ class Templisafe:
         compilation: Compilation = self.compile(
             template_source=template_source,
             schema_source=schema_source,
-            template_parser_settings_source=template_parser_settings_source,
+            template_engine_settings_source=template_engine_settings_source,
             schema_parser_settings_source=schema_parser_settings_source
         )
 
@@ -277,10 +245,73 @@ class Templisafe:
 
         rendering: Rendering = self.render(
             compiled=compilation.compiled,
-            variants_source=variants_source,
+            variants_sources=variants_sources,
+            template_engine_settings_source=template_engine_settings_source,
             variant_parser_settings_source=variant_parser_settings_source
         )
 
         return Build(compilation=compilation, rendering=rendering)
+    
+
+class TemplaterFactory:
+    
+    def _create_loader_facade(
+        self,
+        template_engine: TemplateEngine,
+        *,
+        template_loader_settings_source: Source | None = None,
+        schema_loader_settings_source: Source | None = None,
+        variant_loader_settings_source: Source | None = None
+    ) -> LoaderFacade:
+        return LoaderFacade(
+            template_loader=TemplateLoader(default_engine=template_engine, default_settings_source=template_loader_settings_source),
+            schema_loader=SchemaLoader(schema_loader_settings_source),
+            variant_loader=VariantLoader(variant_loader_settings_source)
+        )
+
+    def _create_template_engine_settings(self, template_engine_settings_source: Source | None = None) -> TemplateEngineSettings:
+        if template_engine_settings_source is None:
+            return TemplateEngineSettings.create(kind=TemplateEngineKind.JINJA)
+        
+        config_str: str = template_engine_settings_source.read()
+        return TemplateEngineSettings.create(config=config_str)
+        
+    def create(
+            self,
+            *,
+            template_engine_settings_source: Source | None = None,
+            template_loader_settings_source: Source | None = None,
+            schema_loader_settings_source: Source | None = None,
+            variant_loader_settings_source: Source | None = None,
+            policy: DiagnosticPolicy | None = None
+            ) -> Templater:
+        
+        source_manager: SourceManager = SourceManager()
+
+        template_engine_manager: TemplateEngineManager = TemplateEngineManager()
+        template_engine_settings: TemplateEngineSettings = self._create_template_engine_settings(
+            template_engine_settings_source
+        )
+        
+        def_template_engine: TemplateEngine = template_engine_manager.get_or_create(template_engine_settings)
+
+        loader_facade: LoaderFacade = self._create_loader_facade(
+            def_template_engine,
+            template_loader_settings_source=template_loader_settings_source,
+            schema_loader_settings_source=schema_loader_settings_source,
+            variant_loader_settings_source=variant_loader_settings_source
+            )
+
+        compiler: Compiler = Compiler("_index")      # TODO: fix
+        renderer: Renderer = Renderer(def_template_engine, "_index")   # TODO: fix
+    
+        return Templater(
+            source_manager=source_manager,
+            template_engine_manager=template_engine_manager,
+            loader_facade=loader_facade,
+            compiler=compiler,
+            renderer=renderer,
+            policy=policy or DiagnosticPolicy.LOG_WARNINGS,
+        )
 
 

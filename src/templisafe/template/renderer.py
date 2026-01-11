@@ -1,9 +1,9 @@
 from typing import Any
 from pydantic import BaseModel, ValidationError
-from jinja2 import Environment, Template
+
+from templisafe.engine.template_engine import TemplateEngine
 from templisafe.template.template_model import (
     CompilationSpec,
-    Binding,
     Schema,
     VariantSet,
     Parameterization,
@@ -13,13 +13,13 @@ from templisafe.template.template_model import (
     Rendering
 )
 
-class TemplateRenderer:
+class Renderer:
     """Renders compiled templates using Jinja2 Environment, with diagnostics."""
 
-    __slots__: tuple[str, ...] = ("_env", "_index_key")
+    __slots__: tuple[str, ...] = ("_engine", "_index_key")
 
-    def __init__(self, env: Environment, index_key: str) -> None:
-        self._env: Environment = env
+    def __init__(self, engine: TemplateEngine, index_key: str) -> None:
+        self._engine: TemplateEngine = engine
         self._index_key: str = index_key
 
     def _extract_index(self, model_type: type[BaseModel], var_name: str) -> int | None:
@@ -134,10 +134,10 @@ class TemplateRenderer:
         self,
         compiled: CompilationSpec,
         variants_set: VariantSet,
-        env: Environment | None = None,
+        engine: TemplateEngine | None = None,
     ) -> Rendering:
         """Render the compiled query for all variants using the given or default Jinja environment."""
-        env_to_use = env or self._env
+        engine_to_use: TemplateEngine = engine or self._engine
 
         validation: Rendering = self.validate(compiled, variants_set)
         if validation.outcome == Outcome.ERROR:
@@ -158,10 +158,8 @@ class TemplateRenderer:
                 binding_value_map[var_name] = field.default
 
             # Render template
-            template: Template = env_to_use.from_string(compiled.template.template)
-            rendered_str: str = template.render(**binding_value_map)
-
-            param = Parameterization(variant=variant, rendered=rendered_str)
+            rendered_str: str = engine_to_use.render(compiled.template.template_str, binding_value_map)
+            param = Parameterization(variant=variant, rendered_str=rendered_str)
             parameterizations.append(param)
 
         rendered_query = RenderingSpec(parameterizations)
@@ -179,4 +177,4 @@ class TemplateRenderer:
         )
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(_env={self._env!r}, _index_key={self._index_key!r})"
+        return f"{self.__class__.__name__}(_engine={self._engine!r}, _index_key={self._index_key!r})"
