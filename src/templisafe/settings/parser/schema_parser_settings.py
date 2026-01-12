@@ -73,7 +73,7 @@ class SchemaParserSettings(ParserSettings, ABC):
         if kind is not None:
             if isinstance(kind, str):
                 try:
-                    kind = ContentType(kind)
+                    kind = ContentType(kind.lower())
                 except ValueError:
                     raise ValueError(f"Invalid kind: {kind!r}")
             subclass = cls._KIND_MAP.get(kind)

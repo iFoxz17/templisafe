@@ -24,8 +24,7 @@ _ALLOWED_TYPES_KEY: str = 'allowed_types'
 _TYPE_ALIASES_KEY: str = 'type_aliases'
 
 SCHEMA_PARSER_SETTINGS_YAML: str = f"""
-default_diagnostic_policy: RAISE_WARNINGS
-parser_type: YAML
+kind: YAML
 {_SCHEMA_KEY_KEY}: schema
 {_TYPE_KEY_KEY}: type
 {_DEFAULT_KEY_KEY}: default

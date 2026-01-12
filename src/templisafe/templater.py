@@ -1,13 +1,11 @@
 import logging
 import warnings
-from typing import Any, Iterable
 
-from templisafe.util.util import DiagnosticPolicy, ContentType
+from templisafe.util.util import DiagnosticPolicy
 
+from templisafe.settings.settings import Settings
 from templisafe.settings.source_settings import SourceSettings
-from templisafe.settings.compiler_settings import CompilerSettings
-from templisafe.settings.renderer_settings import RendererSettings
-from templisafe.settings.template_engine_settings import TemplateEngineSettings, TemplateEngineKind
+from templisafe.settings.template_engine_settings import TemplateEngineSettings
 
 from templisafe.source.source_manager import SourceManager
 from templisafe.source.source import Source
@@ -20,9 +18,6 @@ from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_manager import TemplateEngineManager
 
 from templisafe.loader.loader_facade import LoaderFacade
-from templisafe.loader.template.template_loader import TemplateLoader
-from templisafe.loader.schema.schema_loader import SchemaLoader, _INDEX_KEY_KEY
-from templisafe.loader.variant.variant_loader import VariantLoader
 
 from templisafe.template.template_model import (
     CompilationSpec, 
@@ -77,7 +72,7 @@ class Templater:
                 logging.debug(warning_msg)
                 if self._policy is DiagnosticPolicy.STRICT:
                     raise error_cls(outcome_obj)
-                elif self._policy is DiagnosticPolicy.BASE:
+                elif self._policy is DiagnosticPolicy.LOG:
                     warnings.warn(warning_msg, stacklevel=2)
             case Outcome.ERROR:
                 logging.debug(error_msg)
@@ -109,8 +104,9 @@ class Templater:
         if template_engine_settings_source is None:
             return None
         
-        config_str: str = template_engine_settings_source.read()
-        template_engine_settings = TemplateEngineSettings.create(config=config_str)
+        template_engine_settings: Settings = self._loader_facade.load_settings(template_engine_settings_source)
+        if not isinstance(template_engine_settings, TemplateEngineSettings):
+            raise ValueError(f"Wrong template engine settings provided: {template_engine_settings}")
         return self._template_engine_manager.get_or_create(template_engine_settings)
             
         
@@ -253,80 +249,3 @@ class Templater:
         )
 
         return Build(compilation=compilation, rendering=rendering)
-    
-
-class TemplaterFactory:
-    
-    def _create_loader_facade(
-        self,
-        template_engine: TemplateEngine,
-        *,
-        template_loader_settings_source: Source | None = None,
-        schema_loader_settings_source: Source | None = None,
-        variant_loader_settings_source: Source | None = None
-    ) -> LoaderFacade:
-        return LoaderFacade(
-            template_loader=TemplateLoader(default_engine=template_engine, default_settings_source=template_loader_settings_source),
-            schema_loader=SchemaLoader(schema_loader_settings_source),
-            variant_loader=VariantLoader(variant_loader_settings_source)
-        )
-
-    def _create_template_engine_settings(self, template_engine_settings_source: Source | None = None) -> TemplateEngineSettings:
-        if template_engine_settings_source is None:
-            return TemplateEngineSettings.create(kind=TemplateEngineKind.JINJA)
-        
-        config_str: str = template_engine_settings_source.read()
-        return TemplateEngineSettings.create(config=config_str)
-        
-    def create(
-            self,
-            *,
-            template_engine_settings_source: Source | None = None,
-            template_loader_settings_source: Source | None = None,
-            schema_loader_settings_source: Source | None = None,
-            variant_loader_settings_source: Source | None = None,
-            compiler_settings_source: Source | None = None,
-            renderer_settings_source: Source | None = None,
-            policy: DiagnosticPolicy | None = None
-            ) -> Templater:
-        
-        source_manager: SourceManager = SourceManager()
-
-        template_engine_manager: TemplateEngineManager = TemplateEngineManager()
-        template_engine_settings: TemplateEngineSettings = self._create_template_engine_settings(
-            template_engine_settings_source
-        )
-        
-        def_template_engine: TemplateEngine = template_engine_manager.get_or_create(template_engine_settings)
-
-        loader_facade: LoaderFacade = self._create_loader_facade(
-            def_template_engine,
-            template_loader_settings_source=template_loader_settings_source,
-            schema_loader_settings_source=schema_loader_settings_source,
-            variant_loader_settings_source=variant_loader_settings_source
-            )
-
-        compiler_settings: CompilerSettings = (
-            CompilerSettings.from_yaml(compiler_settings_source.read())
-            if compiler_settings_source
-            else CompilerSettings.create(index_key=_INDEX_KEY_KEY)
-        )
-        compiler: Compiler = Compiler(compiler_settings)
-
-        renderer_settings: RendererSettings = (
-            RendererSettings.from_yaml(renderer_settings_source.read())
-            if renderer_settings_source
-            else RendererSettings.create(index_key=_INDEX_KEY_KEY)
-        )
-        renderer: Renderer = Renderer(def_template_engine, renderer_settings)
-    
-        return Templater(
-            source_manager=source_manager,
-            template_engine_manager=template_engine_manager,
-            loader_facade=loader_facade,
-            compiler=compiler,
-            renderer=renderer,
-            policy=policy or DiagnosticPolicy.BASE,
-        )
-
-

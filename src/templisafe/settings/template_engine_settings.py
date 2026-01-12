@@ -33,7 +33,7 @@ class TemplateEngineSettings(Settings):
 
         if isinstance(kind, str):
             try:
-                kwargs["kind"] = TemplateEngineKind(kind)
+                kwargs["kind"] = TemplateEngineKind(kind.lower())
             except ValueError:
                 raise ValueError(f"Invalid template engine kind: {kind!r}")
 

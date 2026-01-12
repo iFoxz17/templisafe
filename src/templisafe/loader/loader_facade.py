@@ -56,7 +56,7 @@ class LoaderFacade:
             if parser_settings_source
             else None
         )
-        if not isinstance(parser_settings, SchemaParserSettings):
+        if parser_settings and not isinstance(parser_settings, SchemaParserSettings):
             raise ValueError(f"Wrong schema parser settings provided: {parser_settings}")
         return self._schema_loader.load(
             schema_source, 
@@ -73,7 +73,7 @@ class LoaderFacade:
             if parser_settings_source
             else None
         )
-        if not isinstance(parser_settings, VariantParserSettings):
+        if parser_settings and not isinstance(parser_settings, VariantParserSettings):
             raise ValueError(f"Wrong variant parser settings provided: {parser_settings}")
         return self._variant_loader.load(
             variants_sources, 

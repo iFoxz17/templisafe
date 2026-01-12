@@ -12,7 +12,7 @@ from templisafe.util.util import ContentType
 from templisafe.exceptions.template_error import IllegalQTemplateDefinitionError
 
 TEMPLATE_PARSER_SETTINGS_YAML: str = """
-default_diagnostic_policy: RAISE_WARNINGS
+dict_placeholder: value
 """
 
 class TemplateLoader:

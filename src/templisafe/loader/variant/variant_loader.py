@@ -10,14 +10,13 @@ from templisafe.settings.parser.variant_parser_settings import YamlVariantParser
 from templisafe.util.util import ContentType
 from templisafe.exceptions.binding_error import IllegalParamsDefinitionError, UnsupportedQVariantParserError
 
-_PARAMS_KEY_KEY: str = 'params_key'
-_DEFAULT_QVARIANT_KEY_KEY: str = 'default_variant_name'
+_VARIANTS_KEY_KEY: str = 'variants_key'
+_DEFAULT_VARIANTS_KEY_KEY: str = 'default_variants_name'
 
 VARIANT_PARSER_SETTINGS_YAML: str = f"""
-default_diagnostic_policy: RAISE_WARNINGS
-parser_type: YAML
-{_PARAMS_KEY_KEY}: params
-{_DEFAULT_QVARIANT_KEY_KEY}: default
+kind: YAML
+{_VARIANTS_KEY_KEY}: variants
+{_DEFAULT_VARIANTS_KEY_KEY}: default
 """
 
 class VariantLoader:

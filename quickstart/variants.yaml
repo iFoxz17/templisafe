@@ -1,5 +1,5 @@
-params:
-  all_ages:                       # parameterization 1
+variants:
+  all_ages:                       # variant 1
     select_columns:
       - u.id
       - u.name
@@ -18,7 +18,7 @@ params:
     metric_updated_flag: true
     metric_threshold: 54.12
 
-  limited_ages:                   # parameterization 2
+  limited_ages:                   # variant 2
     select_columns:
       - u.id
       - u.name

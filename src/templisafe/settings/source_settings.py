@@ -48,7 +48,7 @@ class SourceSettings(Settings, ABC):
 
         if isinstance(kind, str):
             try:
-                kind = SourceKind(kind)
+                kind = SourceKind(kind.lower())
             except ValueError:
                 raise ValueError(f"Invalid kind: {kind!r}")
 
