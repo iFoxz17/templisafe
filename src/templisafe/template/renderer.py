@@ -2,6 +2,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from templisafe.engine.template_engine import TemplateEngine
+from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.template.template_model import (
     CompilationSpec,
     Schema,
@@ -16,16 +17,16 @@ from templisafe.template.template_model import (
 class Renderer:
     """Renders compiled templates using Jinja2 Environment, with diagnostics."""
 
-    __slots__: tuple[str, ...] = ("_engine", "_index_key")
+    __slots__: tuple[str, ...] = ("_engine", "_settings")
 
-    def __init__(self, engine: TemplateEngine, index_key: str) -> None:
+    def __init__(self, engine: TemplateEngine, settings: RendererSettings) -> None:
         self._engine: TemplateEngine = engine
-        self._index_key: str = index_key
+        self._settings = settings
 
     def _extract_index(self, model_type: type[BaseModel], var_name: str) -> int | None:
         field = model_type.model_fields[var_name]
         json_dict = field.json_schema_extra
-        index_value = json_dict.get(self._index_key) if isinstance(json_dict, dict) else None
+        index_value = json_dict.get(self._settings.index_key) if isinstance(json_dict, dict) else None
         index: int | None = index_value if isinstance(index_value, int) else None
         return index
 
@@ -177,4 +178,4 @@ class Renderer:
         )
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(_engine={self._engine!r}, _index_key={self._index_key!r})"
+        return f"{self.__class__.__name__}(_engine={self._engine!r}, _settings={self._settings!r})"

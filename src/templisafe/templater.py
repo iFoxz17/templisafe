@@ -5,6 +5,8 @@ from typing import Any, Iterable
 from templisafe.util.util import DiagnosticPolicy, ContentType
 
 from templisafe.settings.source_settings import SourceSettings
+from templisafe.settings.compiler_settings import CompilerSettings
+from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings, TemplateEngineKind
 
 from templisafe.source.source_manager import SourceManager
@@ -19,7 +21,7 @@ from templisafe.engine.template_engine_manager import TemplateEngineManager
 
 from templisafe.loader.loader_facade import LoaderFacade
 from templisafe.loader.template.template_loader import TemplateLoader
-from templisafe.loader.schema.schema_loader import SchemaLoader
+from templisafe.loader.schema.schema_loader import SchemaLoader, _INDEX_KEY_KEY
 from templisafe.loader.variant.variant_loader import VariantLoader
 
 from templisafe.template.template_model import (
@@ -37,7 +39,7 @@ from templisafe.template.renderer import Renderer
 
 
 class Templater:
-    __slots__ = ("_source_manager", "_template_engine_manager", "_loader_facade", "_compiler", "_renderer", "_policy")
+    __slots__: tuple[str, ...] = ("_source_manager", "_template_engine_manager", "_loader_facade", "_compiler", "_renderer", "_policy")
     
     def __init__(
         self,
@@ -73,9 +75,9 @@ class Templater:
                 logging.debug(success_msg)
             case Outcome.WARNING:
                 logging.debug(warning_msg)
-                if self._policy is DiagnosticPolicy.RAISE_WARNINGS:
+                if self._policy is DiagnosticPolicy.STRICT:
                     raise error_cls(outcome_obj)
-                elif self._policy is DiagnosticPolicy.LOG_WARNINGS:
+                elif self._policy is DiagnosticPolicy.BASE:
                     warnings.warn(warning_msg, stacklevel=2)
             case Outcome.ERROR:
                 logging.debug(error_msg)
@@ -115,8 +117,8 @@ class Templater:
     def compile(
         self, 
         template_source: Source | SourceSettings,
-        *,
         schema_source: Source | SourceSettings | None = None,
+        *,
         template_engine_settings_source: Source | SourceSettings | None = None,
         schema_parser_settings_source: Source | SourceSettings | None = None
     ) -> Compilation:
@@ -283,6 +285,8 @@ class TemplaterFactory:
             template_loader_settings_source: Source | None = None,
             schema_loader_settings_source: Source | None = None,
             variant_loader_settings_source: Source | None = None,
+            compiler_settings_source: Source | None = None,
+            renderer_settings_source: Source | None = None,
             policy: DiagnosticPolicy | None = None
             ) -> Templater:
         
@@ -302,8 +306,19 @@ class TemplaterFactory:
             variant_loader_settings_source=variant_loader_settings_source
             )
 
-        compiler: Compiler = Compiler("_index")      # TODO: fix
-        renderer: Renderer = Renderer(def_template_engine, "_index")   # TODO: fix
+        compiler_settings: CompilerSettings = (
+            CompilerSettings.from_yaml(compiler_settings_source.read())
+            if compiler_settings_source
+            else CompilerSettings.create(index_key=_INDEX_KEY_KEY)
+        )
+        compiler: Compiler = Compiler(compiler_settings)
+
+        renderer_settings: RendererSettings = (
+            RendererSettings.from_yaml(renderer_settings_source.read())
+            if renderer_settings_source
+            else RendererSettings.create(index_key=_INDEX_KEY_KEY)
+        )
+        renderer: Renderer = Renderer(def_template_engine, renderer_settings)
     
         return Templater(
             source_manager=source_manager,
@@ -311,7 +326,7 @@ class TemplaterFactory:
             loader_facade=loader_facade,
             compiler=compiler,
             renderer=renderer,
-            policy=policy or DiagnosticPolicy.LOG_WARNINGS,
+            policy=policy or DiagnosticPolicy.BASE,
         )
 
 

@@ -1,16 +1,12 @@
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
 
-from templisafe.util.util import DiagnosticPolicy, ContentType
+from templisafe.util.util import ContentType
+from templisafe.settings.settings import Settings
 
-class ParserSettings(BaseModel, ABC):
-    policy: DiagnosticPolicy | None = None
+class ParserSettings(Settings, ABC):
 
-    model_config = {
-        "frozen": True
-    }
 
     @property
     @abstractmethod
-    def content_type(self) -> ContentType:
+    def kind(self) -> ContentType:
         pass

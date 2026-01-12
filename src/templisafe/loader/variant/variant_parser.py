@@ -2,7 +2,6 @@ from typing import Any
 from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field, ConfigDict
 
-from templisafe.loader.parser import Parser
 from templisafe.settings.parser.variant_parser_settings import VariantParserSettings
 from templisafe.settings.parser.parser_settings import ParserSettings
 from templisafe.template.template_model import VariantSet, Variant, Binding
@@ -23,13 +22,13 @@ class VariantExplicitModel(BaseModel):
 # Variant parser
 # ---------------------------------------------------------------------------
 
-class VariantParser(Parser, ABC):
+class VariantParser(ABC):
     """Abstract base class for parsing and validating variants."""
 
     __slots__: tuple[str, ...] = ("_settings",)
 
     def __init__(self, settings: VariantParserSettings) -> None:
-        super().__init__(settings)
+        self._settings: VariantParserSettings = settings
 
     def _parse(self, b_index: int, b_name: str, b_value: Any) -> Binding:
         return Binding(index=b_index, name=b_name, value=b_value)

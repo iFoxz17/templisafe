@@ -1,108 +1,119 @@
 import pytest
-from pathlib import Path
-from pydantic import ValidationError
 
-from templisafe.util.util import ContentType
 from templisafe.settings.source_settings import (
     SourceSettings,
+    InlineSourceSettings,
+    LocalSourceSettings,
     SourceKind,
 )
-from templisafe.source.local_source import LocalSource
-from templisafe.settings.source_settings import (
-    LocalSourceSettings, 
-    InlineSourceSettings
-)
-from templisafe.exceptions.source_error import LocalSourceError
+from templisafe.exceptions.settings_error import SettingsError
 
-def test_factory_creates_local_source_settings(tmp_path):
-    """Test that the factory creates LocalSourceSettings correctly."""
-    file_path = tmp_path / "test.yaml"
-    file_path.write_text("dummy content")
+# -----------------------------
+# Fixtures / example configs
+# -----------------------------
+INLINE_CONFIG_DICT = {"kind": "inline", "content": "SELECT 1"}
+LOCAL_CONFIG_DICT = {"kind": "local", "path": "/tmp/query.sql"}
 
-    settings = SourceSettings.create(
-        kind="local",
-        path=str(file_path),
-    )
-    assert isinstance(settings, LocalSourceSettings)
-    assert settings.kind == SourceKind.LOCAL
-    assert settings.path == str(file_path)
-    assert settings.content_type is None
+INLINE_YAML = """
+kind: inline
+content: "SELECT 1"
+"""
 
-    # Ensure frozen
-    with pytest.raises(Exception):
-        settings.path = "/tmp/other.yaml"
+LOCAL_YAML = """
+kind: local
+path: "/tmp/query.sql"
+"""
+
+INLINE_JSON = '{"kind": "inline", "content": "SELECT 1"}'
+LOCAL_JSON = '{"kind": "local", "path": "/tmp/query.sql"}'
 
 
-def test_factory_creates_inline_source_settings():
-    """Test that the factory creates InlineSourceSettings correctly."""
-    content = "SELECT 1"
-    context: dict[str, object] = {
-        "kind": "inline",
-        "content": content,
-        "content_type": ContentType.JINJA,
-    }
-    settings = SourceSettings.create(**context)
+# -----------------------------
+# Tests for create()
+# -----------------------------
+def test_create_inline_from_dict():
+    instance = SourceSettings.create(**INLINE_CONFIG_DICT)
+    assert isinstance(instance, InlineSourceSettings)
+    assert instance.kind == SourceKind.INLINE
+    assert instance.content == "SELECT 1"
 
-    assert isinstance(settings, InlineSourceSettings)
-    assert settings.kind == SourceKind.INLINE
-    assert settings.content == content
-    assert settings.content_type == ContentType.JINJA
+def test_create_local_from_dict():
+    instance = SourceSettings.create(**LOCAL_CONFIG_DICT)
+    assert isinstance(instance, LocalSourceSettings)
+    assert instance.kind == SourceKind.LOCAL
+    assert instance.path == "/tmp/query.sql"
 
-    # Ensure frozen
-    with pytest.raises(Exception):
-        settings.content = "new content"
+def test_create_invalid_kind_raises():
+    with pytest.raises(ValueError, match="Invalid kind: 'invalid'"):
+        SourceSettings.create(kind="invalid")
 
+def test_create_missing_kind_raises():
+    with pytest.raises(ValueError, match="Missing 'kind'"):
+        SourceSettings.create()
 
-def test_factory_invalid_kind():
-    """Test that creating with an invalid kind raises a ValueError."""
-    with pytest.raises(ValueError, match="Invalid kind"):
-        SourceSettings.create(kind="invalid", path="dummy.txt")
-
-
-def test_factory_missing_required_fields():
-    """Test that missing required fields raises a ValueError."""
-    # LocalSourceSettings missing 'path'
-    with pytest.raises(ValueError, match="Invalid fields"):
-        SourceSettings.create(kind="local", content_type=ContentType.YAML)
-
-    # InlineSourceSettings missing 'content'
-    with pytest.raises(ValueError, match="Invalid fields"):
-        SourceSettings.create(kind="inline", content_type=ContentType.JINJA)
+def test_create_invalid_field_raises():
+    # Extra field not allowed
+    with pytest.raises(ValueError):
+        SourceSettings.create(kind="inline", content="SELECT 1", foo=123)
 
 
-def test_local_source_read_file(tmp_path):
-    """Test that LocalSource reads the file content correctly."""
-    file_path = tmp_path / "hello.txt"
-    content = """schema:
-        id: int
-    """
-    file_path.write_text(content)
+# -----------------------------
+# Tests for from_dict()
+# -----------------------------
+def test_from_dict_inline():
+    instance = InlineSourceSettings.from_dict(INLINE_CONFIG_DICT)
+    assert isinstance(instance, InlineSourceSettings)
+    assert instance.content == "SELECT 1"
 
-    settings = SourceSettings.create(
-        kind="local",
-        path=str(file_path),
-        content_type=ContentType.YAML,
-    )
-    assert isinstance(settings, LocalSourceSettings)
-    local_source = LocalSource(settings=settings)
-
-    # read should return content
-    assert local_source.read() == content
+def test_from_dict_local():
+    instance = LocalSourceSettings.from_dict(LOCAL_CONFIG_DICT)
+    assert isinstance(instance, LocalSourceSettings)
+    assert instance.path == "/tmp/query.sql"
 
 
-def test_local_source_file_not_found(tmp_path):
-    """Test that reading a non-existent file raises LocalSourceError."""
-    file_path = tmp_path / "missing.txt"
-    settings = SourceSettings.create(
-        kind="local",
-        path=str(file_path),
-        content_type=ContentType.YAML,
-    )
-    assert isinstance(settings, LocalSourceSettings)
-    local_source = LocalSource(settings=settings)
+# -----------------------------
+# Tests for from_yaml()
+# -----------------------------
+def test_from_yaml_inline():
+    instance = InlineSourceSettings.from_yaml(INLINE_YAML)
+    assert isinstance(instance, InlineSourceSettings)
+    assert instance.content == "SELECT 1"
 
-    with pytest.raises(LocalSourceError) as exc_info:
-        local_source.read()
+def test_from_yaml_local():
+    instance = LocalSourceSettings.from_yaml(LOCAL_YAML)
+    assert isinstance(instance, LocalSourceSettings)
+    assert instance.path == "/tmp/query.sql"
 
-    # Ensure filename appears in the error message
-    assert file_path.name in str(exc_info.value)
+def test_from_yaml_invalid_yaml_raises():
+    invalid_yaml = "this: [unbalanced"
+    with pytest.raises(SettingsError):
+        InlineSourceSettings.from_yaml(invalid_yaml)
+
+def test_from_yaml_not_a_dict_raises():
+    yaml_list = "- item1\n- item2"
+    with pytest.raises(SettingsError, match="Parsed YAML is not a dictionary"):
+        InlineSourceSettings.from_yaml(yaml_list)
+
+
+# -----------------------------
+# Tests for from_json()
+# -----------------------------
+def test_from_json_inline():
+    instance = InlineSourceSettings.from_json(INLINE_JSON)
+    assert isinstance(instance, InlineSourceSettings)
+    assert instance.content == "SELECT 1"
+
+def test_from_json_local():
+    instance = LocalSourceSettings.from_json(LOCAL_JSON)
+    assert isinstance(instance, LocalSourceSettings)
+    assert instance.path == "/tmp/query.sql"
+
+def test_from_json_invalid_json_raises():
+    invalid_json = '{"foo": "bar",}'
+    with pytest.raises(SettingsError):
+        InlineSourceSettings.from_json(invalid_json)
+
+def test_from_json_not_a_dict_raises():
+    json_list = '["a", "b"]'
+    with pytest.raises(SettingsError, match="Parsed JSON is not a dictionary"):
+        InlineSourceSettings.from_json(json_list)

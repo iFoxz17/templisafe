@@ -4,10 +4,7 @@ from typing import Any
 from templisafe.template.template_model import VariantSet
 from templisafe.loader.variant.variant_parser import VariantParser
 from templisafe.source.source import Source
-from templisafe.source.inline_source import InlineSource
-from templisafe.settings.source_settings import InlineSourceSettings
 from templisafe.loader.variant.variant_parser_manager import VariantParserManager
-from templisafe.loader.loader import Loader, LoaderContext
 from templisafe.settings.parser.parser_settings import ParserSettings
 from templisafe.settings.parser.variant_parser_settings import YamlVariantParserSettings, VariantParserSettings
 from templisafe.util.util import ContentType
@@ -16,60 +13,26 @@ from templisafe.exceptions.binding_error import IllegalParamsDefinitionError, Un
 _PARAMS_KEY_KEY: str = 'params_key'
 _DEFAULT_QVARIANT_KEY_KEY: str = 'default_variant_name'
 
-VARIANT_PARSER_SETTINGS: str = f"""
+VARIANT_PARSER_SETTINGS_YAML: str = f"""
 default_diagnostic_policy: RAISE_WARNINGS
 parser_type: YAML
 {_PARAMS_KEY_KEY}: params
 {_DEFAULT_QVARIANT_KEY_KEY}: default
 """
 
-class VariantLoader(Loader):
+class VariantLoader:
 
-    __slots__: tuple[str, ...] = ('_manager',)
+    __slots__: tuple[str, ...] = ('_default_settings', '_manager',)
 
-    @staticmethod
-    def _get_default_settings_source() -> InlineSource:
-        settings: InlineSourceSettings = InlineSourceSettings(
-            content_type=ContentType.YAML, 
-            content=VARIANT_PARSER_SETTINGS
-            )
-        return InlineSource(settings)
-
-    def __init__(self, default_settings_source: Source | None = None) -> None:
-        super().__init__(
-            default_settings_source or VariantLoader._get_default_settings_source()
-        )
+    def __init__(self, default_settings: VariantParserSettings | None = None) -> None:
+        self._default_settings: VariantParserSettings = default_settings or VariantParserSettings.from_yaml(VARIANT_PARSER_SETTINGS_YAML)
         self._manager: VariantParserManager = VariantParserManager()
 
-    @overrides
-    def _load_parser_settings(self, settings_source: Source, context: LoaderContext | None = None) -> VariantParserSettings:
-        raw: str = settings_source.read()
-        config: dict[str, Any] = self._load_config(raw, IllegalParamsDefinitionError)
-        parser_type: ContentType = settings_source.content_type 
-        try:
-            match parser_type:
-                case ContentType.YAML:
-                    return YamlVariantParserSettings(
-                        variants_key=config[_PARAMS_KEY_KEY],
-                        default_variants_name=config[_DEFAULT_QVARIANT_KEY_KEY]
-                    )
-        except KeyError as e:
-            raise IllegalParamsDefinitionError(f"Missing required key in params config: {e}") from e
+    def _resolve_settings(self, parser_settings: VariantParserSettings | None = None) -> VariantParserSettings:
+        return parser_settings or self._default_settings
 
-        raise UnsupportedQVariantParserError(parser_type)
-
-    def _create_settings(self, parser_settings_source: Source | None = None) -> VariantParserSettings:
-        parser_settings: ParserSettings = (
-            self._default_settings 
-            if parser_settings_source is None 
-            else self._load_parser_settings(parser_settings_source)
-        ) 
-        
-        assert isinstance(parser_settings, VariantParserSettings)
-        return parser_settings
-
-    def load(self, variants_sources: list[Source], parser_settings_source: Source | None = None) -> VariantSet:
-        parser_settings: VariantParserSettings = self._create_settings(parser_settings_source)
+    def load(self, variants_sources: list[Source], parser_settings: VariantParserSettings | None = None) -> VariantSet:
+        parser_settings = self._resolve_settings(parser_settings)
         parser: VariantParser = self._manager.get_or_create(parser_settings)
         variants_str: list[str] = [vs.read() for vs in variants_sources]
         return parser.parse(variants_str)

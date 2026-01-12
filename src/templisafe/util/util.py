@@ -1,11 +1,11 @@
-from enum import IntEnum, Enum
+from enum import Enum
 
-class DiagnosticPolicy(IntEnum):
-    ERRORS_ONLY = 0
-    LOG_WARNINGS = 1
-    RAISE_WARNINGS = 2
+class DiagnosticPolicy(str, Enum):
+    IGNORE = "ignore"
+    LOG = "log"
+    STRICT = "strict"
 
 class ContentType(Enum):
     TEXT = "text"
     YAML = "yaml"
-    JINJA = "j2"
+    JSON = "json"

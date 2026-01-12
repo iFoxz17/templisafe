@@ -19,8 +19,8 @@ from templisafe.util.util import ContentType
 #---------------------------------------------------------------------------------------------
 
 CONTENT_TYPE_MAP: Mapping[str, ContentType] = MappingProxyType({
-    ".j2": ContentType.JINJA,
-    ".jinja": ContentType.JINJA,
+    ".j2": ContentType.TEXT,
+    ".jinja": ContentType.TEXT,
     ".yaml": ContentType.YAML,
 })
 
@@ -60,8 +60,8 @@ class ContentTypeResolver:
         ext: str = self._extract_extension(path)
         try:
             return self._content_type_map[ext]
-        except KeyError as exc:
-            raise ContentTypeResolutionError(settings) from exc
+        except KeyError as e:
+            raise ContentTypeResolutionError(settings) from e
 
 #---------------------------------------------------------------------------------------------
 # Factory

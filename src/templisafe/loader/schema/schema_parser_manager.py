@@ -25,7 +25,7 @@ class SchemaParserFactory:
         type_: type[SchemaParserSettings] = type(settings)
         parser_type: type[SchemaParser] | None = SchemaParserFactory._PARSER_MAP.get(type_)
         if parser_type is None:
-            raise UnsupportedSchemaParserError(settings.content_type)
+            raise UnsupportedSchemaParserError(settings.kind)
         return parser_type(settings)
 
 #---------------------------------------------------------------------------------------------

@@ -1,100 +1,114 @@
-from typing import Any, Callable
-from pydantic import BaseModel, ConfigDict, ValidationError
+from typing import Any, Callable, Type, TypeVar, cast
+from pydantic import ValidationError
 from enum import Enum
+from overrides import overrides
+
+from templisafe.settings.settings import Settings
+
+T = TypeVar("T", bound="TemplateEngineSettings")
+
 
 class TemplateEngineKind(str, Enum):
     JINJA = "jinja"
     DJANGO = "django"
     CUSTOM = "custom"
 
-class TemplateEngineSettings(BaseModel):
+
+class TemplateEngineSettings(Settings):
     kind: TemplateEngineKind
     config: dict[str, Any]
 
-    # Make the model immutable and forbid extra fields
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid"
-    )
-
     @classmethod
-    def create(cls, **kwargs) -> "TemplateEngineSettings":
-        """Factory method to create a TemplateEngineSettings instance."""
+    def _prepare_kwargs(cls: Type[T], kwargs: dict[str, Any]) -> dict[str, Any]:
+        """
+        Normalize 'kind' and 'config', perform subclass dispatch for CUSTOM kind,
+        and return (target_cls, normalized_kwargs).
 
+        Raises if multiple config sources are provided.
+        """
+       
         kind: Any = kwargs.get("kind")
         if kind is None:
             raise ValueError("Missing 'kind' field to determine template engine type.")
 
-        # Convert string to TemplateEngineKind enum if necessary
         if isinstance(kind, str):
             try:
                 kwargs["kind"] = TemplateEngineKind(kind)
             except ValueError:
                 raise ValueError(f"Invalid template engine kind: {kind!r}")
-            
-        # If config is a string, parse it
-        config: Any = kwargs.get("config", {})
-        if isinstance(config, str):
-            import yaml
-            try:
-                config = yaml.safe_load(kwargs['config'])
-            except yaml.YAMLError as e:
-                raise e
 
-        # At this point 'config' must exist and be a dict    
-        if not isinstance(config, dict):
-            raise ValueError(f"Expected 'config' to be a dict, found {type(config).__name__}")
-        kwargs["config"] = config
+        # Check for multiple config sources
+        config_sources = ["config", "config_yaml", "config_json"]
+        provided = [key for key in config_sources if key in kwargs]
+        if len(provided) > 1:
+            raise ValueError(
+                f"Multiple configuration sources provided: {provided}. "
+                "Please provide only one of 'config', 'config_yaml' or 'config_json'."
+            )
 
-        # Determine correct subclass if kind is CUSTOM
+        # Normalize 'config' to a dict
+        cfg: dict[str, Any] = {}
+        if "config" in kwargs:
+            maybe_cfg: Any = kwargs.pop("config")
+            if not isinstance(maybe_cfg, dict):
+                raise ValueError(f"Expected 'config' to be a dict, got {type(maybe_cfg).__name__}")
+            cfg = maybe_cfg
+        elif "config_yaml" in kwargs:
+            cfg_yaml: Any = kwargs.pop("config_yaml")
+            if not isinstance(cfg_yaml, str):
+                raise ValueError(f"Expected 'config_yaml' to be a str, got {type(cfg_yaml).__name__}")
+            cfg = cls._load_yaml(cfg_yaml)
+        elif "config_json" in kwargs:
+            cfg_json: Any = kwargs.pop("config_json")
+            if not isinstance(cfg_json, str):
+                raise ValueError(f"Expected 'config_json' to be a str, got {type(cfg_json).__name__}")
+            cfg = cls._load_json(cfg_json)
+
+        kwargs["config"] = cfg
+
+        # Subclass dispatch for CUSTOM kind
         if kwargs["kind"] == TemplateEngineKind.CUSTOM:
             if "extract_variables_func" not in kwargs or "render_func" not in kwargs:
                 raise ValueError(
                     "CustomTemplateEngineSettings requires 'extract_variables_func' and 'render_func'."
                 )
-            target_cls = CustomTemplateEngineSettings
+            target_cls: Type[T] = CustomTemplateEngineSettings  # type: ignore
         else:
-            target_cls = cls
+            target_cls: Type[T] = cls
 
-        # Validate using Pydantic
+        return {"target_cls": target_cls, "kwargs": kwargs}
+
+
+    @classmethod
+    @overrides
+    def _parse_config(cls: Type[T], config: dict[str, Any]) -> T:
+        prepared: dict[str, Any] = cls._prepare_kwargs(config)
+        target_cls: Type[T] = prepared["target_cls"]
+        kwargs: dict[str, Any] = prepared["kwargs"]
+
+        # Pydantic validation
         try:
-            return target_cls.model_validate(kwargs)
+            return cast(T, target_cls.model_validate(kwargs))
         except ValidationError as e:
-            raise ValueError(
-                f"Invalid fields for {target_cls.__name__}: {e}"
-            ) from e
+            raise ValueError(f"Invalid fields for {target_cls.__name__}: {e}") from e
+
+    @classmethod
+    def create(cls: Type[T], **kwargs) -> T:
+        """Factory method to create the correct TemplateEngineSettings subclass."""
+        prepared: dict[str, Any] = cls._prepare_kwargs(kwargs)
+        target_cls: Type[T] = prepared["target_cls"]
+        kwargs = prepared["kwargs"]
+
+        try:
+            return cast(T, target_cls.model_validate(kwargs))
+        except ValidationError as e:
+            raise ValueError(f"Invalid fields for {target_cls.__name__}: {e}") from e
 
 
 class CustomTemplateEngineSettings(TemplateEngineSettings):
     """
     Settings for a custom template engine backed by user-provided callables.
-
-    This settings class allows users to plug in arbitrary template logic
-    without implementing a concrete `TemplateEngine` subclass.
-
-    Required callables:
-
-    - `extract_variables_func(template: str, config: dict[str, Any]) -> set[str]`
-        A callable that receives the template string and the engine configuration,
-        and returns the set of variable names used by the template.
-
-    - `render_func(
-            template: str,
-            variables: dict[str, Any],
-            config: dict[str, Any]
-        ) -> str`
-        A callable that receives the template string, a mapping of variable values,
-        and the engine configuration, and returns the rendered string.
-
-    The `config` field is passed unchanged to both callables and can be used
-    to control custom rendering behavior.
     """
 
     extract_variables_func: Callable[[str, dict[str, Any]], set[str]]
     render_func: Callable[[str, dict[str, Any], dict[str, Any]], str]
-
-    # Make the model immutable and forbid extra fields
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid"
-    )

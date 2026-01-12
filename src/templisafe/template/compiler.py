@@ -1,6 +1,7 @@
 from typing import Any
 from pydantic import BaseModel
 
+from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.template.template_model import (
     CompilationSpec,
     Template,
@@ -13,15 +14,15 @@ from templisafe.template.template_model import (
 class Compiler:
     """Compiles a template against a schema, producing a compilation result with diagnostics."""
 
-    __slots__: tuple[str, ...] = ("_index_key",)
+    __slots__: tuple[str, ...] = ("_settings",)
 
-    def __init__(self, index_key: str) -> None:
-        self._index_key = index_key
+    def __init__(self, settings: CompilerSettings) -> None:
+        self._settings = settings
 
     def _extract_index(self, model_type: type[BaseModel], var_name: str) -> int | None:
         field = model_type.model_fields[var_name]
         json_dict = field.json_schema_extra
-        index_value = json_dict.get(self._index_key) if isinstance(json_dict, dict) else None
+        index_value = json_dict.get(self._settings.index_key) if isinstance(json_dict, dict) else None
         index: int | None = index_value if isinstance(index_value, int) else None
         return index
 

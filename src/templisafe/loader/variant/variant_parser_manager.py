@@ -23,7 +23,7 @@ class VariantParserFactory:
         type_: type[VariantParserSettings] = type(settings)
         parser_type: type[VariantParser] | None = VariantParserFactory._PARSER_MAP.get(type_)
         if parser_type is None:
-            raise UnsupportedQVariantParserError(settings.content_type)
+            raise UnsupportedQVariantParserError(settings.kind)
         return parser_type(settings)
 
 #---------------------------------------------------------------------------------------------

@@ -13,18 +13,25 @@ from templisafe.template.template_model import (
 )
 from templisafe.template.renderer import Renderer
 from templisafe.engine.jinja_template_engine import JinjaTemplateEngine
+from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
 
+# ========================
+# Fixtures
+# ========================
+
+@pytest.fixture
+def renderer_settings() -> RendererSettings:
+    return RendererSettings(index_key="_index")
 
 @pytest.fixture
 def engine() -> JinjaTemplateEngine:
     settings = TemplateEngineSettings.create(kind="jinja", config={})
     return JinjaTemplateEngine(settings)
 
-
 @pytest.fixture
 def schema_model():
-    fields = {
+    fields: dict[str, Any] = {
         "a": (int, Field(default=1, json_schema_extra={"_index": 0})),
         "b": (str, Field(default="default", json_schema_extra={"_index": 1})),
         "c": (float, Field(..., json_schema_extra={"_index": 2})),
@@ -39,12 +46,15 @@ def compilation(schema_model):
         schema=schema_model,
     )
 
+# ========================
+# Tests
+# ========================
 
 # -----------------------------
 # Basic rendering success
 # -----------------------------
-def test_render_success(engine, compilation):
-    renderer = Renderer(engine, index_key="_index")
+def test_render_success(engine, compilation, renderer_settings: RendererSettings):
+    renderer = Renderer(engine, renderer_settings)
     bindings = [Binding(0, "a", 10), Binding(1, "b", "hello"), Binding(2, "c", 1.5)]
     vset = VariantSet([Variant("default", bindings)])
 
@@ -54,8 +64,8 @@ def test_render_success(engine, compilation):
     assert rendered.rendered.parameterizations[0].rendered_str == "10 hello 1.5"
 
 
-def test_render_missing_binding_with_default(engine, compilation):
-    renderer = Renderer(engine, index_key="_index")
+def test_render_missing_binding_with_default(engine, compilation, renderer_settings):
+    renderer = Renderer(engine, renderer_settings)
     bindings = [Binding(0, "a", 10), Binding(2, "c", 2.5)]
     vset = VariantSet([Variant("default", bindings)])
 
@@ -65,7 +75,7 @@ def test_render_missing_binding_with_default(engine, compilation):
     assert "default" in rendered.rendered.parameterizations[0].rendered_str
 
 
-def test_render_optional_values(engine):
+def test_render_optional_values(engine, renderer_settings):
     fields: dict[str, Any] = {
         "x": (int | None, Field(default=None, json_schema_extra={"_index": 0})),
         "y": (Optional[str], Field(default=None, json_schema_extra={"_index": 1})),
@@ -75,7 +85,7 @@ def test_render_optional_values(engine):
         template=Template("{{ x }} {{ y }}", vars={"x", "y"}), schema=schema
     )
 
-    renderer = Renderer(engine, index_key="_index")
+    renderer = Renderer(engine, renderer_settings)
     bindings = [Binding(0, "x", 42), Binding(1, "y", None)]
     vset = VariantSet([Variant("default", bindings)])
     rendered = renderer.render(compilation, vset)
@@ -85,14 +95,14 @@ def test_render_optional_values(engine):
     assert "None" in rendered.rendered.parameterizations[0].rendered_str
 
 
-def test_render_nested_list_variable(engine):
+def test_render_nested_list_variable(engine, renderer_settings):
     fields: dict[str, Any] = {"matrix": (list[list[float]], Field(..., json_schema_extra={"_index": 0}))}
     schema = Schema(model_cls=create_model("NestedSchema", **fields))
     compilation = CompilationSpec(
         template=Template("{{ matrix }}", vars={"matrix"}), schema=schema
     )
 
-    renderer = Renderer(engine, index_key="_index")
+    renderer = Renderer(engine, renderer_settings)
     bindings = [Binding(0, "matrix", [[1.1, 2], [3, 4.4]])]
     vset = VariantSet([Variant("default", bindings)])
     rendered = renderer.render(compilation, vset)
@@ -104,8 +114,8 @@ def test_render_nested_list_variable(engine):
 # -----------------------------
 # Extra / wrong / missing bindings
 # -----------------------------
-def test_render_extra_binding(engine, compilation):
-    renderer = Renderer(engine, index_key="_index")
+def test_render_extra_binding(engine, compilation, renderer_settings):
+    renderer = Renderer(engine, renderer_settings)
     bindings = [
         Binding(0, "a", 10),
         Binding(1, "b", "hello"),
@@ -119,8 +129,8 @@ def test_render_extra_binding(engine, compilation):
     assert any("Extra binding" in d.message for d in rendered.diagnostics)
 
 
-def test_render_missing_required_binding(engine, compilation):
-    renderer = Renderer(engine, index_key="_index")
+def test_render_missing_required_binding(engine, compilation, renderer_settings):
+    renderer = Renderer(engine, renderer_settings)
     bindings = [Binding(0, "a", 10), Binding(1, "b", "hello")]  # missing required 'c'
     vset = VariantSet([Variant("default", bindings)])
     rendered = renderer.render(compilation, vset)
@@ -129,8 +139,8 @@ def test_render_missing_required_binding(engine, compilation):
     assert any("Missing required binding" in d.message for d in rendered.diagnostics)
 
 
-def test_render_wrong_type_binding(engine, compilation):
-    renderer = Renderer(engine, index_key="_index")
+def test_render_wrong_type_binding(engine, compilation, renderer_settings):
+    renderer = Renderer(engine, renderer_settings)
     bindings = [Binding(0, "a", "wrong"), Binding(1, "b", "hello"), Binding(2, "c", 1.0)]
     vset = VariantSet([Variant("default", bindings)])
     rendered = renderer.render(compilation, vset)
@@ -142,8 +152,8 @@ def test_render_wrong_type_binding(engine, compilation):
 # -----------------------------
 # Multiple variants
 # -----------------------------
-def test_render_multiple_variants(engine, compilation):
-    renderer = Renderer(engine, index_key="_index")
+def test_render_multiple_variants(engine, compilation, renderer_settings):
+    renderer = Renderer(engine, renderer_settings)
     variant1 = Variant("Var1", [Binding(0, "a", 1), Binding(1, "b", "x"), Binding(2, "c", 1.1)])
     variant2 = Variant("Var2", [Binding(0, "a", 2), Binding(1, "b", "y"), Binding(2, "c", 2.2)])
     vset = VariantSet([variant1, variant2])
