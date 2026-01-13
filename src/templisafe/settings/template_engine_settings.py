@@ -7,12 +7,10 @@ from templisafe.settings.settings import Settings
 
 T = TypeVar("T", bound="TemplateEngineSettings")
 
-
 class TemplateEngineKind(str, Enum):
     JINJA = "jinja"
     DJANGO = "django"
     CUSTOM = "custom"
-
 
 class TemplateEngineSettings(Settings):
     kind: TemplateEngineKind
@@ -26,17 +24,32 @@ class TemplateEngineSettings(Settings):
 
         Raises if multiple config sources are provided.
         """
-       
-        kind: Any = kwargs.get("kind")
-        if kind is None:
-            raise ValueError("Missing 'kind' field to determine template engine type.")
 
-        if isinstance(kind, str):
-            try:
-                kwargs["kind"] = TemplateEngineKind(kind.lower())
-            except ValueError:
-                raise ValueError(f"Invalid template engine kind: {kind!r}")
+        target_cls: Type[T] = cls
+        if "kind" in kwargs:
+            kind: Any = kwargs["kind"]
+            if isinstance(kind, str):
+                try:
+                    kind = TemplateEngineKind(kind.lower())
+                except ValueError:
+                    raise ValueError(f"Invalid settings kind: {kind!r}")
 
+                if not isinstance(kind, TemplateEngineKind):
+                    raise ValueError(f"Invalid settings kind: {kind!r}")
+                
+                match kind:
+                    case TemplateEngineKind.JINJA | TemplateEngineKind.DJANGO:
+                        target_cls = TemplateEngineSettings             # type: ignore
+                    case TemplateEngineKind.CUSTOM:
+                        target_cls = CustomTemplateEngineSettings       # type: ignore
+
+        # Subclass dispatch for CUSTOM kind
+        if target_cls == TemplateEngineKind.CUSTOM:
+            if "extract_variables_func" not in kwargs or "render_func" not in kwargs:
+                raise ValueError(
+                    "CustomTemplateEngineSettings requires 'extract_variables_func' and 'render_func'."
+                )
+                
         # Check for multiple config sources
         config_sources = ["config", "config_yaml", "config_json"]
         provided = [key for key in config_sources if key in kwargs]
@@ -65,17 +78,7 @@ class TemplateEngineSettings(Settings):
             cfg = cls._load_json(cfg_json)
 
         kwargs["config"] = cfg
-
-        # Subclass dispatch for CUSTOM kind
-        if kwargs["kind"] == TemplateEngineKind.CUSTOM:
-            if "extract_variables_func" not in kwargs or "render_func" not in kwargs:
-                raise ValueError(
-                    "CustomTemplateEngineSettings requires 'extract_variables_func' and 'render_func'."
-                )
-            target_cls: Type[T] = CustomTemplateEngineSettings  # type: ignore
-        else:
-            target_cls: Type[T] = cls
-
+    
         return {"target_cls": target_cls, "kwargs": kwargs}
 
 
@@ -93,6 +96,7 @@ class TemplateEngineSettings(Settings):
             raise ValueError(f"Invalid fields for {target_cls.__name__}: {e}") from e
 
     @classmethod
+    @overrides
     def create(cls: Type[T], **kwargs) -> T:
         """Factory method to create the correct TemplateEngineSettings subclass."""
         prepared: dict[str, Any] = cls._prepare_kwargs(kwargs)

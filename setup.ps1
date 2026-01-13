@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "Installing package in editable mode with dev dependencies..."
-pip install -e ".[dev]"
+pip install -e ".[dev, notebook]"
 
 Write-Host "Running tests..."
 pytest -v

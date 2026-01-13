@@ -1,6 +1,6 @@
-from templisafe.settings.parser.variant_parser_settings import VariantParserSettings, YamlVariantParserSettings
+from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.loader.variant.variant_parser import VariantParser
-from templisafe.loader.variant.yaml_variant_parser import YamlVariantParser
+from templisafe.loader.variant.variant_parser import VariantParser
 from templisafe.exceptions.binding_error import UnsupportedQVariantParserError
 
 #---------------------------------------------------------------------------------------------
@@ -11,20 +11,11 @@ class VariantParserFactory:
 
     __slots__: tuple[str, ...] = ()
 
-    _PARSER_MAP: dict[type[VariantParserSettings], type[VariantParser]] = {
-        YamlVariantParserSettings: YamlVariantParser
-    }
-    
     def __init__(self) -> None:
         pass
 
     def create(self, settings: VariantParserSettings) -> VariantParser:
-
-        type_: type[VariantParserSettings] = type(settings)
-        parser_type: type[VariantParser] | None = VariantParserFactory._PARSER_MAP.get(type_)
-        if parser_type is None:
-            raise UnsupportedQVariantParserError(settings.kind)
-        return parser_type(settings)
+        return VariantParser(settings)
 
 #---------------------------------------------------------------------------------------------
 # Manager

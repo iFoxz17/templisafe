@@ -30,11 +30,11 @@ class SourceSettings(Settings, ABC):
     # -----------------------------
     # Factory for polymorphic creation
     # -----------------------------
-    _KIND_MAP: ClassVar[dict[SourceKind, Type["SourceSettings"]]] = {}
+    _SOURCE_KIND_MAP: ClassVar[dict[SourceKind, Type["SourceSettings"]]] = {}
 
     @classmethod
-    def register_kind(cls, kind: SourceKind, klass: Type["SourceSettings"]) -> None:
-        cls._KIND_MAP[kind] = klass
+    def register_source_kind(cls, kind: SourceKind, klass: Type["SourceSettings"]) -> None:
+        cls._SOURCE_KIND_MAP[kind] = klass
 
     @classmethod
     def _prepare_kwargs(cls, kwargs: Dict[str, Any]) -> dict[str, Any]:
@@ -52,7 +52,7 @@ class SourceSettings(Settings, ABC):
             except ValueError:
                 raise ValueError(f"Invalid kind: {kind!r}")
 
-        target_cls: Type[SourceSettings] | None = cls._KIND_MAP.get(kind)
+        target_cls: Type[SourceSettings] | None = cls._SOURCE_KIND_MAP.get(kind)
         if target_cls is None:
             raise ValueError(f"No SourceSettings class registered for kind {kind!r}")
 
@@ -74,6 +74,7 @@ class SourceSettings(Settings, ABC):
             raise ValueError(f"Invalid fields for {target_cls.__name__}: {e}") from e
 
     @classmethod
+    @overrides
     def create(cls, **kwargs) -> "SourceSettings":
         """
         Public factory to instantiate the correct SourceSettings subclass.
@@ -110,5 +111,5 @@ class LocalSourceSettings(SourceSettings):
 
 
 # Register subclasses
-SourceSettings.register_kind(SourceKind.INLINE, InlineSourceSettings)
-SourceSettings.register_kind(SourceKind.LOCAL, LocalSourceSettings)
+SourceSettings.register_source_kind(SourceKind.INLINE, InlineSourceSettings)
+SourceSettings.register_source_kind(SourceKind.LOCAL, LocalSourceSettings)

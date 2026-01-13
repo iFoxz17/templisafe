@@ -9,3 +9,4 @@ class ContentType(Enum):
     TEXT = "text"
     YAML = "yaml"
     JSON = "json"
+    TOML = "toml"

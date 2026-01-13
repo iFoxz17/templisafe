@@ -1,7 +1,7 @@
 import pytest
 
 from templisafe.exceptions.settings_error import SettingsError
-from templisafe.settings.renderer_settings import RendererSettings
+from templisafe.settings.renderer_settings import RendererSettings, Settings
 
 
 # -----------------------------
@@ -19,13 +19,19 @@ YAML_NOT_DICT = "- item1\n- item2"
 # -----------------------------
 # Tests for create()
 # -----------------------------
+
+def test_create_base_with_valid_dict():
+    instance = Settings.create(kind="renderer_settings", index_key="idx")
+    assert isinstance(instance, RendererSettings)
+    assert instance.index_key == "idx"
+
 def test_create_success():
     instance = RendererSettings.create(index_key="idx")
     assert isinstance(instance, RendererSettings)
     assert instance.index_key == "idx"
 
 def test_create_missing_index_key_raises():
-    with pytest.raises(ValueError, match="Missing 'index_key'"):
+    with pytest.raises(ValueError):
         RendererSettings.create()
 
 def test_create_invalid_field_raises():

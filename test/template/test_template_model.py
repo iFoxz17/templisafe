@@ -1,10 +1,8 @@
 import pytest
 from pydantic import BaseModel
 from typing import Any
-from types import SimpleNamespace
 from templisafe.template.template_model import (
     Outcome,
-    Diagnostic,
     Schema,
     Template,
     CompilationSpec,
@@ -17,7 +15,6 @@ from templisafe.template.template_model import (
     Rendering,
     Build,
 )
-from templisafe.exceptions.var_error import MissingVarError
 from templisafe.exceptions.binding_error import MissingBindingError
 from templisafe.exceptions.parameterization_error import MissingParameterizationError
 from templisafe.exceptions.compilation_error import CompilationFailureError

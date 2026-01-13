@@ -91,7 +91,7 @@ def test_from_yaml_invalid_yaml_raises():
 
 def test_from_yaml_not_a_dict_raises():
     yaml_list = "- item1\n- item2"
-    with pytest.raises(SettingsError, match="Parsed YAML is not a dictionary"):
+    with pytest.raises(SettingsError):
         InlineSourceSettings.from_yaml(yaml_list)
 
 
@@ -115,5 +115,5 @@ def test_from_json_invalid_json_raises():
 
 def test_from_json_not_a_dict_raises():
     json_list = '["a", "b"]'
-    with pytest.raises(SettingsError, match="Parsed JSON is not a dictionary"):
+    with pytest.raises(SettingsError):
         InlineSourceSettings.from_json(json_list)

@@ -1,9 +1,7 @@
 from typing import Any
-from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field, ConfigDict
 
-from templisafe.settings.parser.variant_parser_settings import VariantParserSettings
-from templisafe.settings.parser.parser_settings import ParserSettings
+from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.template.template_model import VariantSet, Variant, Binding
 from templisafe.exceptions.binding_error import IllegalVariantError
 
@@ -22,8 +20,8 @@ class VariantExplicitModel(BaseModel):
 # Variant parser
 # ---------------------------------------------------------------------------
 
-class VariantParser(ABC):
-    """Abstract base class for parsing and validating variants."""
+class VariantParser:
+    """Class for parsing and validating variants."""
 
     __slots__: tuple[str, ...] = ("_settings",)
 
@@ -34,9 +32,8 @@ class VariantParser(ABC):
         return Binding(index=b_index, name=b_name, value=b_value)
 
     def _parse_variants(self, variants_definition_list: list[dict[str, Any]]) -> VariantSet:
-        settings: ParserSettings = self._settings
-        assert isinstance(settings, VariantParserSettings)
-
+        settings: VariantParserSettings = self._settings
+        
         variants_key: str = settings.variants_key
         implicit_counter: int = 1
         all_variants: dict[str, VariantExplicitModel] = {}
@@ -48,17 +45,41 @@ class VariantParser(ABC):
                 )
 
             variant_context: Any = variant_definition[variants_key]
+            
+            # Multiple explicit variants each reporting variant_name and bindings keys
+            if isinstance(variant_context, list):
+                for expl_variant in variant_context:
+                    if not (settings.variant_name_key in expl_variant and settings.bindings_key in expl_variant):
+                        raise IllegalVariantError(f"Illegal variant definition: {expl_variant}")
+                    var_name: str = expl_variant[settings.variant_name_key]
+                    bindings: dict[str, Any] = expl_variant[settings.bindings_key]
+                    
+                    if var_name in all_variants:
+                        raise IllegalVariantError(f"Duplicated variant: {var_name}")
+                    all_variants[var_name] = VariantExplicitModel(name=var_name, bindings=bindings)
+                continue
+            
             if not isinstance(variant_context, dict):
-                raise IllegalVariantError("Top-level variants context must be a dict")
+                raise IllegalVariantError("Top-level variants context must be a list or a dict")
+            
+            # Single explicit variant reporting variant_name and bindings keys
+            if settings.variant_name_key in variant_context and settings.bindings_key in variant_context:
+                var_name: str = variant_context[settings.variant_name_key]
+                bindings: dict[str, Any] = variant_context[settings.bindings_key]
+                
+                if var_name in all_variants:
+                    raise IllegalVariantError(f"Duplicated variant: {var_name}")
+                all_variants[var_name] = VariantExplicitModel(name=var_name, bindings=bindings)
+                continue
 
-            # If top-level keys look like variant names
+            # Implicit variant
             for key, val in variant_context.items():
                 if isinstance(val, dict):
-                    # Explicit variant
+                    # Implicit variant with name: top-level keys look like variant names
                     var_name: str = key
                     bindings: dict[str, Any] = val
                 else:
-                    # Implicit variant: key is a binding name
+                    # Implicit variant without name: key is a binding name
                     var_name: str = f"{settings.default_variants_name}_{implicit_counter}"
                     bindings: dict[str, Any] = variant_context
                     implicit_counter += 1
@@ -85,12 +106,5 @@ class VariantParser(ABC):
 
         return VariantSet(variant_objs)
 
-
-    @abstractmethod
-    def _parse_raw(self, variants: str) -> dict[str, Any]:
-        """Parse a raw variant string into a dictionary with the top-level variants key."""
-        pass
-
-    def parse(self, variants: list[str]) -> VariantSet:
-        variants_dicts: list[dict[str, Any]] = [self._parse_raw(v) for v in variants]
-        return self._parse_variants(variants_dicts)
+    def parse(self, variants_configs: list[dict[str, Any]]) -> VariantSet:
+        return self._parse_variants(variants_configs)

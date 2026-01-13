@@ -1,18 +1,11 @@
-from overrides import overrides
-from typing import Any
-
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.template.template_model import Template
 from templisafe.loader.template.template_parser import TemplateParser
 from templisafe.source.source import Source
-from templisafe.source.inline_source import InlineSource
-from templisafe.settings.source_settings import InlineSourceSettings
 from templisafe.settings.template_parser_settings import TemplateParserSettings
-from templisafe.util.util import ContentType
 from templisafe.exceptions.template_error import IllegalQTemplateDefinitionError
 
-TEMPLATE_PARSER_SETTINGS_YAML: str = """
-dict_placeholder: value
+TEMPLATE_PARSER_SETTINGS_YAML: str = """{}
 """
 
 class TemplateLoader:

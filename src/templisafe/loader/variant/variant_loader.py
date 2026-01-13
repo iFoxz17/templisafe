@@ -1,22 +1,21 @@
-from overrides import overrides
 from typing import Any
 
 from templisafe.template.template_model import VariantSet
 from templisafe.loader.variant.variant_parser import VariantParser
-from templisafe.source.source import Source
 from templisafe.loader.variant.variant_parser_manager import VariantParserManager
-from templisafe.settings.parser.parser_settings import ParserSettings
-from templisafe.settings.parser.variant_parser_settings import YamlVariantParserSettings, VariantParserSettings
-from templisafe.util.util import ContentType
+from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.exceptions.binding_error import IllegalParamsDefinitionError, UnsupportedQVariantParserError
 
 _VARIANTS_KEY_KEY: str = 'variants_key'
 _DEFAULT_VARIANTS_KEY_KEY: str = 'default_variants_name'
+_VARIANTS_NAME_KEY_KEY: str = 'variant_name_key'
+_BINDINGS_KEY_KEY: str = 'bindings_key'
 
 VARIANT_PARSER_SETTINGS_YAML: str = f"""
-kind: YAML
 {_VARIANTS_KEY_KEY}: variants
 {_DEFAULT_VARIANTS_KEY_KEY}: default
+{_VARIANTS_NAME_KEY_KEY}: name
+{_BINDINGS_KEY_KEY}: bindings
 """
 
 class VariantLoader:
@@ -30,8 +29,7 @@ class VariantLoader:
     def _resolve_settings(self, parser_settings: VariantParserSettings | None = None) -> VariantParserSettings:
         return parser_settings or self._default_settings
 
-    def load(self, variants_sources: list[Source], parser_settings: VariantParserSettings | None = None) -> VariantSet:
+    def load(self, variants_configs: list[dict[str, Any]], parser_settings: VariantParserSettings | None = None) -> VariantSet:
         parser_settings = self._resolve_settings(parser_settings)
         parser: VariantParser = self._manager.get_or_create(parser_settings)
-        variants_str: list[str] = [vs.read() for vs in variants_sources]
-        return parser.parse(variants_str)
+        return parser.parse(variants_configs)

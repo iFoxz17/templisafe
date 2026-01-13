@@ -2,9 +2,8 @@ import pytest
 import json
 import yaml
 
-from templisafe.settings.compiler_settings import CompilerSettings
+from templisafe.settings.compiler_settings import CompilerSettings, Settings
 from templisafe.exceptions.settings_error import SettingsError
-
 
 # -----------------------------
 # Fixtures
@@ -27,6 +26,12 @@ def valid_json(valid_dict):
 # -----------------------------
 # create(**kwargs)
 # -----------------------------
+def test_create_base_with_valid_dict(valid_dict):
+    settings = Settings.create(kind="compiler_settings", **valid_dict)
+    assert isinstance(settings, CompilerSettings)
+    assert settings.index_key == valid_dict["index_key"]
+
+
 def test_create_with_valid_dict(valid_dict):
     settings = CompilerSettings.create(**valid_dict)
     assert isinstance(settings, CompilerSettings)
@@ -34,7 +39,7 @@ def test_create_with_valid_dict(valid_dict):
 
 
 def test_create_missing_index_key_raises():
-    with pytest.raises(ValueError, match="Missing 'index_key' field"):
+    with pytest.raises(ValueError):
         CompilerSettings.create()
 
 

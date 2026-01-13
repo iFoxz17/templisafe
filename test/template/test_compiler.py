@@ -7,7 +7,6 @@ from templisafe.template.template_model import (
     Compilation,
     Outcome,
     Template,
-    Diagnostic
 )
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.template.compiler import Compiler

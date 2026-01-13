@@ -1,15 +1,9 @@
-from overrides import overrides
 from typing import Any
 
 from templisafe.template.template_model import Schema
 from templisafe.loader.schema.schema_parser import SchemaParser
-from templisafe.source.source import Source
-from templisafe.source.inline_source import InlineSource
-from templisafe.settings.source_settings import InlineSourceSettings
 from templisafe.loader.schema.schema_parser_manager import SchemaParserManager
-from templisafe.settings.parser.parser_settings import ParserSettings
-from templisafe.settings.parser.schema_parser_settings import YamlSchemaParserSettings, SchemaParserSettings
-from templisafe.util.util import ContentType
+from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.exceptions.schema_error import IllegalSchemaDefinitionError, UnsupportedSchemaParserError
 
 _SCHEMA_KEY_KEY: str = 'schema_key'
@@ -24,7 +18,6 @@ _ALLOWED_TYPES_KEY: str = 'allowed_types'
 _TYPE_ALIASES_KEY: str = 'type_aliases'
 
 SCHEMA_PARSER_SETTINGS_YAML: str = f"""
-kind: YAML
 {_SCHEMA_KEY_KEY}: schema
 {_TYPE_KEY_KEY}: type
 {_DEFAULT_KEY_KEY}: default
@@ -53,9 +46,9 @@ class SchemaLoader:
     def _resolve_settings(self, parser_settings: SchemaParserSettings | None = None) -> SchemaParserSettings:
         return parser_settings or self._default_settings
 
-    def load(self, schema_source: Source, parser_settings: SchemaParserSettings | None = None) -> Schema:
-        """Load and parse a schema from a source using the specified parser settings."""
+    def load(self, schema_config: dict[str, Any], parser_settings: SchemaParserSettings | None = None) -> Schema:
+        """Load and parse a schema from a config using the specified parser settings."""
 
         parser_settings = self._resolve_settings(parser_settings)
         parser: SchemaParser = self._manager.get_or_create(parser_settings)
-        return parser.parse(schema_source.read())
+        return parser.parse(schema_config)

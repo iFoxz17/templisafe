@@ -1,6 +1,5 @@
-from templisafe.settings.parser.schema_parser_settings import SchemaParserSettings, YamlSchemaParserSettings
+from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.loader.schema.schema_parser import SchemaParser
-from templisafe.loader.schema.yaml_schema_parser import YamlSchemaParser
 from templisafe.exceptions.schema_error import UnsupportedSchemaParserError
 
 #---------------------------------------------------------------------------------------------
@@ -11,10 +10,6 @@ class SchemaParserFactory:
     """Creates SchemaParser instances from schema parser settings."""
 
     __slots__: tuple[str, ...] = ()
-
-    _PARSER_MAP: dict[type[SchemaParserSettings], type[SchemaParser]] = {
-        YamlSchemaParserSettings: YamlSchemaParser
-    }
     
     def __init__(self) -> None:
         pass
@@ -22,11 +17,7 @@ class SchemaParserFactory:
     def create(self, settings: SchemaParserSettings) -> SchemaParser:
         """Create a SchemaParser instance for the given settings."""
 
-        type_: type[SchemaParserSettings] = type(settings)
-        parser_type: type[SchemaParser] | None = SchemaParserFactory._PARSER_MAP.get(type_)
-        if parser_type is None:
-            raise UnsupportedSchemaParserError(settings.kind)
-        return parser_type(settings)
+        return SchemaParser(settings)
 
 #---------------------------------------------------------------------------------------------
 # Manager

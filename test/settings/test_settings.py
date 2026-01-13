@@ -19,8 +19,11 @@ YAML_CONFIG = """
 foo: hello
 bar: 42
 """
-
 JSON_CONFIG = '{"foo": "world", "bar": 99}'
+TOML_CONFIG = """
+foo = "toml"
+bar = 777
+"""
 DICT_CONFIG = {"foo": "dict", "bar": 123}
 
 def test_from_yaml():
@@ -37,6 +40,13 @@ def test_from_json():
     assert settings.bar == 99
 
 
+def test_from_toml():
+    settings = DummySettings.from_toml(TOML_CONFIG)
+    assert isinstance(settings, DummySettings)
+    assert settings.foo == "toml"
+    assert settings.bar == 777
+
+
 def test_from_dict():
     settings = DummySettings.from_dict(DICT_CONFIG)
     assert isinstance(settings, DummySettings)
@@ -44,16 +54,36 @@ def test_from_dict():
     assert settings.bar == 123
 
 
+def test_create_directly_without_kind():
+    # Should create a DummySettings instance using the factory directly
+    settings = DummySettings.create(foo="direct", bar=555)
+    assert isinstance(settings, DummySettings)
+    assert settings.foo == "direct"
+    assert settings.bar == 555
+
+
+def test_create_with_invalid_field_raises():
+    # Should raise ValueError because 'bar' is required int, not str
+    with pytest.raises(ValueError) as excinfo:
+        DummySettings.create(foo="oops", bar="not-an-int")
+    
+
 def test_invalid_yaml():
-    invalid_yaml = "::: Not a valid yaml:::"  # bar should be int
+    invalid_yaml = "::: Not a valid yaml:::"
     with pytest.raises(SettingsError):
         DummySettings.from_yaml(invalid_yaml)
 
 
 def test_invalid_json():
-    invalid_json = '::: Not a valid json:::'  # bar missing
+    invalid_json = '::: Not a valid json:::'
     with pytest.raises(SettingsError):
         DummySettings.from_json(invalid_json)
+
+
+def test_invalid_toml():
+    invalid_toml = '::: Not a valid toml:::'
+    with pytest.raises(SettingsError):
+        DummySettings.from_toml(invalid_toml)
 
 
 def test_non_dict_yaml():

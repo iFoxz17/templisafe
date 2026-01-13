@@ -1,73 +1,89 @@
 import pytest
+from templisafe.settings.schema_parser_settings import SchemaParserSettings
+from templisafe.loader.schema.schema_parser import SchemaParser
 from templisafe.loader.schema.schema_parser_manager import SchemaParserFactory, SchemaParserManager
-from templisafe.loader.schema.yaml_schema_parser import YamlSchemaParser
-from templisafe.settings.parser.schema_parser_settings import SchemaParserSettings, YamlSchemaParserSettings
-from templisafe.util.util import ContentType
-from templisafe.exceptions.schema_error import UnsupportedSchemaParserError
 
-'''
-# -----------------------
-# Factory tests
-# -----------------------
-def test_factory_create_known():
-    settings = YamlQSchemaParserSettings(
-        schema_key="schema",
+
+@pytest.fixture
+def settings() -> SchemaParserSettings:
+    return SchemaParserSettings(
+        schema_key="parameters",
         type_key="type",
         default_key="default",
-        allowed_types=("int",)
+        constraints_key="constraints",
+        metadata_key="metadata",
+        index_key="_index",
+        model_name="TestModel",
+        allowed_types=("int", "str", "float", "bool", "object"),
+        type_aliases={"int": ["integer"], "str": ["string"], "float": ["real", "number"]},  # type: ignore
     )
-    factory = QSchemaParserFactory()
+
+
+def test_factory_creates_parser(settings):
+    factory = SchemaParserFactory()
     parser = factory.create(settings)
-    assert isinstance(parser, QYamlSchemaParser)
+    assert isinstance(parser, SchemaParser)
+    # Ensure the parser retains the settings
     assert parser._settings == settings
 
-def test_factory_create_unknown():
-    class DummySettings(QSchemaParserSettings):
-        @property
-        def content_type(self):
-            return ContentType.YAML
 
-    settings = DummySettings(
-        schema_key="schema",
+def test_manager_creates_and_caches_parser(settings):
+    manager = SchemaParserManager()
+    
+    # Initially, manager has no parsers
+    assert settings not in manager
+    
+    # Create a parser
+    parser1 = manager.get_or_create(settings)
+    assert isinstance(parser1, SchemaParser)
+    
+    # Now settings should be in manager
+    assert settings in manager
+    
+    # Re-fetch the parser should return the same instance
+    parser2 = manager.get_or_create(settings)
+    assert parser1 is parser2  # caching works
+
+
+def test_manager_with_initial_parsers(settings):
+    pre_created_parser = SchemaParser(settings)
+    manager = SchemaParserManager(parsers={settings: pre_created_parser})
+    
+    # The parser should be the same as pre-created
+    parser = manager.get_or_create(settings)
+    assert parser is pre_created_parser
+    assert settings in manager
+
+
+def test_manager_creates_multiple_parsers():
+    # Create multiple distinct settings
+    settings1 = SchemaParserSettings(
+        schema_key="parameters1",
         type_key="type",
         default_key="default",
-        allowed_types=("int",)
+        constraints_key="constraints",
+        metadata_key="metadata",
+        index_key="_index",
+        model_name="Model1",
+        allowed_types=("int", "str"),
+        type_aliases={},                # type: ignore
     )
-    factory = QSchemaParserFactory()
-    with pytest.raises(UnimplementedSchemaParserError):
-        factory.create(settings)
-
-# -----------------------
-# Manager tests
-# -----------------------
-def test_manager_get_or_create_and_contains():
-    manager = QSchemaParserManager()
-
-    # Create parser with default settings
-    default_settings = YamlQSchemaParserSettings(
-        schema_key="schema",
+    settings2 = SchemaParserSettings(
+        schema_key="parameters2",
         type_key="type",
         default_key="default",
-        allowed_types=("str", "float")
+        constraints_key="constraints",
+        metadata_key="metadata",
+        index_key="_index",
+        model_name="Model2",
+        allowed_types=("int", "str"),
+        type_aliases={},                # type: ignore
     )
-    parser1 = manager.get_or_create(default_settings)
-    assert isinstance(parser1, QYamlSchemaParser)
-    assert parser1._settings == default_settings
-    assert default_settings in manager
 
-    # Create parser with custom settings
-    custom_settings = YamlQSchemaParserSettings(
-        schema_key="custom_schema",
-        type_key="custom_type",
-        default_key="custom_default",
-        allowed_types=("int",)
-    )
-    parser2 = manager.get_or_create(custom_settings)
-    assert isinstance(parser2, QYamlSchemaParser)
-    assert parser2._settings == custom_settings
-    assert custom_settings in manager
+    manager = SchemaParserManager()
+    parser1 = manager.get_or_create(settings1)
+    parser2 = manager.get_or_create(settings2)
 
-    # Ensure the same instance is returned on repeated get_or_create
-    parser1_again = manager.get_or_create(default_settings)
-    assert parser1 is parser1_again
-'''
+    assert parser1 is not parser2
+    assert settings1 in manager
+    assert settings2 in manager

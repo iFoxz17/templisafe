@@ -1,11 +1,10 @@
-from abc import ABC, abstractmethod
 from typing import Any, Union, Iterable, NamedTuple
 from types import MappingProxyType
 from datetime import date, datetime
 from pydantic import BaseModel, ValidationError, Field 
 
 from templisafe.template.template_model import Schema
-from templisafe.settings.parser.schema_parser_settings import SchemaParserSettings
+from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.exceptions.schema_error import (
     IllegalType,
     IllegalSchemaError,
@@ -66,7 +65,7 @@ class Var(NamedTuple):
     metadata: dict[str, object]
 
 
-class SchemaParser(ABC):
+class SchemaParser:
     """Parses raw schema definitions into dynamic Pydantic models."""
 
     __slots__: tuple[str, ...] = ("_settings", "_type_parser")
@@ -75,11 +74,6 @@ class SchemaParser(ABC):
         self._settings: SchemaParserSettings = settings
         aliases: dict[str, str] = {alias: t for t, al in settings.type_aliases for alias in al}
         self._type_parser = TypeParser(settings.allowed_types, aliases)
-
-    @abstractmethod
-    def _parse_raw(self, schema: str) -> dict[str, Any]:
-        """Convert a raw schema string into a Python dictionary."""
-        pass
 
     def _parse_var(self, index: int, name: str, schema: Any) -> Var:
         """Parse a single variable data and metadata into a Var."""
@@ -175,16 +169,16 @@ class SchemaParser(ABC):
                 var_default=var.default
             ) from e
 
-    def _parse_schema(self, schema_dict: dict[str, Any]) -> Schema:
-        """Convert a schema dictionary into a Pydantic BaseModel type."""
+    def _parse_schema(self, schema_config: dict[str, Any]) -> Schema:
+        """Convert a schema configuration into a Pydantic BaseModel type."""
 
         settings: SchemaParserSettings = self._settings
         schema_key : str = settings.schema_key
 
-        if schema_key not in schema_dict:
+        if schema_key not in schema_config:
             raise IllegalSchemaError(f"Missing top-level schema key '{schema_key}'")
 
-        vars_dict: dict[str, Any] = schema_dict[schema_key]
+        vars_dict: dict[str, Any] = schema_config[schema_key]
         if not isinstance(vars_dict, dict):
             raise IllegalSchemaError(f"Top-level schema must be a dict: {vars_dict}")
 
@@ -229,7 +223,6 @@ class SchemaParser(ABC):
         return Schema(model_cls=ModelSchema)
 
 
-    def parse(self, schema: str) -> Schema:
-        """Parse raw schema string into a dynamic Pydantic model type."""
-        raw_dict = self._parse_raw(schema)
-        return self._parse_schema(raw_dict)
+    def parse(self, schema_config: dict[str, Any]) -> Schema:
+        """Parse the schema config into a dynamic Pydantic model type."""
+        return self._parse_schema(schema_config)

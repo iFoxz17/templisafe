@@ -6,7 +6,7 @@
 set -e
 
 echo "Installing package in editable mode with dev dependencies..."
-pip install -e ".[dev]"
+pip install -e ".[dev, notebook]"
 
 echo "Running tests..."
 pytest -v

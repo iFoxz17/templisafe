@@ -6,8 +6,8 @@ from templisafe.util.util import DiagnosticPolicy
 
 from templisafe.settings.settings import Settings
 from templisafe.settings.template_parser_settings import TemplateParserSettings
-from templisafe.settings.parser.schema_parser_settings import SchemaParserSettings
-from templisafe.settings.parser.variant_parser_settings import VariantParserSettings
+from templisafe.settings.schema_parser_settings import SchemaParserSettings
+from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings, TemplateEngineKind
@@ -19,7 +19,7 @@ from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_manager import TemplateEngineManager
 
 from templisafe.loader.loader_facade import LoaderFacade
-from templisafe.loader.settings.settings_loader import SettingsLoader
+from templisafe.loader.config.config_loader import ConfigLoader
 from templisafe.loader.template.template_loader import TemplateLoader
 from templisafe.loader.schema.schema_loader import SchemaLoader, _INDEX_KEY_KEY
 from templisafe.loader.variant.variant_loader import VariantLoader
@@ -45,8 +45,8 @@ class TemplaterFactory:
         if source is None:
             return None
 
-        loader: SettingsLoader = SettingsLoader()
-        settings: Settings = loader.load(source)
+        loader: ConfigLoader = ConfigLoader()
+        settings: Settings = loader.load_settings(source)
 
         if expected_type and not isinstance(settings, expected_type):
             raise ValueError(
@@ -101,10 +101,10 @@ class TemplaterFactory:
         variant_settings: Settings | None = self._load_settings(variant_loader_settings_source)
         assert variant_settings is None or isinstance(variant_settings, VariantParserSettings)
 
-        settings_loader: SettingsLoader = SettingsLoader()
+        settings_loader: ConfigLoader = ConfigLoader()
 
         return LoaderFacade(
-            settings_loader=settings_loader,
+            config_loader=settings_loader,
             template_loader=TemplateLoader(
                 default_engine=template_engine,
                 default_settings=template_settings,
