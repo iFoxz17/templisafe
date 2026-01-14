@@ -1,6 +1,5 @@
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.loader.schema.schema_parser import SchemaParser
-from templisafe.exceptions.schema_error import UnsupportedSchemaParserError
 
 #---------------------------------------------------------------------------------------------
 # Factory

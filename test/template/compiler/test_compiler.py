@@ -9,7 +9,7 @@ from templisafe.template.template_model import (
     Template,
 )
 from templisafe.settings.compiler_settings import CompilerSettings
-from templisafe.template.compiler import Compiler
+from templisafe.template.compiler.compiler import Compiler
 
 # ========================
 # Fixtures
@@ -58,7 +58,7 @@ def test_compile_with_matching_schema_success(compiler_settings: CompilerSetting
 def test_compile_with_defaults_and_constraints(compiler_settings: CompilerSettings):
     from pydantic import create_model, Field
     from templisafe.template.template_model import Template, Schema, Outcome
-    from templisafe.template.compiler import Compiler
+    from templisafe.template.compiler.compiler import Compiler
 
     # Create a schema with defaults and constraints
     fields: dict[str, Any] = {

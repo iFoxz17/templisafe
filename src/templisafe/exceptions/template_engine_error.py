@@ -1,11 +1,7 @@
 from templisafe.settings.template_engine_settings import TemplateEngineKind
 
-#---------------------------------------------------------------------------------------------
-# Template engine
-#---------------------------------------------------------------------------------------------
-
 class TemplateEngineError(Exception):
-    """Base class for TemplateEngine related errors."""
+    """Base class for template engine related exceptions."""
     pass
 
 class UnsupportedTemplateEngineError(TemplateEngineError):

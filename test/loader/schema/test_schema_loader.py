@@ -7,7 +7,6 @@ from templisafe.loader.schema.schema_parser_manager import SchemaParserManager
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.loader.schema.schema_parser import SchemaParser
 from templisafe.template.template_model import Schema
-from templisafe.exceptions.schema_error import IllegalSchemaDefinitionError, UnsupportedSchemaParserError
 
 
 @pytest.fixture

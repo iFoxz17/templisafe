@@ -1,11 +1,9 @@
-from abc import ABC
-# from templisafe.query.query_model import QRendering
-
-class RenderingError(Exception, ABC):
-    """Raised when query rendering fails or violates diagnostic policy."""
+class RenderingError(Exception):
+    """Base class for rendering-related exceptions."""
     pass
 
 class RenderingFailureError(RenderingError):
+    """Raised when template rendering fails."""
 
     __slots__: tuple[str, ...] = ("rendering",)
 
@@ -14,7 +12,7 @@ class RenderingFailureError(RenderingError):
 
         # Base message
         message_lines = [
-            f"Query rendering failed with outcome {rendering.outcome.name}: {rendering.message}"
+            f"Template rendering failed with outcome {rendering.outcome.name}: {rendering.message}"
         ]
 
         # Append diagnostics if any

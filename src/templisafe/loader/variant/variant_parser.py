@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, ConfigDict
 
 from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.template.template_model import VariantSet, Variant, Binding
-from templisafe.exceptions.binding_error import IllegalVariantError
+from templisafe.exceptions.variant_error import IllegalVariantError
 
 # ---------------------------------------------------------------------------
 # Variant models (validation only)

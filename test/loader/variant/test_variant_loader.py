@@ -2,7 +2,7 @@ import pytest
 
 from templisafe.loader.variant.variant_loader import VariantLoader, VARIANT_PARSER_SETTINGS_YAML
 from templisafe.settings.variant_parser_settings import VariantParserSettings
-from templisafe.exceptions.binding_error import IllegalVariantError
+from templisafe.exceptions.variant_error import IllegalVariantError
 from templisafe.template.template_model import VariantSet
 
 

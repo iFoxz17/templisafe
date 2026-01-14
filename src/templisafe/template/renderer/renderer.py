@@ -17,11 +17,10 @@ from templisafe.template.template_model import (
 class Renderer:
     """Renders compiled templates using Jinja2 Environment, with diagnostics."""
 
-    __slots__: tuple[str, ...] = ("_engine", "_settings")
+    __slots__: tuple[str, ...] = ("_settings",)
 
-    def __init__(self, engine: TemplateEngine, settings: RendererSettings) -> None:
-        self._engine: TemplateEngine = engine
-        self._settings = settings
+    def __init__(self, settings: RendererSettings) -> None:
+        self._settings: RendererSettings = settings
 
     def _extract_index(self, model_type: type[BaseModel], var_name: str) -> int | None:
         field = model_type.model_fields[var_name]
@@ -135,11 +134,9 @@ class Renderer:
         self,
         compiled: CompilationSpec,
         variants_set: VariantSet,
-        engine: TemplateEngine | None = None,
+        engine: TemplateEngine,
     ) -> Rendering:
-        """Render the compiled query for all variants using the given or default Jinja environment."""
-        engine_to_use: TemplateEngine = engine or self._engine
-
+        
         validation: Rendering = self.validate(compiled, variants_set)
         if validation.outcome == Outcome.ERROR:
             return validation  # Do not render if validation failed
@@ -159,7 +156,7 @@ class Renderer:
                 binding_value_map[var_name] = field.default
 
             # Render template
-            rendered_str: str = engine_to_use.render(compiled.template.template_str, binding_value_map)
+            rendered_str: str = engine.render(compiled.template.template_str, binding_value_map)
             param = Parameterization(variant=variant, rendered_str=rendered_str)
             parameterizations.append(param)
 
@@ -178,4 +175,4 @@ class Renderer:
         )
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(_engine={self._engine!r}, _settings={self._settings!r})"
+        return f"{self.__class__.__name__}(_settings={self._settings!r})"

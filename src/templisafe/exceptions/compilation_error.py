@@ -1,13 +1,9 @@
-from abc import ABC
-# from templisafe.query.query_compiler import QCompilation
-
-class CompilationError(Exception, ABC):
-    """Raised when query compilation fails or violates diagnostic policy."""
-    __slots__: tuple[str, ...] = ()
+class CompilationError(Exception):
+    """Base class for compilation-related exceptions."""
     pass
 
 class CompilationFailureError(CompilationError):
-    """Raised when query compilation fails or violates diagnostic policy."""
+    """Raised when a template compilation fails."""
 
     __slots__: tuple[str, ...] = ("compilation",)
 
@@ -16,7 +12,7 @@ class CompilationFailureError(CompilationError):
 
         # Base message
         message_lines = [
-            f"Query compilation failed with outcome {compilation.outcome.name}: "
+            f"Template compilation failed with outcome {compilation.outcome.name}: "
             f"{compilation.message}"
         ]
 

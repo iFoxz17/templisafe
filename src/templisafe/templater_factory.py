@@ -1,6 +1,9 @@
 from typing import Callable
 
+from templisafe.template.compiler.compiler_manager import CompilerManager
+from templisafe.template.renderer.renderer_manager import RendererManager
 from templisafe.templater import Templater
+from templisafe.outcome_handler import OutcomeHandler
 
 from templisafe.util.util import DiagnosticPolicy
 
@@ -24,11 +27,16 @@ from templisafe.loader.template.template_loader import TemplateLoader
 from templisafe.loader.schema.schema_loader import SchemaLoader, _INDEX_KEY_KEY
 from templisafe.loader.variant.variant_loader import VariantLoader
 
-from templisafe.template.compiler import Compiler
-from templisafe.template.renderer import Renderer
-
-
 class TemplaterFactory:
+    """
+    Factory for creating Templater instances.
+
+    Provides a high-level interface to assemble all components required
+    for template processing, including sources, template engines, loaders,
+    compilers, renderers and outcome handling. Ensures correct defaults
+    and type-safe settings resolution.
+    """
+
     # ------------------------------------------------------------------
     # Low-level helpers
     # ------------------------------------------------------------------
@@ -75,7 +83,6 @@ class TemplaterFactory:
             assert isinstance(settings, TemplateEngineSettings) 
             return settings
 
-        # Programmatic default → use .create()
         return TemplateEngineSettings.create(kind=TemplateEngineKind.JINJA)
 
     # ------------------------------------------------------------------
@@ -125,19 +132,62 @@ class TemplaterFactory:
         variant_loader_settings_source: Source | None = None,
         compiler_settings_source: Source | None = None,
         renderer_settings_source: Source | None = None,
-        policy: DiagnosticPolicy | None = None,
+        diagnostic_policy: DiagnosticPolicy | str | None = None,
     ) -> Templater:
-        source_manager = SourceManager()
-        template_engine_manager = TemplateEngineManager()
+        """
+        Create a fully configured Templater instance.
+
+        Resolves and applies provided or default settings for template engines,
+        loaders, compilers and renderers. Initializes the outcome handler
+        according to the specified diagnostic policy.
+
+        Parameters
+        ----------
+        template_engine_settings_source : Source | None
+            Optional source for template engine settings. If not provided, default configurations are used.
+        template_loader_settings_source : Source | None
+            Optional source for template loader settings. If not provided, default configurations are used.
+        schema_loader_settings_source : Source | None
+            Optional source for schema loader settings. If not provided, default configurations are used.
+        variant_loader_settings_source : Source | None
+            Optional source for variant loader settings. If not provided, default configurations are used.
+        compiler_settings_source : Source | None
+            Optional source for compiler settings. If not provided, default configurations are used.
+        renderer_settings_source : Source | None
+            Optional source for renderer settings. If not provided, default configurations are used.
+        diagnostic_policy : DiagnosticPolicy | str | None
+            Optional policy controlling how warnings and errors are handled.
+            If not provided, the default policy is used.
+
+        Returns
+        -------
+        Templater
+            A ready-to-use Templater instance with all components configured.
+
+        Raises
+        ------
+        ValueError
+            If any provided settings source yields an object of an unexpected type,
+            or if the diagnostic policy string is invalid.
+        """
+
+        if isinstance(diagnostic_policy, str):
+            try:
+                diagnostic_policy = DiagnosticPolicy(diagnostic_policy)
+            except ValueError as e:
+                raise ValueError(f"Invalid diagnostic policy provided: {diagnostic_policy}") from e
+
+        source_manager: SourceManager = SourceManager()
+        template_engine_manager: TemplateEngineManager = TemplateEngineManager()
 
         # Template engine
-        engine_settings = self._create_template_engine_settings(
+        engine_settings: TemplateEngineSettings = self._create_template_engine_settings(
             template_engine_settings_source
         )
-        template_engine = template_engine_manager.get_or_create(engine_settings)
+        template_engine: TemplateEngine = template_engine_manager.get_or_create(engine_settings)
 
         # Loaders
-        loader_facade = self._create_loader_facade(
+        loader_facade: LoaderFacade = self._create_loader_facade(
             template_engine,
             template_loader_settings_source=template_loader_settings_source,
             schema_loader_settings_source=schema_loader_settings_source,
@@ -145,7 +195,7 @@ class TemplaterFactory:
         )
 
         # Compiler
-        compiler_settings = (
+        compiler_settings: Settings | None = (
             self._load_settings(
                 compiler_settings_source,
                 expected_type=CompilerSettings,
@@ -156,10 +206,10 @@ class TemplaterFactory:
             )
         )
         assert isinstance(compiler_settings, CompilerSettings)
-        compiler = Compiler(compiler_settings)
+        compiler_manager: CompilerManager = CompilerManager()
 
         # Renderer
-        renderer_settings = (
+        renderer_settings: Settings | None = (
             self._load_settings(
                 renderer_settings_source,
                 expected_type=RendererSettings,
@@ -170,13 +220,19 @@ class TemplaterFactory:
             )
         )
         assert isinstance(renderer_settings, RendererSettings)
-        renderer = Renderer(template_engine, renderer_settings)
+        renderer_manager: RendererManager = RendererManager()
+
+        # Outcome handler
+        outcome_handler: OutcomeHandler = OutcomeHandler(policy=diagnostic_policy or DiagnosticPolicy.LOG)
 
         return Templater(
             source_manager=source_manager,
             template_engine_manager=template_engine_manager,
             loader_facade=loader_facade,
-            compiler=compiler,
-            renderer=renderer,
-            policy=policy or DiagnosticPolicy.LOG,
+            compiler_manager=compiler_manager,
+            renderer_manager=renderer_manager,
+            outcome_handler=outcome_handler,
+            engine_default_settings=engine_settings,
+            compiler_default_settings=compiler_settings,
+            renderer_default_settings=renderer_settings
         )

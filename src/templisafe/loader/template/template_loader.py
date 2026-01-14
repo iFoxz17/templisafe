@@ -3,7 +3,6 @@ from templisafe.template.template_model import Template
 from templisafe.loader.template.template_parser import TemplateParser
 from templisafe.source.source import Source
 from templisafe.settings.template_parser_settings import TemplateParserSettings
-from templisafe.exceptions.template_error import IllegalQTemplateDefinitionError
 
 TEMPLATE_PARSER_SETTINGS_YAML: str = """{}
 """

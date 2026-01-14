@@ -4,7 +4,6 @@ from templisafe.template.template_model import Schema
 from templisafe.loader.schema.schema_parser import SchemaParser
 from templisafe.loader.schema.schema_parser_manager import SchemaParserManager
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
-from templisafe.exceptions.schema_error import IllegalSchemaDefinitionError, UnsupportedSchemaParserError
 
 _SCHEMA_KEY_KEY: str = 'schema_key'
 _TYPE_KEY_KEY: str = 'type_key'

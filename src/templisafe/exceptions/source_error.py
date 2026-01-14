@@ -1,5 +1,8 @@
-from pathlib import Path
-from templisafe.source.source import SourceSettings
+from typing import TYPE_CHECKING 
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from templisafe.source.source import SourceSettings
 
 class SourceError(Exception):
     """Base class for source-related exceptions."""
@@ -35,7 +38,7 @@ class ContentTypeResolutionError(SourceError):
 
     __slots__: tuple[str, ...] = ("settings",)
 
-    def __init__(self, settings: "SourceSettings") -> None:
+    def __init__(self, settings: SourceSettings) -> None:
         self.settings = settings
         message = f"Unable to resolve content type for settings {settings}"
         super().__init__(message)

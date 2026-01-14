@@ -4,7 +4,6 @@ from templisafe.template.template_model import VariantSet
 from templisafe.loader.variant.variant_parser import VariantParser
 from templisafe.loader.variant.variant_parser_manager import VariantParserManager
 from templisafe.settings.variant_parser_settings import VariantParserSettings
-from templisafe.exceptions.binding_error import IllegalParamsDefinitionError, UnsupportedQVariantParserError
 
 _VARIANTS_KEY_KEY: str = 'variants_key'
 _DEFAULT_VARIANTS_KEY_KEY: str = 'default_variants_name'

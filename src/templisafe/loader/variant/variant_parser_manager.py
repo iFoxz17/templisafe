@@ -1,7 +1,6 @@
 from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.loader.variant.variant_parser import VariantParser
 from templisafe.loader.variant.variant_parser import VariantParser
-from templisafe.exceptions.binding_error import UnsupportedQVariantParserError
 
 #---------------------------------------------------------------------------------------------
 # Factory
