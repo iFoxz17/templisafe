@@ -5,7 +5,7 @@ from enum import Enum
 
 from templisafe.exceptions.settings_error import SettingsError
 from templisafe.exceptions.load_error import LoadError
-from templisafe.loader.loader import YamlLoader, JsonLoader, TomlLoader
+from templisafe.loader.loader import *
 
 class SettingsKind(str, Enum):
     TEMPLATE_PARSER_SETTINGS = "template_parser_settings" 
@@ -90,6 +90,14 @@ class Settings(BaseModel, ABC):
             return TomlLoader().load(config_str)    
         except LoadError as e:
             raise SettingsError("Cannot parse TOML configuration") from e
+        
+    @classmethod
+    def _load_xml(cls, config_str: str) -> dict[str, Any]:
+        """Load settings from a XML string."""
+        try:
+            return XmlLoader().load(config_str)    
+        except LoadError as e:
+            raise SettingsError("Cannot parse XML configuration") from e
     
     @classmethod
     def from_yaml(cls: Type[T], config_str: str) -> T:
@@ -105,6 +113,11 @@ class Settings(BaseModel, ABC):
     def from_toml(cls: Type[T], config_str: str) -> T:
         """Load settings from a TOML string."""
         return cls._parse_config(cls._load_toml(config_str))
+    
+    @classmethod
+    def from_xml(cls: Type[T], config_str: str) -> T:
+        """Load settings from a XML string."""
+        return cls._parse_config(cls._load_xml(config_str))
 
     @classmethod
     def from_dict(cls: Type[T], config: dict[str, Any]) -> T:

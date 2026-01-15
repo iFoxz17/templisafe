@@ -2,17 +2,18 @@ from typing import Any
 
 from templisafe.exceptions.load_error import UnsopportedLoadError
 from templisafe.settings.settings import Settings
-from templisafe.loader.loader import Loader, YamlLoader, JsonLoader, TomlLoader
+from templisafe.loader.loader import *
 from templisafe.source.source import Source
 from templisafe.util.util import ContentType
 
 class ConfigLoader:
-    __slots__: tuple[str, ...] = ('_yaml_loader', '_json_loader', '_toml_loader')
+    __slots__: tuple[str, ...] = ('_yaml_loader', '_json_loader', '_toml_loader', '_xml_loader')
     
     def __init__(self) -> None:
         self._yaml_loader: YamlLoader | None = None
         self._json_loader: JsonLoader | None = None
         self._toml_loader: TomlLoader | None = None
+        self._xml_loader: XmlLoader | None = None
 
     def load_config(self, config_source: Source) -> dict[str, Any]:
         raw: str = config_source.read()
@@ -30,6 +31,10 @@ class ConfigLoader:
                 if self._toml_loader is None:
                     self._toml_loader = TomlLoader()
                 loader = self._toml_loader
+            case ContentType.XML:
+                if self._xml_loader is None:
+                    self._xml_loader = XmlLoader()
+                loader = self._xml_loader
             case _:
                 raise UnsopportedLoadError(config_source.content_type)
             

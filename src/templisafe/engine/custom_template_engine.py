@@ -1,12 +1,10 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 from overrides import overrides
 
 from templisafe.engine.template_engine import TemplateEngine
 
-if TYPE_CHECKING:
-    from typing import Any, Callable
-    from templisafe.settings.template_engine_settings import CustomTemplateEngineSettings
+from typing import Any, Callable
+from templisafe.settings.template_engine_settings import CustomTemplateEngineSettings
     
 
 class CustomTemplateEngine(TemplateEngine):

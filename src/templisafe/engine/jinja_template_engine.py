@@ -1,12 +1,9 @@
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any
 from overrides import overrides
 
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
 from templisafe.engine.template_engine import TemplateEngine
-
-if TYPE_CHECKING:
-    from jinja2 import Environment
 
 class JinjaTemplateEngine(TemplateEngine):
     """

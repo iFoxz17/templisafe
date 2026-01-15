@@ -3,7 +3,7 @@ from templisafe.templater_factory import TemplaterFactory
 
 from templisafe.template.template_model import *
 from templisafe.settings import *
-from templisafe.util.util import ContentType
+from templisafe.util.util import ContentType, DiagnosticPolicy
 
 __all__ = [
     "Templater",
@@ -27,5 +27,5 @@ __all__ = [
     "SchemaParserSettings",
     "VariantParserSettings",
 
-    "ContentType"
+    "ContentType", "DiagnosticPolicy"
 ]

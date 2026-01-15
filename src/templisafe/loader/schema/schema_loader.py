@@ -24,7 +24,7 @@ SCHEMA_PARSER_SETTINGS_YAML: str = f"""
 {_METADATA_KEY_KEY}: metadata
 {_INDEX_KEY_KEY}: _index
 {_MODEL_NAME_KEY}: ModelSchema
-{_ALLOWED_TYPES_KEY}: [bool, int, float, str, list, date, datetime, object]
+{_ALLOWED_TYPES_KEY}: [bool, int, float, str, optional, list, dict, date, datetime, object]
 {_TYPE_ALIASES_KEY}: 
   bool: [boolean]
   int: [integer]

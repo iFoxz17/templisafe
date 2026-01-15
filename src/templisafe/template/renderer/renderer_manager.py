@@ -1,6 +1,5 @@
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.template.renderer.renderer import Renderer
-from templisafe.engine.template_engine import TemplateEngine
 
 #---------------------------------------------------------------------------------------------
 # Factory

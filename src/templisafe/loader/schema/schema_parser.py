@@ -21,6 +21,7 @@ class TypeParser:
         "float": float,
         "str": str,
         "list": list,
+        "dict": dict,
         "date": date,
         "datetime": datetime,
         "object": object,
@@ -30,32 +31,79 @@ class TypeParser:
         self._allowed: set[str] = set(allowed)
         self._aliases: dict[str, str] = aliases or {}
 
+    # ----------------------------
+    # Private helpers
+    # ----------------------------
+
+    def _is_list(self, type_name: str) -> bool:
+        return type_name.startswith("list[") and type_name.endswith("]")
+
+    def _parse_list(self, type_name: str) -> type:
+        inner_type_name: str = type_name[5:-1].strip()
+        inner_type: type = self.parse(inner_type_name)
+        return list[inner_type]
+
+    def _is_optional(self, type_name: str) -> bool:
+        return type_name.startswith("optional[") and type_name.endswith("]")
+
+    def _parse_optional(self, type_name: str) -> type:
+        inner_type_name: str = type_name[9:-1].strip()
+        inner_type: type = self.parse(inner_type_name)
+        return Union[inner_type, None]  # type: ignore
+
+    def _is_dict(self, type_name: str) -> bool:
+        return type_name.startswith("dict[") and type_name.endswith("]")
+
+    def _parse_dict(self, type_name: str) -> type:
+        inner_content: str = type_name[5:-1].strip()
+        if "," not in inner_content:
+            raise IllegalType(type_name, self._allowed, aliases=list(self._aliases.keys()))
+        key_type_name, value_type_name = map(str.strip, inner_content.split(",", 1))
+        key_type: type = self.parse(key_type_name)
+        value_type: type = self.parse(value_type_name)
+        return dict[key_type, value_type]
+
     def parse(self, type_name: str) -> type:
-        """Parse type string into Python type, recursively handling list[...] and optional[...]"""
+        """Parse a type string into a Python type, recursively handling:
+        - list[T]
+        - optional[T]
+        - dict[K, V]
+        """
+
         type_name = type_name.strip()
+        main_type_name: str
+        sub_typing_name: str
+
+        if "[" in type_name:
+            sub_typing_index: int = type_name.find("[")
+            main_type_name = type_name[: sub_typing_index].strip()
+            sub_typing_name = type_name[sub_typing_index :].strip()
+        else:
+            main_type_name = type_name
+            sub_typing_name = ""
 
         # Resolve aliases
-        if type_name in self._aliases:
-            type_name = self._aliases[type_name]
+        if main_type_name in self._aliases:
+            main_type_name = self._aliases[main_type_name]
 
-        # Handle list[T]
-        if type_name.startswith("list[") and type_name.endswith("]"):
-            inner_type_name: str = type_name[5:-1].strip()
-            inner_type: type = self.parse(inner_type_name)
-            return list[inner_type]
-
-        # Handle optional[T]
-        if type_name.startswith("optional[") and type_name.endswith("]"):
-            inner_type_name: str = type_name[9:-1].strip()
-            inner_type: type = self.parse(inner_type_name)
-            return Union[inner_type, None]          # type: ignore
+        # Reconstruct type_name for further parsing
+        type_name = main_type_name + sub_typing_name
 
         # Base type
-        if type_name not in self._allowed:
-            raise IllegalType(type_name, self._allowed, aliases=list(self._aliases.keys()))
+        if main_type_name not in self._allowed:
+            raise IllegalType(type_name, self._allowed, aliases=list(self._aliases.keys()))        
+
+        # Dispatch to specific handlers
+        if self._is_list(type_name):
+            return self._parse_list(type_name)
+        if self._is_optional(type_name):
+            return self._parse_optional(type_name)
+        if self._is_dict(type_name):
+            return self._parse_dict(type_name)
+
         return self._BASE_TYPE_MAP[type_name]
 
-
+    
 class Var(NamedTuple):
     index_: int
     name: str

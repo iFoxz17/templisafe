@@ -12,6 +12,16 @@ class DummySettings(Settings):
     def _parse_config(cls: Type["DummySettings"], config: Dict[str, Any]) -> "DummySettings":
         # Simply validate with Pydantic
         return cls.model_validate(config)
+    
+# Concrete subclass for testing
+class DummySettingsXml(Settings):
+    foo: str
+    bar: int
+
+    @classmethod
+    def _parse_config(cls: Type["DummySettingsXml"], config: Dict[str, Any]) -> "DummySettingsXml":
+        # Simply validate with Pydantic
+        return cls.model_validate(config['settings'])
 
 
 # Sample configurations
@@ -23,6 +33,12 @@ JSON_CONFIG = '{"foo": "world", "bar": 99}'
 TOML_CONFIG = """
 foo = "toml"
 bar = 777
+"""
+XML_CONFIG = """
+<settings>
+    <foo>xml</foo>
+    <bar>42</bar>
+</settings>
 """
 DICT_CONFIG = {"foo": "dict", "bar": 123}
 
@@ -45,6 +61,12 @@ def test_from_toml():
     assert isinstance(settings, DummySettings)
     assert settings.foo == "toml"
     assert settings.bar == 777
+
+def test_from_xml():
+    settings = DummySettingsXml.from_xml(XML_CONFIG)
+    assert isinstance(settings, DummySettingsXml)
+    assert settings.foo == "xml"
+    assert settings.bar == 42
 
 
 def test_from_dict():
@@ -84,6 +106,12 @@ def test_invalid_toml():
     invalid_toml = '::: Not a valid toml:::'
     with pytest.raises(SettingsError):
         DummySettings.from_toml(invalid_toml)
+
+
+def test_invalid_xml():
+    invalid_xml = '::: Not a valid xml:::'
+    with pytest.raises(SettingsError):
+        DummySettings.from_xml(invalid_xml)
 
 
 def test_non_dict_yaml():

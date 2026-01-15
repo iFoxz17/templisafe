@@ -23,7 +23,7 @@ class OutcomeHandler:
         self._handle_outcome(
             outcome_obj=compilation,
             success_msg="Query compiled successfully",
-            warning_msg=f"Query compiled with warnings: {", ".join([d.message for d in compilation.diagnostics])}",
+            warning_msg=f"Query compiled with warnings: {', '.join([d.message for d in compilation.diagnostics])}",
             error_msg="Query compilation failed",
             error_cls=CompilationFailureError
         )
@@ -35,7 +35,7 @@ class OutcomeHandler:
         self._handle_outcome(
             outcome_obj=rendering,
             success_msg="Query rendered successfully",
-            warning_msg=f"Query rendered with warnings: {", ".join([d.message for d in rendering.diagnostics])}",
+            warning_msg=f"Query rendered with warnings: {', '.join([d.message for d in rendering.diagnostics])}",
             error_msg="Query rendering failed",
             error_cls=RenderingFailureError
         )

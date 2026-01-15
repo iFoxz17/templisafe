@@ -47,6 +47,52 @@ variants:
     assert b2 is not None
     assert b2.value == "abc" and b2.index == 1
 
+def test_implicit_variant_without_name_complex_object(settings):
+    parser = VariantParser(settings)
+    yaml_str = """
+variants: 
+    a:
+      - a1:
+        - 1
+      - a2:
+        - 2
+        - 2.1
+      - a3:
+        - 3
+        - 3.1
+        - 3.2
+    b:
+      - b1: [4, 4.1, 4.2, 4.3]
+      - b2: [5, 5.1, 5.2, 5.3, 5.4]
+      - b3: [6, 6.1, 6.2, 6.3, 6.4, 6.5]
+"""
+    a: list[dict[str, list[float]]] = [
+            {"a1": [1]},
+            {"a2": [2, 2.1]},
+            {"a3": [3, 3.1, 3.2]}
+        ]
+        
+        
+    b: list[dict[str, list[float]]] = [
+            {"b1": [4, 4.1, 4.2, 4.3]},
+            {"b2": [5, 5.1, 5.2, 5.3, 5.4]},
+            {"b3": [6, 6.1, 6.2, 6.3, 6.4, 6.5]}
+        ]
+    
+    yaml_cfg = yaml.safe_load(yaml_str)
+    vset: VariantSet = parser.parse([yaml_cfg])
+
+    assert len(vset.variants) == 1
+    assert vset.names == {"default_1"}
+
+    for variant, b_names in zip(vset.variants, [{"a", "b"}]):
+        assert all(isinstance(b, Binding) for b in variant.bindings)
+        assert variant.names == set(b_names)
+
+    v = next(v for v in vset.variants if v.name == "default_1")
+    values = [b.value for b in v.bindings]
+    assert values == [a, b]
+
 def test_multiple_implicit_variants_one_yaml(settings):
     parser = VariantParser(settings)
     yaml_str = """
@@ -78,6 +124,54 @@ variants:
     values = [b.value for b in v3.bindings]
     assert values == [[1, 2, 3], "c"]
 
+def test_implicit_variant_with_name_complex_object(settings):
+    parser = VariantParser(settings)
+    yaml_str = """
+variants:
+  variant1:
+    complex: 
+      a:
+        - a1:
+          - 1
+        - a2:
+          - 2
+          - 2.1
+        - a3:
+          - 3
+          - 3.1
+          - 3.2
+      b:
+        - b1: [4, 4.1, 4.2, 4.3]
+        - b2: [5, 5.1, 5.2, 5.3, 5.4]
+        - b3: [6, 6.1, 6.2, 6.3, 6.4, 6.5]
+"""
+    complex: dict[str, list[dict[str, list[float]]]] = {
+        "a": [
+            {"a1": [1]},
+            {"a2": [2, 2.1]},
+            {"a3": [3, 3.1, 3.2]},
+        ],
+        "b": [
+            {"b1": [4, 4.1, 4.2, 4.3]},
+            {"b2": [5, 5.1, 5.2, 5.3, 5.4]},
+            {"b3": [6, 6.1, 6.2, 6.3, 6.4, 6.5]},
+        ],
+    }
+    yaml_cfg = yaml.safe_load(yaml_str)
+    vset: VariantSet = parser.parse([yaml_cfg])
+
+    assert len(vset.variants) == 1
+    assert vset.names == {"variant1"}
+
+    for variant in vset.variants:
+        assert all(isinstance(b, Binding) for b in variant.bindings)
+        assert variant.names == {"complex"}
+
+    v = next(v for v in vset.variants if v.name == "variant1")
+    values = [b.value for b in v.bindings]
+    assert values == [complex]
+
+    
 def test_multiple_implicit_variants_no_name_multiple_yaml(settings):
     parser = VariantParser(settings)
     yaml_str1 = """
@@ -223,6 +317,54 @@ variants:
     b2 = variant.get("param2")
     assert b1 is not None and b1.value == 42 and b1.index == 0
     assert b2 is not None and b2.value == "abc" and b2.index == 1
+
+def test_explicit_variant_complex_object(settings):
+    parser = VariantParser(settings)
+    yaml_str = """
+variants:
+  name: variant1
+  bindings:
+    complex: 
+      a:
+        - a1:
+          - 1
+        - a2:
+          - 2
+          - 2.1
+        - a3:
+          - 3
+          - 3.1
+          - 3.2
+      b:
+        - b1: [4, 4.1, 4.2, 4.3]
+        - b2: [5, 5.1, 5.2, 5.3, 5.4]
+        - b3: [6, 6.1, 6.2, 6.3, 6.4, 6.5]
+"""
+    complex: dict[str, list[dict[str, list[float]]]] = {
+        "a": [
+            {"a1": [1]},
+            {"a2": [2, 2.1]},
+            {"a3": [3, 3.1, 3.2]},
+        ],
+        "b": [
+            {"b1": [4, 4.1, 4.2, 4.3]},
+            {"b2": [5, 5.1, 5.2, 5.3, 5.4]},
+            {"b3": [6, 6.1, 6.2, 6.3, 6.4, 6.5]},
+        ],
+    }
+    yaml_cfg = yaml.safe_load(yaml_str)
+    vset: VariantSet = parser.parse([yaml_cfg])
+
+    assert len(vset.variants) == 1
+    assert vset.names == {"variant1"}
+
+    for variant in vset.variants:
+        assert all(isinstance(b, Binding) for b in variant.bindings)
+        assert variant.names == {"complex"}
+
+    v = next(v for v in vset.variants if v.name == "variant1")
+    values = [b.value for b in v.bindings]
+    assert values == [complex]
 
 def test_multiple_explicit_variants_one_yaml(settings):
     parser = VariantParser(settings)

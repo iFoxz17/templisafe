@@ -7,12 +7,17 @@ build-backend = "setuptools.build_meta"
 name = "templisafe"
 version = "0.1.0"
 description = """
-    A small library to load YAML/SQL templates and render SQL queries with parameters, 
-    providing optional schema enforcement for parameters"""
+    Templisafe is a flexible, engine (and configuration) agnostic library for safe 
+    templating. It can support any template engine (Jinja is used as default) and configuration 
+    format (YAML, JSON, TOML, XML, ...), automatically generating schemas for template 
+    variables using Pydantic and validating parameterizations. 
+    Templisafe handles any type of source (inline, local, or cloud) concurrently and 
+    efficiently with asyncio, while providing a fully configurable and easy-to-use API.
+"""
 readme = "README.md"
 authors = [{name = "Mattia Volpato"}]
 license = {text = "MIT"}
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 # Runtime dependencies
 dependencies = [

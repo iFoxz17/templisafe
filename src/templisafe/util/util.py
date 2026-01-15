@@ -1,7 +1,5 @@
 from enum import Enum
 
-from enum import Enum
-
 class DiagnosticPolicy(str, Enum):
     """
     Policy for handling warnings and errors during compilation, rendering, validation or build.
@@ -11,17 +9,17 @@ class DiagnosticPolicy(str, Enum):
             Completely ignore warnings and errors.
             - Errors and warnings do not raise exceptions.
             - No logs or warnings are emitted.
+            - To use when programmatic access to the build diagnostics is needed.
         
         LOG:
             Log warnings, raise errors.
-            - Errors will raise the corresponding exception, stopping the process.
-            - Warnings will be logged using, but execution continues.
+            - Errors will raise the corresponding exception, stopping the build process.
+            - Warnings will be logged, but execution continues.
         
         STRICT:
             Raise both warnings and errors.
             - Any warning triggers an exception.
-            - Errors also trigger an exception.
-            - Use this policy when you want maximum strictness and do not want to allow even minor issues.
+            - Any error trigger an exception.
     """
     IGNORE = "ignore"
     LOG = "log"
@@ -33,3 +31,4 @@ class ContentType(Enum):
     YAML = "yaml"
     JSON = "json"
     TOML = "toml"
+    XML = "xml"

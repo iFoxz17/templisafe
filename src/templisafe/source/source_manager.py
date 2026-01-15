@@ -22,8 +22,9 @@ CONTENT_TYPE_MAP: Mapping[str, ContentType] = MappingProxyType({
     ".j2": ContentType.TEXT,
     ".jinja": ContentType.TEXT,
     ".yaml": ContentType.YAML,
+    ".json": ContentType.JSON,
+    ".toml": ContentType.TOML,
 })
-
 class ContentTypeResolver:
     __slots__: tuple[str, ...] = ("_content_type_map",)
 

@@ -111,6 +111,39 @@ def test_render_nested_list_variable(engine, renderer_settings):
     assert "[[1.1, 2], [3, 4.4]]" in rendered.rendered.parameterizations[0].rendered_str
 
 
+def test_render_complex_object_variable(engine, renderer_settings):
+    fields: dict[str, Any] = {
+        "complex": (
+            dict[str, list[dict[str, list[float]]]], 
+            Field(..., json_schema_extra={"_index": 0})
+            )
+        }
+    schema = Schema(model_cls=create_model("NestedSchema", **fields))
+    compilation = CompilationSpec(
+        template=Template("{{ complex }}", vars={"complex"}), schema=schema
+    )
+
+    object: dict[str, list[dict[str, list[float]]]] = {
+        "a": [
+            {"a1": [1]},
+            {"a2": [2, 2.1]},
+            {"a3": [3, 3.1, 3.2]},
+        ],
+        "b": [
+            {"b1": [4, 4.1, 4.2, 4.3]},
+            {"b2": [5, 5.1, 5.2, 5.3, 5.4]},
+            {"b3": [6, 6.1, 6.2, 6.3, 6.4, 6.5]},
+        ],
+    }
+    renderer = Renderer(renderer_settings)
+    bindings = [Binding(0, "complex", object)]
+    vset = VariantSet([Variant("default", bindings)])
+    rendered = renderer.render(compilation, vset, engine)
+
+    assert rendered.outcome == Outcome.SUCCESS
+    assert str(object) in rendered.rendered.parameterizations[0].rendered_str
+
+
 # -----------------------------
 # Extra / wrong / missing bindings
 # -----------------------------

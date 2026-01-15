@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Type, Any, ClassVar, Dict, cast
+from typing import Type, Any, ClassVar, cast
 from pydantic import ValidationError
 from enum import Enum
 from overrides import overrides
@@ -37,7 +37,7 @@ class SourceSettings(Settings, ABC):
         cls._SOURCE_KIND_MAP[kind] = klass
 
     @classmethod
-    def _prepare_kwargs(cls, kwargs: Dict[str, Any]) -> dict[str, Any]:
+    def _prepare_kwargs(cls, kwargs: dict[str, Any]) -> dict[str, Any]:
         """
         Normalize 'kind', validate presence and select target subclass.
         Returns {'target_cls': <subclass>, 'kwargs': normalized kwargs}.
@@ -60,7 +60,7 @@ class SourceSettings(Settings, ABC):
 
     @classmethod
     @overrides
-    def _parse_config(cls, config: Dict[str, Any]) -> "SourceSettings":
+    def _parse_config(cls, config: dict[str, Any]) -> "SourceSettings":
         """
         Convert a dict from YAML/JSON/dict into the correct SourceSettings subclass.
         """

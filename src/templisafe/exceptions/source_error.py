@@ -1,8 +1,5 @@
-from typing import TYPE_CHECKING 
-
-if TYPE_CHECKING:
-    from pathlib import Path
-    from templisafe.source.source import SourceSettings
+from pathlib import Path
+from templisafe.source.source import SourceSettings
 
 class SourceError(Exception):
     """Base class for source-related exceptions."""
