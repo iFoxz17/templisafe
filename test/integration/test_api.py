@@ -68,7 +68,6 @@ variants:
           - 4.5
 """
 
-@pytest.mark.integration
 def test_full_build_with_local_sources(tmp_path):
     # ------------------------------------------------------------------
     # Create temporary resource files
@@ -143,7 +142,6 @@ def test_full_build_with_local_sources(tmp_path):
     assert all([l in functional_param.rendered_str for l in ("python", "lisp", "javascript")])
 
 
-@pytest.mark.integration
 def test_full_build_with_inline_sources(tmp_path):
     # ------------------------------------------------------------------
     # Create SourceSettings (INLINE)
