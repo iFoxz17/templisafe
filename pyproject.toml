@@ -1,0 +1,53 @@
+[build-system]
+# Use setuptools and wheel as the build backend
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "templisafe"
+version = "0.1.0"
+description = """
+    Templisafe is a flexible, engine (and configuration) agnostic library for safe 
+    templating. It can support any template engine (Jinja is used as default) and configuration 
+    format (YAML, JSON, TOML, XML, ...), automatically generating schemas for template 
+    variables using Pydantic and validating parameterizations. 
+    Templisafe handles any type of source (inline, local, or cloud) concurrently and 
+    efficiently with asyncio, while providing a fully configurable and easy-to-use API.
+"""
+readme = "README.md"
+authors = [{name = "Mattia Volpato"}]
+license = {text = "MIT"}
+requires-python = ">=3.11"
+
+# Runtime dependencies
+dependencies = [
+    "PyYAML>=6.0",
+    "Jinja2>=3.0",
+    "pydantic>=2.0",
+    "overrides>=7.3"
+]
+
+# Optional development dependencies
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-mock",
+    "pytest-asyncio",
+    "black",
+    "isort",
+    "mypy",
+    "Django>=4.2",
+    "moto[s3]>=4.0"           # Enables mocking for S3
+]
+notebook = [
+    "notebook>=7.0",          # Jupyter Notebook
+    "jupyterlab>=4.0",        # JupyterLab interface (optional)
+    "ipykernel>=6.0",         # Kernel for running Python
+]
+s3 = [
+    "boto3>=1.30",
+]
+
+[tool.setuptools]
+# Include packages under src/
+packages = {find = {where = ["src"]}}

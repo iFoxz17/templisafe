@@ -1,0 +1,40 @@
+variants:
+  - name: adults_only                       # variant name 1
+    bindings:
+      select_columns:
+        - u.id
+        - u.name
+        - u.age
+        - m.value
+
+      user_join_key: id
+      metric_join_key: user_id
+      # user_codes -> defaulted
+        
+      user_age_lower:  18
+      user_age_upper: 70
+      user_status: ACTIVE
+
+      # metric_code -> defaulted
+      metric_updated_flag: true
+      metric_threshold: 54.12
+
+  - name: minors_only                       # variant name 2
+    bindings:
+      select_columns:
+        - u.id
+        - u.name
+        - u.age
+        - m.value
+
+      user_join_key: id
+      metric_join_key: user_id
+      # user_codes -> defaulted
+        
+      user_age_lower:  5
+      user_age_upper: 17
+      user_status: ACTIVE
+
+      # metric_code -> defaulted
+      metric_updated_flag: true
+      metric_threshold: 54.12
