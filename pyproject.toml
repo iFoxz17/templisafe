@@ -36,12 +36,16 @@ dev = [
     "black",
     "isort",
     "mypy",
-    "Django>=4.2"
+    "Django>=4.2",
+    "moto[s3]>=4.0"           # Enables mocking for S3
 ]
 notebook = [
     "notebook>=7.0",          # Jupyter Notebook
     "jupyterlab>=4.0",        # JupyterLab interface (optional)
     "ipykernel>=6.0",         # Kernel for running Python
+]
+s3 = [
+    "boto3>=1.30",
 ]
 
 [tool.setuptools]

@@ -8,7 +8,7 @@ from templisafe.outcome_handler import OutcomeHandler
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.settings.settings import Settings
-from templisafe.settings.source_settings import SourceSettings
+from templisafe.settings.source.source_settings import SourceSettings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
 
 from templisafe.source.source_manager import SourceManager

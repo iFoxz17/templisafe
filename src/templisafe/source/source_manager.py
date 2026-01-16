@@ -2,14 +2,10 @@ from pathlib import Path
 from types import MappingProxyType
 from collections.abc import Mapping
 
-from templisafe.settings.source_settings import (
-    SourceSettings, 
-    LocalSourceSettings, 
-    InlineSourceSettings, 
-    SourceKind
-)
+from templisafe.settings.source import *
 from templisafe.source.source import Source
 from templisafe.source.local_source import LocalSource
+from templisafe.source.s3_source import S3Source
 from templisafe.source.inline_source import InlineSource, InlineSourceSettings
 from templisafe.exceptions.source_error import UnsupportedSourceError, ContentTypeResolutionError
 from templisafe.util.util import ContentType
@@ -46,6 +42,9 @@ class ContentTypeResolver:
             case SourceKind.LOCAL:
                 assert isinstance(settings, LocalSourceSettings)
                 return settings.path
+            case SourceKind.S3:
+                assert isinstance(settings, S3SourceSettings)
+                return settings.key
             case SourceKind.INLINE:
                 assert isinstance(settings, InlineSourceSettings)
                 return None
@@ -73,6 +72,7 @@ class SourceFactory:
         {
             InlineSourceSettings: InlineSource,
             LocalSourceSettings: LocalSource,
+            S3SourceSettings: S3Source
         }
     )
     
@@ -94,15 +94,20 @@ class SourceManager:
         self._resolver: ContentTypeResolver = ContentTypeResolver()
         self._sources: dict[SourceSettings, Source] = sources or {}
     
-    def get_or_create(self, settings: SourceSettings) -> Source:
+    def _resolve_content_type(self, settings: SourceSettings) -> SourceSettings:
         if settings.content_type is None:
             content_type: ContentType = self._resolver.resolve(settings)
             settings = settings.model_copy(update={"content_type": content_type})
+        
+        return settings
 
+    def get_or_create(self, settings: SourceSettings) -> Source:
+        settings = self._resolve_content_type(settings)
         s: dict[SourceSettings, Source] = self._sources
         if settings not in s:
             s[settings] = self._factory.create(settings)
         return s[settings]
 
     def __contains__(self, settings: SourceSettings) -> bool:
+        settings = self._resolve_content_type(settings)
         return settings in self._sources
