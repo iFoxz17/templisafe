@@ -1,5 +1,6 @@
 from templisafe.source.inline_source import InlineSource
-from templisafe.settings.source_settings import SourceSettings, InlineSourceSettings
+from templisafe.settings.source.source_settings import SourceSettings 
+from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 from templisafe.util.util import ContentType
 
 

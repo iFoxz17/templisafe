@@ -1,31 +1,23 @@
 import pytest
 
-from templisafe.settings.source_settings import (
+from templisafe.settings.source.source_settings import (
     SourceSettings,
-    InlineSourceSettings,
-    LocalSourceSettings,
     SourceKind,
 )
+from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 from templisafe.exceptions.settings_error import SettingsError
 
 # -----------------------------
 # Fixtures / example configs
 # -----------------------------
 INLINE_CONFIG_DICT = {"kind": "inline", "content": "SELECT 1"}
-LOCAL_CONFIG_DICT = {"kind": "local", "path": "/tmp/query.sql"}
 
 INLINE_YAML = """
 kind: inline
 content: "SELECT 1"
 """
 
-LOCAL_YAML = """
-kind: local
-path: "/tmp/query.sql"
-"""
-
 INLINE_JSON = '{"kind": "inline", "content": "SELECT 1"}'
-LOCAL_JSON = '{"kind": "local", "path": "/tmp/query.sql"}'
 
 
 # -----------------------------
@@ -36,12 +28,6 @@ def test_create_inline_from_dict():
     assert isinstance(instance, InlineSourceSettings)
     assert instance.kind == SourceKind.INLINE
     assert instance.content == "SELECT 1"
-
-def test_create_local_from_dict():
-    instance = SourceSettings.create(**LOCAL_CONFIG_DICT)
-    assert isinstance(instance, LocalSourceSettings)
-    assert instance.kind == SourceKind.LOCAL
-    assert instance.path == "/tmp/query.sql"
 
 def test_create_invalid_kind_raises():
     with pytest.raises(ValueError, match="Invalid kind: 'invalid'"):
@@ -65,11 +51,6 @@ def test_from_dict_inline():
     assert isinstance(instance, InlineSourceSettings)
     assert instance.content == "SELECT 1"
 
-def test_from_dict_local():
-    instance = LocalSourceSettings.from_dict(LOCAL_CONFIG_DICT)
-    assert isinstance(instance, LocalSourceSettings)
-    assert instance.path == "/tmp/query.sql"
-
 
 # -----------------------------
 # Tests for from_yaml()
@@ -78,11 +59,6 @@ def test_from_yaml_inline():
     instance = InlineSourceSettings.from_yaml(INLINE_YAML)
     assert isinstance(instance, InlineSourceSettings)
     assert instance.content == "SELECT 1"
-
-def test_from_yaml_local():
-    instance = LocalSourceSettings.from_yaml(LOCAL_YAML)
-    assert isinstance(instance, LocalSourceSettings)
-    assert instance.path == "/tmp/query.sql"
 
 def test_from_yaml_invalid_yaml_raises():
     invalid_yaml = "this: [unbalanced"
@@ -102,11 +78,6 @@ def test_from_json_inline():
     instance = InlineSourceSettings.from_json(INLINE_JSON)
     assert isinstance(instance, InlineSourceSettings)
     assert instance.content == "SELECT 1"
-
-def test_from_json_local():
-    instance = LocalSourceSettings.from_json(LOCAL_JSON)
-    assert isinstance(instance, LocalSourceSettings)
-    assert instance.path == "/tmp/query.sql"
 
 def test_from_json_invalid_json_raises():
     invalid_json = '{"foo": "bar",}'

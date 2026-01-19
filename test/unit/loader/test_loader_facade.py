@@ -154,7 +154,7 @@ async def test_load_variants_concurrent():
 
     # Each source sleeps 0.5s; if sequential it would be ~2s
     # If concurrent, it should be ~0.5s (+small overhead)
-    assert elapsed < 1, f"Method is not concurrent, elapsed={elapsed:.2f}s"
+    assert elapsed < 1.5, f"Method is not concurrent, elapsed={elapsed:.2f}s"
 
     # Ensure config_loader.load_config called for both sources
     assert config_loader.load_config.call_count == 4

@@ -2,7 +2,7 @@ from pathlib import Path
 from overrides import overrides
 
 from templisafe.source.source import Source
-from templisafe.settings.source_settings import LocalSourceSettings
+from templisafe.settings.source.local_source_settings import LocalSourceSettings
 
 from templisafe.exceptions.source_error import LocalSourceError
 

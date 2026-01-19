@@ -1,7 +1,7 @@
 from overrides import overrides
 
 from templisafe.source.source import Source
-from templisafe.settings.source_settings import InlineSourceSettings
+from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 
 class InlineSource(Source):
     def __init__(self, settings: InlineSourceSettings) -> None:

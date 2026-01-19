@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from templisafe.util.util import ContentType
-from templisafe.settings.source_settings import SourceSettings
+from templisafe.settings.source.source_settings import SourceSettings
     
 class Source(ABC):
     def __init__(self, settings: SourceSettings) -> None:

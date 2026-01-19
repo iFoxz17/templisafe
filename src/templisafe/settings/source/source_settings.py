@@ -7,10 +7,10 @@ from overrides import overrides
 from templisafe.settings.settings import Settings
 from templisafe.util.util import ContentType
 
-
 class SourceKind(str, Enum):
     INLINE = "inline"
     LOCAL = "local"
+    S3 = "s3"
 
 
 class SourceSettings(Settings, ABC):
@@ -87,29 +87,3 @@ class SourceSettings(Settings, ABC):
             return cast("SourceSettings", target_cls.model_validate(kwargs))
         except ValidationError as e:
             raise ValueError(f"Invalid fields for {target_cls.__name__}: {e}") from e
-
-
-# ---------------------------------------------------------------------------
-# Concrete source settings
-# ---------------------------------------------------------------------------
-class InlineSourceSettings(SourceSettings):
-    content: str
-
-    @property
-    @overrides
-    def kind(self) -> SourceKind:
-        return SourceKind.INLINE
-
-
-class LocalSourceSettings(SourceSettings):
-    path: str
-
-    @property
-    @overrides
-    def kind(self) -> SourceKind:
-        return SourceKind.LOCAL
-
-
-# Register subclasses
-SourceSettings.register_source_kind(SourceKind.INLINE, InlineSourceSettings)
-SourceSettings.register_source_kind(SourceKind.LOCAL, LocalSourceSettings)
