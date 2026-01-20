@@ -10,7 +10,7 @@ from templisafe.settings.template_engine_settings import (
 )
 from templisafe.settings.template_parser_settings import TemplateParserSettings
 from templisafe.settings.variant_parser_settings import VariantParserSettings
-from templisafe.settings.source_loader_settings import SourceLoaderSettings
+from templisafe.settings.source_resolver_settings import SourceResolverSettings
 
 __all__ = [
     "Settings", "SettingsKind",
@@ -21,5 +21,5 @@ __all__ = [
     "TemplateParserSettings",
     "SchemaParserSettings",
     "VariantParserSettings",
-    "SourceLoaderSettings"
+    "SourceResolverSettings"
 ]

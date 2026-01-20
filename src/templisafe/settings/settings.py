@@ -11,7 +11,7 @@ class SettingsKind(str, Enum):
     TEMPLATE_PARSER_SETTINGS = "template_parser_settings" 
     SCHEMA_PARSER_SETTINGS = "schema_parser_settings"
     VARIANT_PARSER_SETTINGS = "variant_parser_settings"
-    SOURCE_LOADER_SETTINGS = "source_loader_settings"
+    SOURCE_RESOLVER_SETTINGS = "source_loader_settings"
     COMPILER_SETTINGS = "compiler_settings"
     RENDERER_SETTINGS = "renderer_settings"
     

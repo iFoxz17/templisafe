@@ -2,7 +2,7 @@ from typing import Any, Callable
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed, Future
 
-from templisafe.loader.config.config_loader import ConfigLoader
+from templisafe.resolver.config_loader import ConfigLoader
 from templisafe.source.source import Source
 from templisafe.settings.settings import Settings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
@@ -11,10 +11,10 @@ from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
-from templisafe.settings.source_loader_settings import SourceLoaderSettings
+from templisafe.settings.source_resolver_settings import SourceResolverSettings
 
 @dataclass(frozen=True, slots=True)
-class SourceLoadInput:
+class SourceResolutionRequest:
     template_source: Source | None = None
     schema_source: Source | None = None
     variants_sources: list[Source] | None = None
@@ -27,90 +27,80 @@ class SourceLoadInput:
     renderer_settings_source: Source | None = None
 
 @dataclass(frozen=True, slots=True)
-class SourceLoadOutput:
+class SourceResolutionResult:
     template_str: str | None = None
     schema_config: dict[str, Any] | None = None
     variants_configs: list[dict[str, Any]] | None = None
 
     template_engine_settings: TemplateEngineSettings | None = None
     template_parser_settings: TemplateParserSettings | None = None
-    schema_parser_settings_source: SchemaParserSettings | None = None
-    variant_parser_settings_source: VariantParserSettings | None = None
-    compiler_settings_source: CompilerSettings | None = None
-    renderer_settings_source: RendererSettings | None = None
+    schema_parser_settings: SchemaParserSettings | None = None
+    variant_parser_settings: VariantParserSettings | None = None
+    compiler_settings: CompilerSettings | None = None
+    renderer_settings: RendererSettings | None = None
 
 
-class SourceLoader:
+class SourceResolver:
     __slots__ = ("_settings", "_config_loader")
 
-    def __init__(self, settings: SourceLoaderSettings, config_loader: ConfigLoader | None = None) -> None:
-        self._settings = settings
+    def __init__(self, settings: SourceResolverSettings, config_loader: ConfigLoader | None = None) -> None:
+        self._settings: SourceResolverSettings = settings
         self._config_loader: ConfigLoader = config_loader or ConfigLoader()
 
-    def _read(self, source: Source | None) -> str | None:
-        if source is None:
-            return None
-        return source.read()
+    def _resolve(self, source: Source | None) -> str | None:
+        return source.read() if source else None 
 
-    def _load_config(self, config_source: Source | None) -> dict[str, Any] | None:
-        if config_source is None:
-            return None
-        return self._config_loader.load_config(config_source)
-    
-    def _load_settings(self, settings_source: Source | None) -> Settings | None:
-        if settings_source is None:
-            return None
-        return self._config_loader.load_settings(settings_source)
-
-    def _load_serial(self, sources: SourceLoadInput) -> SourceLoadOutput:
+    def _resolve_config(self, config_source: Source | None) -> dict[str, Any] | None:
+        return self._config_loader.load_config(config_source) if config_source else None 
+        
+    def _resolve_settings(self, settings_source: Source | None) -> Settings | None:
+        return self._config_loader.load_settings(settings_source) if settings_source else None 
+        
+    def _resolve_serial(self, sources: SourceResolutionRequest) -> SourceResolutionResult:
         context: dict[str, Any] = {}
 
-        context["template_str"] = self._read(sources.template_source)
-        context["schema_config"] = self._load_config(sources.schema_source)
+        context["template_str"] = self._resolve(sources.template_source)
+        context["schema_config"] = self._resolve_config(sources.schema_source)
 
         variants_configs: list[dict[str, Any]] | None = None
         if sources.variants_sources is not None:
             variants_configs = []
             for src in sources.variants_sources:
-                config: dict[str, Any] | None = self._load_config(src)
+                config: dict[str, Any] | None = self._resolve_config(src)
                 assert config is not None
                 variants_configs.append(config)
         context["variants_configs"] = variants_configs
 
-        context["template_engine_settings"] = self._load_settings(
+        context["template_engine_settings"] = self._resolve_settings(
             sources.template_engine_settings_source
         )
-        context["template_parser_settings"] = self._read(
+        context["template_parser_settings"] = self._resolve_settings(
             sources.template_parser_settings_source
         )
-        context["schema_parser_settings_source"] = self._read(
+        context["schema_parser_settings"] = self._resolve_settings(
             sources.schema_parser_settings_source
         )
-        context["variant_parser_settings_source"] = self._read(
+        context["variant_parser_settings"] = self._resolve_settings(
             sources.variant_parser_settings_source
         )
-        context["compiler_settings_source"] = self._read(
+        context["compiler_settings"] = self._resolve_settings(
             sources.compiler_settings_source
         )
-        context["renderer_settings_source"] = self._read(
+        context["renderer_settings"] = self._resolve_settings(
             sources.renderer_settings_source
         )
 
-        return SourceLoadOutput(**context)
+        return SourceResolutionResult(**context)
 
     def _submit_variant_futures(
             self,
             executor: ThreadPoolExecutor,
             variants_sources: list[Source]
             ) -> dict[Future, int]:
-        """
-        Submit all variant sources to the executor and return a mapping
-        from future -> variant index for later reordering.
-        """
 
         future_to_idx: dict[Future, int] = {}
         for idx, src in enumerate(variants_sources):
-            future: Future = executor.submit(self._load_config, src)
+            future: Future = executor.submit(self._resolve_config, src)
             future_to_idx[future] = idx
         
         return future_to_idx
@@ -118,14 +108,10 @@ class SourceLoader:
     def _collect_variant_results(
             self,
             future_to_idx: dict[Future, int]
-            ) -> list[dict[str, Any]]:
-        """
-        Collect completed variant futures and return a list of results
-        in the same order as the input sources.
-        """
+            ) -> list[dict[str, Any]] | None :
 
         if not future_to_idx:
-            return []
+            return None
 
         results: list[dict[str, Any]] = [{}] * len(future_to_idx)
         for future in as_completed(future_to_idx):
@@ -133,7 +119,7 @@ class SourceLoader:
             results[idx] = future.result()
         return results
 
-    def _load_concurrent(self, sources: SourceLoadInput) -> SourceLoadOutput:
+    def _resolve_concurrent(self, sources: SourceResolutionRequest) -> SourceResolutionResult:
         results: dict[str, Any] = {}
 
         with ThreadPoolExecutor(max_workers=self._settings.n_threads) as executor:
@@ -145,14 +131,14 @@ class SourceLoader:
 
             # Submit top-level sources
             futures: dict[str, Future | None] = {
-                "template_str": resolve_submit(sources.template_source, self._read),
-                "schema_config": resolve_submit(sources.schema_source, self._load_config),
-                "template_engine_settings": resolve_submit(sources.template_engine_settings_source, self._load_settings),
-                "template_parser_settings": resolve_submit(sources.template_parser_settings_source, self._load_settings),
-                "schema_parser_settings_source": resolve_submit(sources.schema_parser_settings_source, self._load_settings),
-                "variant_parser_settings_source": resolve_submit(sources.variant_parser_settings_source, self._load_settings),
-                "compiler_settings_source": resolve_submit(sources.compiler_settings_source, self._load_settings),
-                "renderer_settings_source": resolve_submit(sources.renderer_settings_source, self._load_settings),
+                "template_str": resolve_submit(sources.template_source, self._resolve),
+                "schema_config": resolve_submit(sources.schema_source, self._resolve_config),
+                "template_engine_settings": resolve_submit(sources.template_engine_settings_source, self._resolve_settings),
+                "template_parser_settings": resolve_submit(sources.template_parser_settings_source, self._resolve_settings),
+                "schema_parser_settings": resolve_submit(sources.schema_parser_settings_source, self._resolve_settings),
+                "variant_parser_settings": resolve_submit(sources.variant_parser_settings_source, self._resolve_settings),
+                "compiler_settings": resolve_submit(sources.compiler_settings_source, self._resolve_settings),
+                "renderer_settings": resolve_submit(sources.renderer_settings_source, self._resolve_settings),
             }
 
             # Submit variant futures concurrently with top-level sources
@@ -166,11 +152,35 @@ class SourceLoader:
                 if future is not None:
                     results[name] = future.result()
 
-        return SourceLoadOutput(**results)
+        return SourceResolutionResult(**results)
 
 
-    
-    def load(self, sources: SourceLoadInput) -> SourceLoadOutput:
-        if self._settings.concurrent:
-            return self._load_concurrent(sources)
-        return self._load_serial(sources)
+    def resolve(self, request: SourceResolutionRequest) -> SourceResolutionResult:
+        """
+        Resolve all provided sources and return their values.
+        
+        Depending on the settings, source resolution is performed either
+        serially or concurrently using a thread pool.
+
+        Parameters
+        ----------
+        request : SourceResolutionRequest
+            Container object holding all optional input sources to load.
+
+        Returns
+        -------
+        SourceResolutionResult
+            Container object holding all the loaded resources.
+
+        Raises
+        ------
+        Exception
+            Propagates any exception raised during source reading or
+            configuration/settings loading.
+        """
+
+        return (
+            self._resolve_concurrent(request)
+            if self._settings.concurrent
+            else self._resolve_serial(request)
+        )

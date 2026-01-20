@@ -54,7 +54,13 @@ def test_create_loader_facade_returns_loader_with_expected_types(factory):
     loader = templater._loader_facade
 
     # Loader should have the correct loaders
-    assert hasattr(loader, "_config_loader")
     assert hasattr(loader, "_template_loader")
     assert hasattr(loader, "_schema_loader")
     assert hasattr(loader, "_variant_loader")
+
+def test_create_source_resolverreturns_resolver_with_expected_types(factory):
+    templater = factory.create()
+    resolver = templater._source_resolver
+
+    # Loader should have the correct loaders
+    assert hasattr(resolver, "_config_loader")

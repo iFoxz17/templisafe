@@ -41,12 +41,14 @@ def moto_s3_bucket():
 # Tests
 # -------------------------------------------------------------------
 
+@pytest.mark.s3
 def test_read_returns_content(moto_s3_bucket, s3_settings):
     """Test that S3Source.read() returns the correct content."""
     source = S3Source(s3_settings)
     content = source.read()
     assert content == TEST_CONTENT
 
+@pytest.mark.s3
 def test_read_raises_on_missing_bucket(moto_s3_bucket):
     """Test that reading a non-existent object raises S3SourceError."""
     source = S3Source(S3SourceSettings(
@@ -60,6 +62,7 @@ def test_read_raises_on_missing_bucket(moto_s3_bucket):
     with pytest.raises(S3SourceError):
         source.read()
 
+@pytest.mark.s3
 def test_read_raises_on_missing_object(moto_s3_bucket):
     """Test that reading a non-existent object raises S3SourceError."""
     source = S3Source(S3SourceSettings(

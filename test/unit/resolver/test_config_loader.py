@@ -7,7 +7,7 @@ from templisafe.settings.settings import Settings
 from templisafe.loader.loader import *
 from templisafe.util.util import ContentType
 from templisafe.exceptions.load_error import UnsopportedLoadError
-from templisafe.loader.config.config_loader import ConfigLoader
+from templisafe.resolver.config_loader import ConfigLoader
 
 
 # --- Dummy Settings class for testing ---
@@ -107,7 +107,7 @@ def test_load_settings_returns_settings_instance(monkeypatch):
     source = FakeSource(ContentType.YAML, YAML_RAW)
 
     # Patch Settings.from_dict to DummySettings for testing
-    monkeypatch.setattr("templisafe.loader.config.config_loader.Settings.from_dict", DummySettings.from_dict)
+    monkeypatch.setattr("templisafe.resolver.config_loader.Settings.from_dict", DummySettings.from_dict)
 
     settings = loader.load_settings(source)
     assert isinstance(settings, DummySettings)
@@ -120,7 +120,7 @@ def test_load_settings_returns_settings_instance_xml(monkeypatch):
     source = FakeSource(ContentType.XML, XML_RAW)
 
     # Patch Settings.from_dict to DummySettings for testing
-    monkeypatch.setattr("templisafe.loader.config.config_loader.Settings.from_dict", DummySettingsXml.from_dict)
+    monkeypatch.setattr("templisafe.resolver.config_loader.Settings.from_dict", DummySettingsXml.from_dict)
 
     settings = loader.load_settings(source)
     assert isinstance(settings, DummySettingsXml)
