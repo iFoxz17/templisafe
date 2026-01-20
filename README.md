@@ -164,4 +164,3 @@ We appreciate your help in making **templisafe** more robust, flexible and relia
 ## License
 
 templisafe is open-source software licensed under the MIT License. See [the license](LICENSE) for more details.
->>>>>>> s3_source
