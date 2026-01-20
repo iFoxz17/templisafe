@@ -11,6 +11,7 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 - [ ] Develop contribuiting section
 - [ ] Develop IaC use case
 - [ ] Release the library on pip
+- [ ] Document pydantic fields (In particular of Settings)
 
 ## Medium Priority
 - [ ] Improve error messages

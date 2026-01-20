@@ -83,3 +83,6 @@ coverage.xml
 
 # Test reports
 test-reports/
+
+# draw.io 
+doc/.$architecture.drawio.bkp

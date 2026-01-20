@@ -2,16 +2,19 @@
 
 **Safe, flexible and fully configurable templating for Python.**
 
-**`templisafe` is not another template engine**. Instead, it is a high-level framework built **on top of existing template engines** to simplify and secure template management. It generates schemas for template variables, validates parameterizations and renders templates safely and efficiently. It is designed to be flexible, agnostic to both template engines and configuration languages, and fully ready for cloud-based sources.
+**`templisafe` is not just another template engine**. It is a high-level framework built **on top of existing template engines** to simplify and secure template management. Templisafe automatically generates schemas for template variables, validates parameterizations and renders templates safely and efficiently.  
+
+Designed to be flexible and agnostic to both template engines and configuration languages, it works seamlessly with cloud-based sources and embraces a **Template-As-Code (TaC)** approach—allowing you to manage templates systematically and safely.
 
 ---
 
 ## Key Principles
 
-- **Engine and Configuration Agnostic:** Works with any template engine (default is [`Jinja`](https://github.com/pallets/jinja)) and any configuration language (`YAML`, `JSON`, `TOML`, `XML`, ...).  
-- **Schema Generation with Pydantic:** Uses [`pydantic`](https://pydantic-docs.helpmanual.io/) to automatically generate schemas for template variables, ensuring type safety, constraints and validation.
-- **Flexible Source Handling:** Accepts inline, local and remote sources (`S3`, `Azure Blob`, `GCP Cloud Storage`, ...), abstracting all reading methods and allowing the same API to handle any source type transparently.  
-- **Concurrent and Efficient:** Uses `asyncio` to load and process multiple sources in parallel, minimizing latency when handling cloud sources.
+- **Template-As-Code (TaC):** Inspired by IaC principles, Templisafe lets you manage templates safely and systematically as code.
+- **Engine and Configuration Agnostic:** Works with any template engine (default is [Jinja](https://github.com/pallets/jinja)) and any configuration language (`YAML`, `JSON`, `TOML`, `XML`, ...).  
+- **Schema Generation with Pydantic:** Uses [pydantic](https://pydantic-docs.helpmanual.io/) to automatically generate schemas for template variables, ensuring type safety, constraints and validation.
+- **Flexible Source Handling:** Accepts inline, local and remote sources (`S3`, `Azure Blob`, `GCP Cloud Storage`, ...), abstracting all reading methods so the same API can handle any source type transparently.  
+- **Concurrent and Efficient:** Uses **threading** to handle multiple sources concurrently when enabled, while still supporting serial processing if preferred, minimizing latency when handling cloud sources.  
 - **Fully Configurable:** Every aspect of the library can be configured. Defaults are provided so you can start simple while keeping full flexibility for advanced use cases.  
 - **Simple and Well-Documented API:** Practical examples and clear method interfaces make templating easy and safe.
 
@@ -134,6 +137,7 @@ All configurations are optional. You can override any aspect, including:
 - Renderer settings
 - Template engine settings
 - Loader settings for templates, schemas or variants
+- Source resolver settings
 - Diagnostic policies
 
 Default configurations make it ready to use with minimal setup, while still providing full control when needed.

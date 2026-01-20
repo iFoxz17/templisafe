@@ -22,12 +22,11 @@ class TemplateLoader:
     
     def load(
             self, 
-            template_source: Source, 
+            template_str: str, 
             engine: TemplateEngine | None = None
             ) -> Template:
         """Load and parse a template from a source using the specified parser settings."""
 
         engine_to_use: TemplateEngine = engine or self._engine
-        template_str: str = template_source.read()
         vars: set[str] = engine_to_use.extract_variables(template_str)
         return self._parser.parse(template_str, vars)

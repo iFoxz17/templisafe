@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 import pytest
-from unittest.mock import create_autospec, AsyncMock
+from unittest.mock import create_autospec
 import time
 
+from templisafe.resolver import source_resolver
 from templisafe.settings.template_engine_settings import TemplateEngineKind, TemplateEngineSettings
 from templisafe.templater import Templater
 from templisafe.outcome_handler import OutcomeHandler
@@ -10,6 +11,7 @@ from templisafe.template.template_model import (
     CompilationSpec, Parameterization, RenderingSpec, Template, Schema, VariantSet,
     Compilation, Rendering, Build, Outcome
 )
+from templisafe.resolver.source_resolver import SourceResolutionResult, SourceResolver
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.source.source import Source
@@ -77,6 +79,11 @@ def templater(
     source_manager = create_autospec(SourceManager)
     source_manager.get_or_create.return_value = source
 
+    # Source resolver
+    result: SourceResolutionResult = create_autospec(SourceResolutionResult)
+    source_resolver = create_autospec(SourceResolver)
+    source_resolver.resolve.return_value = result
+
     # Template engine
     engine = create_autospec(TemplateEngine)
     engine_manager = create_autospec(TemplateEngineManager)
@@ -86,8 +93,7 @@ def templater(
     loader = create_autospec(LoaderFacade)
     loader.load_template.return_value = template
     loader.load_schema.return_value = schema
-    loader.load_variants = AsyncMock(return_value=variants)
-    loader.load_settings.return_value = None
+    loader.load_variants.return_value = variants
 
     # Compiler
     compiler = create_autospec(Compiler)
@@ -107,6 +113,7 @@ def templater(
 
     return Templater(
         source_manager=source_manager,
+        source_resolver=source_resolver,
         template_engine_manager=engine_manager,
         loader_facade=loader,
         compiler_manager=compiler_manager,
@@ -123,31 +130,12 @@ def test_compile_sync_calls_acompile_and_returns_compilation(templater):
     assert isinstance(result, Compilation)
 
 
-@pytest.mark.asyncio
-async def test_acompile_calls_compiler_and_outcome_handler(templater):
-    result = await templater.acompile(template_source=create_autospec(Source))
-
-    assert isinstance(result, Compilation)
-    templater._outcome_handler.handle_compilation.assert_called_once_with(result)
-
-
 def test_render_sync_returns_rendering(templater):
     result = templater.render(
         compiled="COMPILED",
         variants_sources=create_autospec(Source)
     )
     assert isinstance(result, Rendering)
-
-
-@pytest.mark.asyncio
-async def test_arender_calls_renderer_and_outcome_handler(templater):
-    result = await templater.arender(
-        compiled="COMPILED",
-        variants_sources=create_autospec(Source)
-    )
-
-    assert isinstance(result, Rendering)
-    templater._outcome_handler.handle_rendering.assert_called_once_with(result)
 
 def test_validate_sync_returns_rendering(templater):
     result = templater.validate(
@@ -156,16 +144,6 @@ def test_validate_sync_returns_rendering(templater):
     )
     assert isinstance(result, Rendering)
 
-
-@pytest.mark.asyncio
-async def test_avalidate_calls_renderer_validate(templater):
-    result = await templater.avalidate(
-        compiled="COMPILED",
-        variants_sources=create_autospec(Source)
-    )
-
-    assert isinstance(result, Rendering)
-    templater._outcome_handler.handle_validation.assert_called_once_with(result)
 
 def test_build_sync_returns_build(templater):
     result = templater.build(
@@ -176,25 +154,3 @@ def test_build_sync_returns_build(templater):
     assert isinstance(result, Build)
     assert isinstance(result.compilation, Compilation)
     assert isinstance(result.rendering, Rendering)
-
-
-@pytest.mark.asyncio
-async def test_abuild_runs_compile_then_render(templater):
-    result = await templater.abuild(
-        template_source=create_autospec(Source),
-        variants_sources=create_autospec(Source),
-    )
-
-    assert isinstance(result, Build)
-    assert isinstance(result.compilation, Compilation)
-    assert isinstance(result.rendering, Rendering)
-
-
-
-class SlowSource(Source):
-    def __init__(self, delay: float):
-        self.delay = delay
-
-    def read(self) -> str:
-        time.sleep(self.delay)
-        return "data"
