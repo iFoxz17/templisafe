@@ -17,19 +17,11 @@ class LocalSourceError(SourceError):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(path={self.path!r})"
 
-class S3SourceError(Exception):
-    """Raised when an S3 object cannot be accessed or read."""
+class AwsSourceError(Exception):
+    """Raised when an aws source cannot be accessed or read."""
 
-    __slots__: tuple[str, ...] = ("bucket", "key")
-
-    def __init__(self, bucket: str, key: str) -> None:
-        self.bucket = bucket
-        self.key = key
-        msg = f"Failed to read S3 object: bucket={bucket!r}, key={key!r}"
+    def __init__(self, msg: str) -> None:
         super().__init__(msg)
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(bucket={self.bucket!r}, key={self.key!r})"
 
 class UnsupportedSourceError(SourceError):
     """Raised when trying to instantiate a source that is not supported."""

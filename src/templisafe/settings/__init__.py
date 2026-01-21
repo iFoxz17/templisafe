@@ -16,7 +16,7 @@ __all__ = [
     "Settings", "SettingsKind",
     "CompilerSettings",
     "RendererSettings",
-    "SourceKind", "SourceSettings", "InlineSourceSettings", "LocalSourceSettings", "S3SourceSettings",
+    "SourceKind", "SourceSettings", "InlineSourceSettings", "LocalSourceSettings", "AwsS3BucketSourceSettings",
     "TemplateEngineKind", "CustomTemplateEngineSettings", "TemplateEngineSettings",
     "TemplateParserSettings",
     "SchemaParserSettings",

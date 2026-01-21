@@ -14,7 +14,7 @@ description = """
 
     Templisafe handles multiple sources concurrently using threading (if enabled), while 
     also supporting serial processing when needed. Its core idea is to enable Template-As-Code 
-    (TaC), providing an IaC-like approach to managing templates safely and systematically, 
+    (TaC), providing an IaC-like approach to managing templates safely and systematically 
     with a fully configurable and easy-to-use API.
 """
 
@@ -40,7 +40,7 @@ dev = [
     "isort",
     "mypy",
     "Django>=4.2",
-    "moto[s3]>=4.0"           # Enables mocking for S3
+    "moto[s3, secretsmanager, ssm, dynamodb]"           # Enables mocking for aws services
 ]
 notebook = [
     "notebook>=7.0",          # Jupyter Notebook
