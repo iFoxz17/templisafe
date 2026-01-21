@@ -4,7 +4,6 @@ from templisafe.settings.template_engine_settings import TemplateEngineKind, Tem
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.jinja_template_engine import JinjaTemplateEngine
 from templisafe.engine.django_template_engine import DjangoTemplateEngine
-from templisafe.engine.custom_template_engine import CustomTemplateEngine
 
 from templisafe.exceptions.template_engine_error import UnsupportedTemplateEngineError
 
@@ -20,7 +19,6 @@ class TemplateEngineFactory:
     _ENGINE_MAP: MappingProxyType[TemplateEngineKind, type[TemplateEngine]] = MappingProxyType({
         TemplateEngineKind.JINJA: JinjaTemplateEngine,
         TemplateEngineKind.DJANGO: DjangoTemplateEngine,
-        TemplateEngineKind.CUSTOM: CustomTemplateEngine
     })
     
     def __init__(self) -> None:

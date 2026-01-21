@@ -1,45 +1,39 @@
 import pytest
 from typing import Any, Set, Dict
 
-from templisafe.settings.template_engine_settings import (
-    TemplateEngineKind,
-    CustomTemplateEngineSettings
-)
-from templisafe.engine.custom_template_engine import CustomTemplateEngine
+from templisafe.engine.template_engine import TemplateEngine
+from templisafe.settings.template_engine_settings import TemplateEngineSettings
+
+
+# -------------------------
+# Custom TemplateEngine for testing
+# -------------------------
+class MyCustomEngine(TemplateEngine):
+    """A trivial custom template engine for testing purposes."""
+
+    def extract_variables(self, template_str: str) -> Set[str]:
+        # Trivial extraction: '{{a}}' is the only recognized variable
+        return {"a"} if "{{a}}" in template_str else set()
+
+    def render(self, template_str: str, vars_map: Dict[str, Any]) -> str:
+        # Replace '{{a}}' with the provided value or default to 1
+        return template_str.replace("{{a}}", str(vars_map.get("a", 1)))
+
 
 # -------------------------
 # Fixtures
 # -------------------------
 @pytest.fixture
-def custom_settings() -> CustomTemplateEngineSettings:
-    """Custom settings for testing the CustomTemplateEngine."""
-    
-    def extract_vars(template: str, config: dict[str, Any]) -> Set[str]:
-        # Trivial extraction: find '{{a}}' as a variable
-        return {"a"} if "{{a}}" in template else set()
-    
-    def render(template: str, values: Dict[str, Any], config: dict[str, Any]) -> str:
-        # Trivial render: replace '{{a}}' with values['a'] or '1'
-        return template.replace("{{a}}", str(values.get("a", 1)))
-
-    return CustomTemplateEngineSettings(
-        kind=TemplateEngineKind.CUSTOM,
-        config={},
-        extract_variables_func=extract_vars,
-        render_func=render
-    )
-
-
-@pytest.fixture
-def custom_engine(custom_settings) -> CustomTemplateEngine:
-    """Return a CustomTemplateEngine instance for testing."""
-    return CustomTemplateEngine(custom_settings)
+def custom_engine() -> TemplateEngine:
+    """Return an instance of the custom engine."""
+    settings = TemplateEngineSettings.create(kind="custom", config={})
+    return MyCustomEngine(settings)
 
 
 # -------------------------
-# CustomTemplateEngine tests
+# Tests
 # -------------------------
-def test_custom_engine_extract(custom_engine: CustomTemplateEngine):
+def test_extract_variables(custom_engine: TemplateEngine):
     template = "Value is {{a}}"
     vars_ = custom_engine.extract_variables(template)
     assert vars_ == {"a"}
@@ -49,7 +43,7 @@ def test_custom_engine_extract(custom_engine: CustomTemplateEngine):
     assert vars_ == set()
 
 
-def test_custom_engine_render(custom_engine: CustomTemplateEngine):
+def test_render(custom_engine: TemplateEngine):
     template = "Value is {{a}}"
     rendered = custom_engine.render(template, {"a": 42})
     assert rendered == "Value is 42"

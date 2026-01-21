@@ -1,6 +1,8 @@
+from dataclasses import replace
 from templisafe.outcome_handler import OutcomeHandler
 
 from templisafe.resolver.source_resolver import SourceResolutionRequest, SourceResolutionResult, SourceResolver
+from templisafe.settings import template_parser_settings
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.settings.source.source_settings import SourceSettings
@@ -92,22 +94,35 @@ class Templater:
 
         return resolved
     
+    def _resolve_template_engine(
+            self, 
+            template_engine: Source | SourceSettings | TemplateEngine | None,
+            template_engine_settings: TemplateEngineSettings | None,
+            ) -> TemplateEngine:
+        if isinstance(template_engine, TemplateEngine):
+            return template_engine
+        
+        return self._template_engine_manager.get_or_create(
+                template_engine_settings or self._engine_default_settings
+            )
+    
     # ----------------------------
     # Compilation
     # ----------------------------
     
-    def _compile(self, result: SourceResolutionResult) -> Compilation:
+    def _compile(
+            self, 
+            result: SourceResolutionResult, 
+            template_engine: TemplateEngine      
+        ) -> Compilation:
+        
         if result.template_str is None:
             raise ValueError(f"Missing required template_str resolution: {result}")
-        
-        engine: TemplateEngine = self._template_engine_manager.get_or_create(
-            result.template_engine_settings or self._engine_default_settings
-        )
         
         loader_facade: LoaderFacade = self._loader_facade
         template: Template = loader_facade.load_template(
             template_str=result.template_str,
-            engine=engine
+            engine=template_engine
             )
         
         schema: Schema | None = None
@@ -126,28 +141,32 @@ class Templater:
         
     def compile(
         self,
-        template_source: Source | SourceSettings,
-        schema_source: Source | SourceSettings | None = None,
+        template: Source | SourceSettings,
+        schema: Source | SourceSettings | None = None,
         *,
-        template_engine_settings_source: Source | SourceSettings | None = None,
-        schema_parser_settings_source: Source | SourceSettings | None = None,
-        compiler_settings_source: Source | SourceSettings | None = None,
+        template_engine: Source | SourceSettings | TemplateEngine | None = None,
+        template_parser_settings: Source | SourceSettings | None = None,
+        schema_parser_settings: Source | SourceSettings | None = None,
+        compiler_settings: Source | SourceSettings | None = None,
     ) -> Compilation:
         """
         Compile a template with an optional schema.  
 
         Parameters
         ----------
-        template_source : Source | SourceSettings
-            Source of the template to compile.
-        schema_source : Source | SourceSettings | None
-            Optional source for schema used in compilation.
-        template_engine_settings_source : Source | SourceSettings | None
-            Optional source for template engine settings. If not provided, default configurations are used.
-        schema_parser_settings_source : Source | SourceSettings | None
-            Optional source for schema parser settings. If not provided, default configurations are used.
-        compiler_settings_source : Source | SourceSettings | None
-            Optional source for compiler settings. If not provided, default configurations are used.
+        template : Source | SourceSettings
+            Source or source settings of the template to compile.
+        schema : Source | SourceSettings | None
+            Optional source or source settings of the schema to use in compilation.
+        template_engine : TemplateEngine | Source | SourceSettings | None, optional
+            Either a TemplateEngine instance, source settings object or a source pointing to
+            template engine settings. If not provided, default configurations are used.
+        template_parser_settings : Source | SourceSettings | None
+            Optional source or source settings for template parser settings. If not provided, default configurations are used.
+        schema_parser_settings : Source | SourceSettings | None
+            Optional source or source settings for schema parser settings. If not provided, default configurations are used.
+        compiler_settings : Source | SourceSettings | None
+            Optional source or source settings for compiler settings. If not provided, default configurations are used.
 
         Returns
         -------
@@ -161,29 +180,41 @@ class Templater:
             or compilation failures.
         """
 
-        request: SourceResolutionRequest = SourceResolutionRequest(
-            template_source=self._resolve_source(template_source),
-            schema_source=self._resolve_source(schema_source),
-            template_engine_settings_source=self._resolve_source(template_engine_settings_source),
-            template_parser_settings_source=self._resolve_source(template_engine_settings_source),
-            schema_parser_settings_source=self._resolve_source(schema_parser_settings_source),
-            compiler_settings_source=self._resolve_source(compiler_settings_source)
+        template_engine_settings_source: Source | None = (
+            self._resolve_source(template_engine)
+            if isinstance(template_engine, (Source, SourceSettings))
+            else None
         )
+            
+        request: SourceResolutionRequest = SourceResolutionRequest(
+            template_source=self._resolve_source(template),
+            schema_source=self._resolve_source(schema),
+            template_engine_settings_source=template_engine_settings_source,
+            template_parser_settings_source=self._resolve_source(template_parser_settings),
+            schema_parser_settings_source=self._resolve_source(schema_parser_settings),
+            compiler_settings_source=self._resolve_source(compiler_settings)
+        )
+        
         result: SourceResolutionResult = self._source_resolver.resolve(request)
-        return self._compile(result)
+        template_engine_resolved: TemplateEngine = self._resolve_template_engine(
+            template_engine, result.template_engine_settings
+        )   
+
+        return self._compile(result, template_engine_resolved)
             
     # ----------------------------
     # Rendering
     # ----------------------------
 
-    def _render(self, compiled: CompilationSpec, result: SourceResolutionResult) -> Rendering:
+    def _render(
+            self, 
+            compiled: CompilationSpec, 
+            result: SourceResolutionResult,
+            template_engine: TemplateEngine   
+            ) -> Rendering:
         if result.variants_configs is None:
             raise ValueError(f"Missing required variants_configs resolution: {result}")
                 
-        engine: TemplateEngine = self._template_engine_manager.get_or_create(
-            result.template_engine_settings or self._engine_default_settings
-        )
-        
         variants_set: VariantSet = self._loader_facade.load_variants(
             variants_configs=result.variants_configs,
             parser_settings=result.variant_parser_settings
@@ -195,7 +226,7 @@ class Templater:
         rendering: Rendering = renderer.render(
             compiled=compiled,
             variants_set=variants_set,
-            engine=engine
+            engine=template_engine
         )
         self._outcome_handler.handle_rendering(rendering)
         return rendering
@@ -203,11 +234,11 @@ class Templater:
     def render(
         self, 
         compiled: CompilationSpec,
-        variants_sources: Source | SourceSettings | list[Source | SourceSettings],
+        variants: Source | SourceSettings | list[Source | SourceSettings],
         *,
-        template_engine_settings_source: Source | SourceSettings | None = None,
-        variant_parser_settings_source: Source | SourceSettings | None = None,
-        renderer_settings_source: Source | SourceSettings | None = None,
+        template_engine: TemplateEngine | Source | SourceSettings | None = None,
+        variant_parser_settings: Source | SourceSettings | None = None,
+        renderer_settings: Source | SourceSettings | None = None,
     ) -> Rendering:
         """
         Render a compiled template using variants and a template engine.
@@ -216,14 +247,15 @@ class Templater:
         ----------
         compiled : CompilationSpec
             The compiled template to render.
-        variants_sources : Source | SourceSettings | list[Source | SourceSettings]
-            Sources of variant data.
-        template_engine_settings_source : Source | SourceSettings | None
-            Optional source for template engine settings. If not provided, default configurations are used.
-        variant_parser_settings_source : Source | SourceSettings | None
-            Optional source for variant parser settings. If not provided, default configurations are used.
-        renderer_settings_source : Source | SourceSettings | None
-            Optional source for renderer settings. If not provided, default configurations are used.
+        variants : Source | SourceSettings | list[Source | SourceSettings]
+            Sources or sources settings of variants data.
+        template_engine : TemplateEngine | Source | SourceSettings | None, optional
+            Either a TemplateEngine instance, source settings object or a source pointing to
+            template engine settings. If not provided, default configurations are used.
+        variant_parser_settings : Source | SourceSettings | None
+            Optional source or source settings for variant parser settings. If not provided, default configurations are used.
+        renderer_settings : Source | SourceSettings | None
+            Optional source or source settings for renderer settings. If not provided, default configurations are used.
 
         Returns
         -------
@@ -237,15 +269,24 @@ class Templater:
             or rendering failures.
         """
 
+        template_engine_settings_source: Source | None = (
+            self._resolve_source(template_engine)
+            if isinstance(template_engine, (Source, SourceSettings))
+            else None
+        )
+        
         request: SourceResolutionRequest = SourceResolutionRequest(
-            variants_sources=self._resolve_sources(variants_sources),
-            template_engine_settings_source=self._resolve_source(template_engine_settings_source),
-            variant_parser_settings_source=self._resolve_source(variant_parser_settings_source),
-            renderer_settings_source=self._resolve_source(renderer_settings_source)
+            variants_sources=self._resolve_sources(variants),
+            template_engine_settings_source=template_engine_settings_source,
+            variant_parser_settings_source=self._resolve_source(variant_parser_settings),
+            renderer_settings_source=self._resolve_source(renderer_settings)
         )
         result: SourceResolutionResult = self._source_resolver.resolve(request)
+        template_engine_resolved: TemplateEngine = self._resolve_template_engine(
+            template_engine, result.template_engine_settings
+        ) 
 
-        return self._render(compiled, result)
+        return self._render(compiled, result, template_engine_resolved)
     
     # ----------------------------
     # Validation
@@ -273,10 +314,10 @@ class Templater:
     def validate(
         self, 
         compiled: CompilationSpec,
-        variants_sources: Source | SourceSettings | list[Source | SourceSettings],
+        variants: Source | SourceSettings | list[Source | SourceSettings],
         *,
-        variant_parser_settings_source: Source | SourceSettings | None = None,
-        renderer_settings_source: Source | SourceSettings | None = None,
+        variant_parser_settings: Source | SourceSettings | None = None,
+        renderer_settings: Source | SourceSettings | None = None,
     ) -> Rendering:
         """
         Validate a compiled template against variants without effectively rendering it.
@@ -285,12 +326,12 @@ class Templater:
         ----------
         compiled : CompilationSpec
             The compiled template to render.
-        variants_sources : Source | SourceSettings | list[Source | SourceSettings]
-            Sources of variant data.
-        variant_parser_settings_source : Source | SourceSettings | None
-            Optional source for variant parser settings. If not provided, default configurations are used.
-        renderer_settings_source : Source | SourceSettings | None
-            Optional source for renderer settings. If not provided, default configurations are used.
+        variants : Source | SourceSettings | list[Source | SourceSettings]
+            Sources or sources settings of variants data.
+        variant_parser_settings : Source | SourceSettings | None
+            Optional source or source settings for variant parser settings. If not provided, default configurations are used.
+        renderer_settings : Source | SourceSettings | None
+            Optional source or source settings for renderer settings. If not provided, default configurations are used.
 
         Returns
         -------
@@ -305,13 +346,13 @@ class Templater:
         """
 
         request: SourceResolutionRequest = SourceResolutionRequest(
-            variants_sources=self._resolve_sources(variants_sources),
-            variant_parser_settings_source=self._resolve_source(variant_parser_settings_source),
-            renderer_settings_source=self._resolve_source(renderer_settings_source)
+            variants_sources=self._resolve_sources(variants),
+            variant_parser_settings_source=self._resolve_source(variant_parser_settings),
+            renderer_settings_source=self._resolve_source(renderer_settings)
         )
         result: SourceResolutionResult = self._source_resolver.resolve(request)
 
-        return self._render(compiled, result)
+        return self._validate(compiled, result)
 
     # ----------------------------
     # Build
@@ -319,37 +360,39 @@ class Templater:
     
     def build(
         self, 
-        template_source: Source | SourceSettings,
-        variants_sources: Source | SourceSettings | list[Source | SourceSettings],
-        schema_source: Source | SourceSettings | None = None,
+        template: Source | SourceSettings,
+        variants: Source | SourceSettings | list[Source | SourceSettings],
+        schema: Source | SourceSettings | None = None,
         *,
-        template_engine_settings_source: Source | SourceSettings | None = None,
-        schema_parser_settings_source: Source | SourceSettings | None = None,
-        variant_parser_settings_source: Source | SourceSettings | None = None,
-        compiler_settings_source: Source | SourceSettings | None = None,
-        renderer_settings_source: Source | SourceSettings | None = None
+        template_engine: TemplateEngine | Source | SourceSettings | None = None,
+        template_parser_settings: Source | SourceSettings | None = None,
+        schema_parser_settings: Source | SourceSettings | None = None,
+        variant_parser_settings: Source | SourceSettings | None = None,
+        compiler_settings: Source | SourceSettings | None = None,
+        renderer_settings: Source | SourceSettings | None = None
     ) -> Build:
         """
         Compile, validate and render a template.
         
         Parameters
         ----------
-        template_source : Source | SourceSettings
-            Source of the template to compile.
-        schema_source : Source | SourceSettings | None
-            Optional source for schema used in compilation.
+        template : Source | SourceSettings
+            Source or source settings of the template to compile.
         variants_sources : Source | SourceSettings | list[Source | SourceSettings]
-            Sources of variant data.
-        template_engine_settings_source : Source | SourceSettings | None
-            Optional source for template engine settings. If not provided, default configurations are used.
-        schema_parser_settings_source : Source | SourceSettings | None
-            Optional source for schema parser settings. If not provided, default configurations are used.
-        variant_parser_settings_source : Source | SourceSettings | None
-            Optional source for variant parser settings. If not provided, default configurations are used.
-        compiler_settings_source : Source | SourceSettings | None
-            Optional source for compiler settings. If not provided, default configurations are used.
-        renderer_settings_source : Source | SourceSettings | None
-            Optional source for renderer settings. If not provided, default configurations are used.
+            Sources or sources settings of variants data.
+        schema : Source | SourceSettings | None
+            Optional source or source settings of the schema used in compilation.
+        template_engine : TemplateEngine | Source | SourceSettings | None, optional
+            Either a TemplateEngine instance, source settings object or a source pointing to
+            template engine settings. If not provided, default configurations are used.
+        schema_parser_settings : Source | SourceSettings | None
+            Optional source or source settings for schema parser settings. If not provided, default configurations are used.
+        variant_parser_settings : Source | SourceSettings | None
+            Optional source or source settings for variant parser settings. If not provided, default configurations are used.
+        compiler_settings : Source | SourceSettings | None
+            Optional source or source settings for compiler settings. If not provided, default configurations are used.
+        renderer_settings: Source | SourceSettings | None
+            Optional source or source settings for renderer settings. If not provided, default configurations are used.
 
         Returns
         -------
@@ -363,19 +406,28 @@ class Templater:
             compilation or rendering failures.
         """
 
+        template_engine_settings_source: Source | None = (
+            self._resolve_source(template_engine)
+            if isinstance(template_engine, (Source, SourceSettings))
+            else None
+        )
+
         request: SourceResolutionRequest = SourceResolutionRequest(
-            template_source=self._resolve_source(template_source),
-            schema_source=self._resolve_source(schema_source),
-            variants_sources=self._resolve_sources(variants_sources),
-            template_engine_settings_source=self._resolve_source(template_engine_settings_source),
-            template_parser_settings_source=self._resolve_source(template_engine_settings_source),
-            schema_parser_settings_source=self._resolve_source(schema_parser_settings_source),
-            variant_parser_settings_source=self._resolve_source(variant_parser_settings_source),
-            compiler_settings_source=self._resolve_source(compiler_settings_source),
-            renderer_settings_source=self._resolve_source(renderer_settings_source)
+            template_source=self._resolve_source(template),
+            schema_source=self._resolve_source(schema),
+            variants_sources=self._resolve_sources(variants),
+            template_engine_settings_source=template_engine_settings_source,
+            template_parser_settings_source=self._resolve_source(template_parser_settings),
+            schema_parser_settings_source=self._resolve_source(schema_parser_settings),
+            variant_parser_settings_source=self._resolve_source(variant_parser_settings),
+            compiler_settings_source=self._resolve_source(compiler_settings),
+            renderer_settings_source=self._resolve_source(renderer_settings)
         )
         result: SourceResolutionResult = self._source_resolver.resolve(request)
+        template_engine_resolved: TemplateEngine = self._resolve_template_engine(
+            template_engine, result.template_engine_settings
+        )
 
-        compilation: Compilation = self._compile(result)
-        rendering: Rendering = self._render(compilation.compiled, result)
+        compilation: Compilation = self._compile(result, template_engine_resolved)
+        rendering: Rendering = self._render(compilation.compiled, result, template_engine_resolved)
         return Build(compilation=compilation, rendering=rendering)

@@ -126,29 +126,29 @@ def templater(
 
 
 def test_compile_sync_calls_acompile_and_returns_compilation(templater):
-    result = templater.compile(template_source=create_autospec(Source))
+    result = templater.compile(template=create_autospec(Source))
     assert isinstance(result, Compilation)
 
 
 def test_render_sync_returns_rendering(templater):
     result = templater.render(
         compiled="COMPILED",
-        variants_sources=create_autospec(Source)
+        variants=create_autospec(Source)
     )
     assert isinstance(result, Rendering)
 
 def test_validate_sync_returns_rendering(templater):
     result = templater.validate(
         compiled="COMPILED",
-        variants_sources=create_autospec(Source)
+        variants=create_autospec(Source)
     )
     assert isinstance(result, Rendering)
 
 
 def test_build_sync_returns_build(templater):
     result = templater.build(
-        template_source=create_autospec(Source),
-        variants_sources=create_autospec(Source),
+        template=create_autospec(Source),
+        variants=create_autospec(Source),
     )
 
     assert isinstance(result, Build)

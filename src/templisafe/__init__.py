@@ -22,7 +22,7 @@ __all__ = [
     "CompilerSettings",
     "RendererSettings",
     "SourceKind", "SourceSettings", "InlineSourceSettings", "LocalSourceSettings",
-    "TemplateEngineKind", "CustomTemplateEngineSettings", "TemplateEngineSettings",
+    "TemplateEngineKind", "TemplateEngineSettings",
     "TemplateParserSettings",
     "SchemaParserSettings",
     "VariantParserSettings",

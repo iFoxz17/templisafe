@@ -6,7 +6,7 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 ---
 
 ## High Priority
-- [ ] Complete AwsSecretsManagerSource with tests
+- [ ] Implement custom source
 - [ ] Setup github repo: automate release pipeline to create tags on release branch
 - [ ] Add a test for Templater concurrency
 - [ ] Develop contribuiting section

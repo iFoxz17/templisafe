@@ -1,4 +1,4 @@
-from typing import Any, Callable, Type, TypeVar, cast
+from typing import Any, Type, TypeVar, cast
 from pydantic import ValidationError
 from enum import Enum
 from overrides import overrides
@@ -25,31 +25,6 @@ class TemplateEngineSettings(Settings):
         Raises if multiple config sources are provided.
         """
 
-        target_cls: Type[T] = cls
-        if "kind" in kwargs:
-            kind: Any = kwargs["kind"]
-            if isinstance(kind, str):
-                try:
-                    kind = TemplateEngineKind(kind.lower())
-                except ValueError:
-                    raise ValueError(f"Invalid settings kind: {kind!r}")
-
-                if not isinstance(kind, TemplateEngineKind):
-                    raise ValueError(f"Invalid settings kind: {kind!r}")
-                
-                match kind:
-                    case TemplateEngineKind.JINJA | TemplateEngineKind.DJANGO:
-                        target_cls = TemplateEngineSettings             # type: ignore
-                    case TemplateEngineKind.CUSTOM:
-                        target_cls = CustomTemplateEngineSettings       # type: ignore
-
-        # Subclass dispatch for CUSTOM kind
-        if target_cls == TemplateEngineKind.CUSTOM:
-            if "extract_variables_func" not in kwargs or "render_func" not in kwargs:
-                raise ValueError(
-                    "CustomTemplateEngineSettings requires 'extract_variables_func' and 'render_func'."
-                )
-                
         # Check for multiple config sources
         config_sources = ["config", "config_yaml", "config_json"]
         provided = [key for key in config_sources if key in kwargs]
@@ -79,7 +54,7 @@ class TemplateEngineSettings(Settings):
 
         kwargs["config"] = cfg
     
-        return {"target_cls": target_cls, "kwargs": kwargs}
+        return {"target_cls": cls, "kwargs": kwargs}
 
 
     @classmethod
@@ -107,12 +82,3 @@ class TemplateEngineSettings(Settings):
             return cast(T, target_cls.model_validate(kwargs))
         except ValidationError as e:
             raise ValueError(f"Invalid fields for {target_cls.__name__}: {e}") from e
-
-
-class CustomTemplateEngineSettings(TemplateEngineSettings):
-    """
-    Settings for a custom template engine backed by user-provided callables.
-    """
-
-    extract_variables_func: Callable[[str, dict[str, Any]], set[str]]
-    render_func: Callable[[str, dict[str, Any], dict[str, Any]], str]

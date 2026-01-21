@@ -5,7 +5,6 @@ from templisafe.settings.settings import Settings, SettingsKind
 from templisafe.settings.source import *
 from templisafe.settings.template_engine_settings import (
     TemplateEngineKind,
-    CustomTemplateEngineSettings,
     TemplateEngineSettings
 )
 from templisafe.settings.template_parser_settings import TemplateParserSettings
@@ -17,7 +16,7 @@ __all__ = [
     "CompilerSettings",
     "RendererSettings",
     "SourceKind", "SourceSettings", "InlineSourceSettings", "LocalSourceSettings", "AwsS3BucketSourceSettings",
-    "TemplateEngineKind", "CustomTemplateEngineSettings", "TemplateEngineSettings",
+    "TemplateEngineKind", "TemplateEngineSettings",
     "TemplateParserSettings",
     "SchemaParserSettings",
     "VariantParserSettings",

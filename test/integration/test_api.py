@@ -116,9 +116,9 @@ def test_full_build_with_local_sources(tmp_path):
     # Build
     # ------------------------------------------------------------------
     build: Build = templater.build(
-        template_source=template_source,
-        schema_source=schema_source,
-        variants_sources=[variants_1_source, variants_2_source],
+        template=template_source,
+        schema=schema_source,
+        variants=[variants_1_source, variants_2_source],
     )
 
     # ------------------------------------------------------------------
@@ -179,9 +179,9 @@ def test_full_build_with_inline_sources():
     # Build
     # ------------------------------------------------------------------
     build: Build = templater.build(
-        template_source=template_source,
-        schema_source=schema_source,
-        variants_sources=[variants_1_source, variants_2_source],
+        template=template_source,
+        schema=schema_source,
+        variants=[variants_1_source, variants_2_source],
     )
 
     # ------------------------------------------------------------------
