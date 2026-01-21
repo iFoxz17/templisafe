@@ -3,9 +3,15 @@ from types import MappingProxyType
 from collections.abc import Mapping
 
 from templisafe.settings.source import *
+from templisafe.settings.source.aws.aws_dynamodb_source_settings import AwsDynamoDBSourceSettings
+from templisafe.settings.source.aws.aws_secrets_manager_source_settings import AwsSecretsManagerSourceSettings
+from templisafe.settings.source.aws.aws_ssm_parameter_source_settings import AwsSsmParameterSourceSettings
+from templisafe.source.aws.aws_dynamodb_source import AwsDynamoDBSource
+from templisafe.source.aws.aws_ssm_parameter_source import AwsSsmParameterSource
 from templisafe.source.source import Source
 from templisafe.source.local_source import LocalSource
-from templisafe.source.s3_source import S3Source
+from templisafe.source.aws.aws_s3_bucket_source import AwsS3BucketSource
+from templisafe.source.aws.aws_secrets_manager_source import AwsSecretsManagerSource
 from templisafe.source.inline_source import InlineSource, InlineSourceSettings
 from templisafe.exceptions.source_error import UnsupportedSourceError, ContentTypeResolutionError
 from templisafe.util.util import ContentType
@@ -17,9 +23,11 @@ from templisafe.util.util import ContentType
 CONTENT_TYPE_MAP: Mapping[str, ContentType] = MappingProxyType({
     ".j2": ContentType.TEXT,
     ".jinja": ContentType.TEXT,
+    ".txt": ContentType.TEXT,
     ".yaml": ContentType.YAML,
     ".json": ContentType.JSON,
     ".toml": ContentType.TOML,
+    ".xml": ContentType.XML,
 })
 class ContentTypeResolver:
     __slots__: tuple[str, ...] = ("_content_type_map",)
@@ -42,9 +50,18 @@ class ContentTypeResolver:
             case SourceKind.LOCAL:
                 assert isinstance(settings, LocalSourceSettings)
                 return settings.path
-            case SourceKind.S3:
-                assert isinstance(settings, S3SourceSettings)
+            case SourceKind.AWS_S3_BUCKET:
+                assert isinstance(settings, AwsS3BucketSourceSettings)
                 return settings.key
+            case SourceKind.AWS_SECRETS_MANAGER:
+                assert isinstance(settings, AwsSecretsManagerSourceSettings)
+                return settings.secret_id
+            case SourceKind.AWS_SSM_PARAMETER:
+                assert isinstance(settings, AwsSsmParameterSourceSettings)
+                return settings.parameter_name
+            case SourceKind.AWS_DYNAMODB:
+                assert isinstance(settings, AwsDynamoDBSourceSettings)
+                return None
             case SourceKind.INLINE:
                 assert isinstance(settings, InlineSourceSettings)
                 return None
@@ -72,7 +89,10 @@ class SourceFactory:
         {
             InlineSourceSettings: InlineSource,
             LocalSourceSettings: LocalSource,
-            S3SourceSettings: S3Source
+            AwsS3BucketSourceSettings: AwsS3BucketSource,
+            AwsSecretsManagerSourceSettings: AwsSecretsManagerSource,
+            AwsSsmParameterSourceSettings: AwsSsmParameterSource,
+            AwsDynamoDBSourceSettings: AwsDynamoDBSource
         }
     )
     

@@ -10,7 +10,10 @@ from templisafe.util.util import ContentType
 class SourceKind(str, Enum):
     INLINE = "inline"
     LOCAL = "local"
-    S3 = "s3"
+    AWS_S3_BUCKET = "aws_s3_bucket"
+    AWS_SECRETS_MANAGER ="aws_secrets_manager"
+    AWS_SSM_PARAMETER = "aws_ssm_parameter"
+    AWS_DYNAMODB = "aws_dynamodb"
 
 
 class SourceSettings(Settings, ABC):
