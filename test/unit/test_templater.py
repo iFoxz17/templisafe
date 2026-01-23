@@ -112,14 +112,14 @@ def templater(
     outcome_handler = create_autospec(OutcomeHandler)
 
     return Templater(
-        source_manager=source_manager,
+        source_executor=source_manager,
         source_resolver=source_resolver,
-        template_engine_manager=engine_manager,
+        template_engine_resolver=engine_manager,
         loader_facade=loader,
         compiler_manager=compiler_manager,
         renderer_manager=renderer_manager,
         outcome_handler=outcome_handler,
-        engine_default_settings=TemplateEngineSettings(kind=TemplateEngineKind.JINJA, config={}),
+        template_engine_default_settings=TemplateEngineSettings(kind=TemplateEngineKind.JINJA, config={}),
         compiler_default_settings=CompilerSettings(index_key="_index"),
         renderer_default_settings=RendererSettings(index_key="_index"),
     )

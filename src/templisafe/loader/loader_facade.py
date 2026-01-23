@@ -1,5 +1,6 @@
 from typing import Any
 
+from templisafe.settings.template_parser_settings import TemplateParserSettings
 from templisafe.template.template_model import Schema, Template, VariantSet
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.settings.variant_parser_settings import VariantParserSettings
@@ -28,31 +29,30 @@ class LoaderFacade:
     def load_template(
             self, 
             template_str: str, 
-            engine: TemplateEngine | None = None
+            template_engine: TemplateEngine,
+            parser_settings: TemplateParserSettings | None = None
             ) -> Template:
         return self._template_loader.load(
             template_str,
-            engine
-        )
+            template_engine,
+            parser_settings
+            )
 
     def load_schema(
             self, 
             schema_config: dict[str, Any], 
             parser_settings: SchemaParserSettings | None = None
             ) -> Schema:
-        
         return self._schema_loader.load(
             schema_config, 
             parser_settings
         )
     
     def load_variants(
-        self,
-        variants_configs: list[dict[str, Any]],
-        parser_settings: VariantParserSettings | None = None,
-    ) -> VariantSet:
-
-        
+            self,
+            variants_configs: list[dict[str, Any]],
+            parser_settings: VariantParserSettings | None = None,
+            ) -> VariantSet:
         return self._variant_loader.load(
             variants_configs,
             parser_settings,

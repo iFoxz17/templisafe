@@ -1,11 +1,15 @@
 from typing import Callable
 
-from templisafe.resolver.source_resolver import SourceResolver
-from templisafe.settings.source_resolver_settings import SourceResolverSettings
+from templisafe.engine.template_engine_resolver import TemplateEngineResolver
+from templisafe.settings.source.source_settings import SourceSettings
+from templisafe.settings.source_executor_settings import SourceExecutorSettings
+from templisafe.source.source_resolver import SourceResolver
 from templisafe.template.compiler.compiler_manager import CompilerManager
 from templisafe.template.renderer.renderer_manager import RendererManager
 from templisafe.templater import Templater
+
 from templisafe.outcome_handler import OutcomeHandler
+from templisafe.default_handler import DefaultHandler
 
 from templisafe.util.util import DiagnosticPolicy
 
@@ -20,16 +24,20 @@ from templisafe.settings.template_engine_settings import TemplateEngineSettings,
 from templisafe.source.source_manager import SourceManager
 from templisafe.source.source import Source
 
+
+from templisafe.executor.source_executor import SourceExecutor
+from templisafe.executor.config_loader import ConfigLoader
+
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_manager import TemplateEngineManager
 
 from templisafe.loader.loader_facade import LoaderFacade
-from templisafe.resolver.config_loader import ConfigLoader
 from templisafe.loader.template.template_loader import TemplateLoader
 from templisafe.loader.schema.schema_loader import SchemaLoader, _INDEX_KEY_KEY
 from templisafe.loader.variant.variant_loader import VariantLoader
 
 class TemplaterFactory:
+    '''
     """
     Factory for creating Templater instances.
 
@@ -73,23 +81,26 @@ class TemplaterFactory:
     # ------------------------------------------------------------------
     # Source resolver
     # ------------------------------------------------------------------
-    def _create_source_resolver(
+    def _create_source_executor(
         self,
-        source_resolver_settings_source: Source | None = None,
-    ) -> SourceResolver:
-        
+        source_executor_settings: Source | SourceSettings | SourceExecutorSettings | None = None,
+    ) -> SourceExecutor:
+        if not isinstance(source_executor_settings, SourceExecutorSettings):
+
+
+
         settings = (
             self._load_settings(
-                source_resolver_settings_source,
-                expected_type=SourceResolverSettings,
+                source_executor_settings_source,
+                expected_type=SourceExecutorSettings,
             )
-            if source_resolver_settings_source is not None
-            else SourceResolverSettings.create()
+            if source_executor_settings_source is not None
+            else SourceExecutorSettings.create()
         )
-        assert isinstance(settings, SourceResolverSettings)
+        assert isinstance(settings, SourceExecutorSettings)
 
         config_loader: ConfigLoader = ConfigLoader()
-        return SourceResolver(settings=settings, config_loader=config_loader)
+        return SourceExecutor(settings=settings, config_loader=config_loader)
 
     # ------------------------------------------------------------------
     # Template engine
@@ -113,8 +124,6 @@ class TemplaterFactory:
     # ------------------------------------------------------------------
     def _create_loader_facade(
         self,
-        template_engine: TemplateEngine,
-        *,
         template_loader_settings_source: Source | None = None,
         schema_loader_settings_source: Source | None = None,
         variant_loader_settings_source: Source | None = None,
@@ -132,10 +141,7 @@ class TemplaterFactory:
         assert variant_settings is None or isinstance(variant_settings, VariantParserSettings)
 
         return LoaderFacade(
-            template_loader=TemplateLoader(
-                default_engine=template_engine,
-                default_settings=template_settings,
-            ),
+            template_loader=TemplateLoader(default_settings=template_settings),
             schema_loader=SchemaLoader(schema_settings),
             variant_loader=VariantLoader(variant_settings),
         )
@@ -146,13 +152,13 @@ class TemplaterFactory:
     def create(
         self,
         *,
-        source_resolver_settings_source: Source | None = None,
-        template_engine_settings_source: Source | None = None,
-        template_loader_settings_source: Source | None = None,
-        schema_loader_settings_source: Source | None = None,
-        variant_loader_settings_source: Source | None = None,
-        compiler_settings_source: Source | None = None,
-        renderer_settings_source: Source | None = None,
+        source_executor_settings: Source | SourceSettings | SourceExecutorSettings | None = None,
+        template_engine_settings: Source | SourceSettings | TemplateEngineSettings | None = None,
+        template_parser_settings: Source | SourceSettings | TemplateParserSettings |  None = None,
+        schema_parser_settings: Source | SourceSettings | SchemaParserSettings | None = None,
+        variant_parser_settings: Source | SourceSettings | VariantParserSettings | None = None,
+        compiler_settings: Source | SourceSettings | CompilerSettings | None = None,
+        renderer_settings: Source | SourceSettings | RendererSettings | None = None,
         diagnostic_policy: DiagnosticPolicy | str | None = None,
     ) -> Templater:
         """
@@ -164,20 +170,20 @@ class TemplaterFactory:
 
         Parameters
         ----------
-        source_resolver_settings_source : Source | None
-            Optional source for source resolver settings. If not provided, default configurations are used.
-        template_engine_settings_source : Source | None
-            Optional source for template engine settings. If not provided, default configurations are used.
-        template_loader_settings_source : Source | None
-            Optional source for template loader settings. If not provided, default configurations are used.
-        schema_loader_settings_source : Source | None
-            Optional source for schema loader settings. If not provided, default configurations are used.
-        variant_loader_settings_source : Source | None
-            Optional source for variant loader settings. If not provided, default configurations are used.
-        compiler_settings_source : Source | None
-            Optional source for compiler settings. If not provided, default configurations are used.
-        renderer_settings_source : Source | None
-            Optional source for renderer settings. If not provided, default configurations are used.
+        source_resolver_settings_source : Source | SourceSettings | None
+            Optional source or source settings for source resolver settings. If not provided, default configurations are used.
+        template_engine_settings_source : Source | SourceSettings | None
+            Optional source or source settings for template engine settings. If not provided, default configurations are used.
+        template_loader_settings_source : Source | SourceSettings | None
+            Optional source or source settings for template loader settings. If not provided, default configurations are used.
+        schema_loader_settings_source : Source | SourceSettings | None
+            Optional source or source settings for schema loader settings. If not provided, default configurations are used.
+        variant_loader_settings_source : Source | SourceSettings | None
+            Optional source or source settings for variant loader settings. If not provided, default configurations are used.
+        compiler_settings_source : Source | SourceSettings | None
+            Optional source or source settings for compiler settings. If not provided, default configurations are used.
+        renderer_settings_source : Source | SourceSettings | None
+            Optional source or source settings for renderer settings. If not provided, default configurations are used.
         diagnostic_policy : DiagnosticPolicy | str | None
             Optional policy controlling how warnings and errors are handled.
             If not provided, the default policy is used.
@@ -200,33 +206,35 @@ class TemplaterFactory:
             except ValueError as e:
                 raise ValueError(f"Invalid diagnostic policy provided: {diagnostic_policy}") from e
 
-        source_manager: SourceManager = SourceManager()
-        template_engine_manager: TemplateEngineManager = TemplateEngineManager()
-        
-        # Source resolver
-        source_resolver: SourceResolver = self._create_source_resolver(source_resolver_settings_source)
+        # Source
+        source_resolver: SourceResolver = SourceResolver()
+
+        # Executor
+        source_executor: SourceExecutor = self._create_source_executor(
+            source_resolver.resolve_or_none(source_executor_settings)
+            )
         
         # Template engine
+        template_engine_resolver: TemplateEngineResolver = TemplateEngineResolver()
+        
         engine_settings: TemplateEngineSettings = self._create_template_engine_settings(
-            template_engine_settings_source
+            source_resolver.resolve_or_none(template_engine_settings)
         )
-        template_engine: TemplateEngine = template_engine_manager.get_or_create(engine_settings)
 
         # Loaders
         loader_facade: LoaderFacade = self._create_loader_facade(
-            template_engine,
-            template_loader_settings_source=template_loader_settings_source,
-            schema_loader_settings_source=schema_loader_settings_source,
-            variant_loader_settings_source=variant_loader_settings_source,
+            template_loader_settings_source=source_resolver.resolve_or_none(template_parser_settings),
+            schema_loader_settings_source=source_resolver.resolve_or_none(schema_parser_settings),
+            variant_loader_settings_source=source_resolver.resolve_or_none(variant_parser_settings)
         )
 
         # Compiler
         compiler_settings: Settings | None = (
             self._load_settings(
-                compiler_settings_source,
+                compiler_settings,
                 expected_type=CompilerSettings,
             )
-            if compiler_settings_source
+            if compiler_settings
             else self._create_default_settings(
                 lambda: CompilerSettings.create(index_key=_INDEX_KEY_KEY)
             )
@@ -237,10 +245,10 @@ class TemplaterFactory:
         # Renderer
         renderer_settings: Settings | None = (
             self._load_settings(
-                renderer_settings_source,
+                renderer_settings,
                 expected_type=RendererSettings,
             )
-            if renderer_settings_source
+            if renderer_settings
             else self._create_default_settings(
                 lambda: RendererSettings.create(index_key=_INDEX_KEY_KEY)
             )
@@ -252,14 +260,15 @@ class TemplaterFactory:
         outcome_handler: OutcomeHandler = OutcomeHandler(policy=diagnostic_policy or DiagnosticPolicy.LOG)
 
         return Templater(
-            source_manager=source_manager,
+            source_executor=source_manager,
             source_resolver=source_resolver,
-            template_engine_manager=template_engine_manager,
+            template_engine_resolver=template_engine_manager,
             loader_facade=loader_facade,
             compiler_manager=compiler_manager,
             renderer_manager=renderer_manager,
             outcome_handler=outcome_handler,
-            engine_default_settings=engine_settings,
+            template_engine_default_settings=engine_settings,
             compiler_default_settings=compiler_settings,
             renderer_default_settings=renderer_settings
         )
+        '''
