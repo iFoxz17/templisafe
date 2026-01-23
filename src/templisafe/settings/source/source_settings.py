@@ -15,6 +15,7 @@ class SourceKind(str, Enum):
     AWS_SECRETS_MANAGER ="aws_secrets_manager"
     AWS_SSM_PARAMETER = "aws_ssm_parameter"
     AWS_DYNAMODB = "aws_dynamodb"
+    CUSTOM = "custom"
 
 
 class SourceSettings(Settings, ABC):

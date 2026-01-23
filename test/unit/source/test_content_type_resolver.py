@@ -1,6 +1,7 @@
 import pytest
 
 from templisafe.settings.source.aws import *
+from templisafe.settings.source.custom_source_settings import CustomSourceSettings
 from templisafe.settings.source.http_source_settings import HttpSourceSettings
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 from templisafe.settings.source.local_source_settings import LocalSourceSettings
@@ -49,6 +50,13 @@ def aws_dynamodb_settings() -> AwsDynamoDBSourceSettings:
         key={"id": {"S": "123"}},  # type: ignore
         projection_expression="schema",
         **AWS_COMMON_KWARGS
+    )
+
+@pytest.fixture
+def custom_source_settings() -> CustomSourceSettings:
+    return CustomSourceSettings(
+        content_type=None,
+        context=None
     )
 
 # -----------------------------
@@ -116,6 +124,11 @@ def test_resolve_inline_raises():
     resolver = ContentTypeResolver()
     with pytest.raises(ContentTypeResolutionError):
         resolver.resolve(settings)
+
+def test_resolve_custom_raises(custom_source_settings):
+    resolver = ContentTypeResolver()
+    with pytest.raises(ContentTypeResolutionError):
+        resolver.resolve(custom_source_settings)
 
 def test_resolve_http_raises():
     """Http sources without path should raise ContentTypeResolutionError."""

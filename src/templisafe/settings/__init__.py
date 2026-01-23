@@ -2,23 +2,34 @@ from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.settings.settings import Settings, SettingsKind
-from templisafe.settings.source import *
 from templisafe.settings.template_engine_settings import (
     TemplateEngineKind,
     TemplateEngineSettings
 )
 from templisafe.settings.template_parser_settings import TemplateParserSettings
 from templisafe.settings.variant_parser_settings import VariantParserSettings
-from templisafe.settings.source_resolver_settings import SourceResolverSettings
+from templisafe.settings.source_executor_settings import SourceExecutorSettings
+from templisafe.settings.source import *
+
 
 __all__ = [
     "Settings", "SettingsKind",
     "CompilerSettings",
     "RendererSettings",
-    "SourceKind", "SourceSettings", "InlineSourceSettings", "LocalSourceSettings", "AwsS3BucketSourceSettings",
+    
     "TemplateEngineKind", "TemplateEngineSettings",
     "TemplateParserSettings",
     "SchemaParserSettings",
     "VariantParserSettings",
-    "SourceResolverSettings"
+    "SourceExecutorSettings",
+
+    "SourceSettings", "SourceKind",
+    "InlineSourceSettings",
+    "LocalSourceSettings",
+    "HttpSourceSettings",
+
+    "AwsSsmParameterSourceSettings",
+    "AwsSecretsManagerSourceSettings",
+    "AwsS3BucketSourceSettings",
+    "AwsDynamoDBSourceSettings"
 ]

@@ -2,6 +2,7 @@ import pytest
 from pathlib import Path
 
 from templisafe.settings.manager_settings import ManagerSettings
+from templisafe.settings.source.custom_source_settings import CustomSourceSettings
 from templisafe.source.source_manager import SourceManager, SourceFactory
 from templisafe.source.local_source import LocalSource
 from templisafe.source.inline_source import InlineSource
@@ -80,6 +81,13 @@ def aws_dynamodb_settings() -> AwsDynamoDBSourceSettings:
         **AWS_COMMON_KWARGS
     )
 
+@pytest.fixture
+def custom_source_settings() -> CustomSourceSettings:
+    return CustomSourceSettings(
+        content_type=ContentType.TEXT,
+        context=None
+    )
+
 # -----------------------------
 # SourceFactory tests
 # -----------------------------
@@ -101,6 +109,12 @@ def test_factory_creates_sources(settings_fixture, expected_class, request):
     source = SourceFactory().create(settings)
     assert isinstance(source, expected_class)
     assert getattr(source, "_settings", None) == settings
+
+
+def test_factory_custom_source_raises(custom_source_settings):    
+    with pytest.raises(UnsupportedSourceError):
+        SourceFactory().create(custom_source_settings)
+
 
 def test_factory_unsupported_source():
     """Unknown settings should raise UnsupportedSourceError."""

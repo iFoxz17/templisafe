@@ -1,6 +1,10 @@
+from overrides import overrides
 import pytest
 
+from templisafe.exceptions.source_error import UnsupportedSourceError
 from templisafe.settings.manager_settings import ManagerSettings
+from templisafe.settings.source.custom_source_settings import CustomSourceSettings
+from templisafe.source.source import Source
 from templisafe.source.source_manager import SourceManager
 from templisafe.source.source_resolver import SourceResolver
 from templisafe.source.local_source import LocalSource
@@ -34,6 +38,13 @@ def inline_settings():
     """InlineSourceSettings fixture with some text content."""
     return SourceSettings.create(kind="inline", content="some content", content_type="text")
 
+@pytest.fixture
+def custom_source_settings() -> CustomSourceSettings:
+    return CustomSourceSettings(
+        content_type=ContentType.TEXT,
+        context=None
+    )
+
 # -----------------------------
 # Tests
 # -----------------------------
@@ -64,3 +75,21 @@ def test_resolve_optional_source_returns_source(source_resolver: SourceResolver,
     source = source_resolver.resolve_optional(inline_settings)
     assert isinstance(source, InlineSource)
     assert source._settings.content_type == ContentType.TEXT
+
+def test_resolve_custom_source_settings_raises(source_resolver: SourceResolver, custom_source_settings):
+    with pytest.raises(UnsupportedSourceError):
+        _ = source_resolver.resolve_optional(custom_source_settings)
+    
+def test_resolve_custom_source_returns_source(source_resolver: SourceResolver, custom_source_settings):
+    class CustomSource(Source):
+        @overrides
+        def read(self) -> str:
+            assert isinstance(self._settings, CustomSourceSettings)
+            return self._settings.context
+
+    custom_source = CustomSource(custom_source_settings)
+    source = source_resolver.resolve_optional(custom_source)
+    assert isinstance(source, CustomSource)
+    assert source._settings.content_type == ContentType.TEXT
+    assert source is custom_source
+

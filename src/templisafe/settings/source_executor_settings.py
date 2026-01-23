@@ -3,9 +3,9 @@ from pydantic import Field
 
 from templisafe.settings.settings import Settings, SettingsKind
 
-T = TypeVar("T", bound="SourceResolverSettings")
+T = TypeVar("T", bound="SourceExecutorSettings")
 
-class SourceResolverSettings(Settings):
+class SourceExecutorSettings(Settings):
     n_threads: int | None = Field(
         default=None,
         description=(
@@ -19,4 +19,4 @@ class SourceResolverSettings(Settings):
         description="Enable concurrent loading of sources when True; load sources sequentially when False."
     )
 
-Settings.register_kind(SettingsKind.SOURCE_RESOLVER_SETTINGS, SourceResolverSettings)
+Settings.register_kind(SettingsKind.SOURCE_EXECUTOR_SETTINGS, SourceExecutorSettings)
