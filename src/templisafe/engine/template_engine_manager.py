@@ -1,5 +1,6 @@
 from types import MappingProxyType
 
+from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.template_engine_settings import TemplateEngineKind, TemplateEngineSettings
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.jinja_template_engine import JinjaTemplateEngine
@@ -37,19 +38,27 @@ class TemplateEngineFactory:
 #---------------------------------------------------------------------------------------------
 
 class TemplateEngineManager:
-    """
-    Manages TemplateEngine instances.
-    At the moment no caching is performed: a new engine is created each time.
-    """
+    __slots__: tuple[str, ...] = ("_settings", "_factory", "_engines")
 
-    __slots__: tuple[str, ...] = ("_factory",)
-
-    def __init__(self) -> None:
-        self._factory: TemplateEngineFactory = TemplateEngineFactory()
+    def __init__(
+            self, 
+            settings: ManagerSettings,
+            factory: TemplateEngineFactory | None = None,
+            engines: dict[TemplateEngineSettings, TemplateEngine] | None = None
+            ) -> None:
+        self._settings: ManagerSettings = settings
+        self._factory: TemplateEngineFactory = factory or TemplateEngineFactory()
+        self._engines: dict[TemplateEngineSettings, TemplateEngine] = engines or {}
 
     def get_or_create(self, settings: TemplateEngineSettings) -> TemplateEngine:
-        """
-        Create a new TemplateEngine instance for the given settings.
-        """
+        e: dict[TemplateEngineSettings, TemplateEngine] = self._engines
+        if settings in e:
+            return e[settings]
+        
+        engine: TemplateEngine = self._factory.create(settings)
+        if self._settings.cache:
+            e[settings] = engine
+        return engine 
 
-        return self._factory.create(settings)
+    def __contains__(self, settings: TemplateEngineSettings) -> bool:
+        return settings in self._engines
