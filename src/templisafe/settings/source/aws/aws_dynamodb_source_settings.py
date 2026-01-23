@@ -1,17 +1,22 @@
 from overrides import overrides
-from pydantic import model_validator
+from pydantic import Field, model_validator
 
 from templisafe.settings.source.aws.aws_source_settings import AwsSourceSettings
 from templisafe.settings.source.source_settings import SourceSettings, SourceKind
 
 class AwsDynamoDBSourceSettings(AwsSourceSettings):
     """
-    Settings for reading an item from AWS DynamoDB.
+    Settings for reading an item from AWS DynamoDB. 
+    The source `content_type` must be explicitly set.
     """
 
-    table_name: str
-    key: tuple[tuple[str, str], ...]
-    projection_expression: str | None = None
+    table_name: str = Field(..., description="The name of the DynamoDB table")
+    key: tuple[tuple[str, str], ...] = Field(
+        ..., description="The primary key as a tuple of (name, value) pairs"
+    )
+    projection_expression: str | None = Field(
+        default=None, description="Optional projection expression to select attributes"
+    )
 
     @property
     def key_dict(self) -> dict[str, str]:
@@ -21,7 +26,7 @@ class AwsDynamoDBSourceSettings(AwsSourceSettings):
     @overrides
     def kind(self) -> SourceKind:
         return SourceKind.AWS_DYNAMODB
-        
+
     @model_validator(mode="before")
     def transform_key_dict(cls, values):
         key = values.get("key")
@@ -30,5 +35,4 @@ class AwsDynamoDBSourceSettings(AwsSourceSettings):
             values["key"] = tuple((k, str(v)) for k, v in key.items())
         return values
 
-# Register subclass
 SourceSettings.register_source_kind(SourceKind.AWS_DYNAMODB, AwsDynamoDBSourceSettings)

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Type, Any, ClassVar, cast
-from pydantic import ValidationError
+from pydantic import Field, ValidationError
 from enum import Enum
 from overrides import overrides
 
@@ -10,6 +10,7 @@ from templisafe.util.util import ContentType
 class SourceKind(str, Enum):
     INLINE = "inline"
     LOCAL = "local"
+    HTTP = "http"
     AWS_S3_BUCKET = "aws_s3_bucket"
     AWS_SECRETS_MANAGER ="aws_secrets_manager"
     AWS_SSM_PARAMETER = "aws_ssm_parameter"
