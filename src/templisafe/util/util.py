@@ -32,3 +32,7 @@ class ContentType(Enum):
     JSON = "json"
     TOML = "toml"
     XML = "xml"
+
+DEFAULT_MANAGER_SETTINGS_YAML: str = '''
+cache: true
+'''

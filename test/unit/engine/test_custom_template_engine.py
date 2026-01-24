@@ -1,5 +1,5 @@
 import pytest
-from typing import Any, Set, Dict
+from typing import Any
 
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
@@ -11,11 +11,11 @@ from templisafe.settings.template_engine_settings import TemplateEngineSettings
 class MyCustomEngine(TemplateEngine):
     """A trivial custom template engine for testing purposes."""
 
-    def extract_variables(self, template_str: str) -> Set[str]:
+    def extract_variables(self, template_str: str) -> set[str]:
         # Trivial extraction: '{{a}}' is the only recognized variable
         return {"a"} if "{{a}}" in template_str else set()
 
-    def render(self, template_str: str, vars_map: Dict[str, Any]) -> str:
+    def render(self, template_str: str, vars_map: dict[str, Any]) -> str:
         # Replace '{{a}}' with the provided value or default to 1
         return template_str.replace("{{a}}", str(vars_map.get("a", 1)))
 

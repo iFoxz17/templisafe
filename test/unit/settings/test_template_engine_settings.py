@@ -25,6 +25,10 @@ config:
 
 JSON_CONFIG = '{"kind": "jinja", "config": {"x": 1, "y": 2}}'
 
+CUSTOM_DICT_CONFIG = {
+    "kind": "custom",
+    "config": {"option1": True, "option2": 42}
+}
 
 # -------------------------
 # Tests
@@ -34,6 +38,12 @@ def test_create_from_dict():
     settings = TemplateEngineSettings.from_dict(DICT_CONFIG)
     assert isinstance(settings, TemplateEngineSettings)
     assert settings.kind == TemplateEngineKind.JINJA
+    assert settings.config == {"option1": True, "option2": 42}
+
+def test_create_custom_from_dict():
+    settings = TemplateEngineSettings.from_dict(CUSTOM_DICT_CONFIG)
+    assert isinstance(settings, TemplateEngineSettings)
+    assert settings.kind == TemplateEngineKind.CUSTOM
     assert settings.config == {"option1": True, "option2": 42}
 
 
@@ -102,13 +112,16 @@ def test_create_kwargs_standard_engine():
     assert settings.config == {"option1": True, "option2": 42}
 
 def test_create_kwargs_custom_engine():
-    settings = TemplateEngineSettings.create(
-        kind="custom",
-        config={"option1": True, "option2": 42}
-    )
+    settings = TemplateEngineSettings.create(**CUSTOM_DICT_CONFIG)
     assert isinstance(settings, TemplateEngineSettings)
     assert settings.kind == TemplateEngineKind.CUSTOM
     assert settings.config == {"option1": True, "option2": 42}
+
+def test_create_kwargs_no_config():
+    settings = TemplateEngineSettings.create(kind="jinja")
+    assert isinstance(settings, TemplateEngineSettings)
+    assert settings.kind == TemplateEngineKind.JINJA
+    assert settings.config == {}
 
 def test_create_kwargs_missing_kind():
     with pytest.raises(ValueError):
@@ -140,5 +153,13 @@ def test_create_kwargs_with_json_config():
 
 def test_create_kwargs_multiple_config_sources_error():
     cfg = {"kind": "jinja", "config": {}, "config_yaml": YAML_CONFIG}
+    with pytest.raises(ValueError, match="Multiple configuration sources"):
+        TemplateEngineSettings.create(**cfg)
+
+    cfg = {"kind": "jinja", "config": {}, "config_json": JSON_CONFIG}
+    with pytest.raises(ValueError, match="Multiple configuration sources"):
+        TemplateEngineSettings.create(**cfg)
+
+    cfg = {"kind": "jinja", "config_yaml": YAML_CONFIG, "config_json": JSON_CONFIG}
     with pytest.raises(ValueError, match="Multiple configuration sources"):
         TemplateEngineSettings.create(**cfg)

@@ -2,15 +2,8 @@ from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_manager import TemplateEngineManager
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
 
-#---------------------------------------------------------------------------------------------
-# Resolver
-#---------------------------------------------------------------------------------------------
-
 class TemplateEngineResolver:
-    """
-    Resolves a template engine instance from either a `TemplateEngine` object,
-    `TemplateEngineSettings` or by falling back to a default template engine.
-    """
+    """Resolves `TemplateEngine` instances."""
 
     __slots__: tuple[str, ...] = ("_default_settings", "_template_engine_manager")
 
