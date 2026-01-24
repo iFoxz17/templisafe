@@ -37,9 +37,7 @@ class Settings(BaseModel, ABC):
 
     @classmethod
     def create(cls: Type[T], **kwargs) -> T:
-        """
-        Factory to create Settings instances.
-        """
+        """Factory to create Settings instances."""
 
         target_cls: Type[T] = cls
         if "kind" in kwargs:
@@ -64,14 +62,12 @@ class Settings(BaseModel, ABC):
 
     @classmethod
     def _parse_config(cls: Type[T], config: dict[str, Any]) -> T:
-        """Convert a parsed config dict into a concrete Settings instance."""
         if not isinstance(config, dict):
             raise ValueError(f"Expected a dict, got {type(config).__name__}")
         return cls.create(**config)
 
     @classmethod
     def _load_yaml(cls, config_str: str) -> dict[str, Any]:
-        """Load settings from a YAML string."""
         try:
             return YamlLoader().load(config_str)    
         except LoadError as e:
@@ -79,7 +75,6 @@ class Settings(BaseModel, ABC):
         
     @classmethod
     def _load_json(cls, config_str: str) -> dict[str, Any]:
-        """Load settings from a JSON string."""
         try:
             return JsonLoader().load(config_str)    
         except LoadError as e:
@@ -87,7 +82,6 @@ class Settings(BaseModel, ABC):
         
     @classmethod
     def _load_toml(cls, config_str: str) -> dict[str, Any]:
-        """Load settings from a TOML string."""
         try:
             return TomlLoader().load(config_str)    
         except LoadError as e:
@@ -95,7 +89,6 @@ class Settings(BaseModel, ABC):
         
     @classmethod
     def _load_xml(cls, config_str: str) -> dict[str, Any]:
-        """Load settings from a XML string."""
         try:
             return XmlLoader().load(config_str)    
         except LoadError as e:

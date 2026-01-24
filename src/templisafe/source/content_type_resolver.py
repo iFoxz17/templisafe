@@ -7,10 +7,6 @@ from templisafe.settings.source.aws.aws_ssm_parameter_source_settings import Aws
 from templisafe.exceptions.source_error import ContentTypeResolutionError
 from templisafe.util.util import ContentType
 
-#---------------------------------------------------------------------------------------------
-# Content type resolver
-#---------------------------------------------------------------------------------------------
-
 CONTENT_TYPE_MAP: Mapping[str, ContentType] = MappingProxyType({
     ".j2": ContentType.TEXT,
     ".jinja": ContentType.TEXT,
@@ -20,7 +16,10 @@ CONTENT_TYPE_MAP: Mapping[str, ContentType] = MappingProxyType({
     ".toml": ContentType.TOML,
     ".xml": ContentType.XML,
 })
+
 class ContentTypeResolver:
+    """Resolves the `ContentType` of a source based on settings or extensions."""
+
     __slots__: tuple[str, ...] = ("_content_type_map",)
 
     def __init__(self, content_type_map: Mapping[str, ContentType] | None = None) -> None:
@@ -28,7 +27,6 @@ class ContentTypeResolver:
 
     @staticmethod
     def _extract_extension(path: Path | str) -> str:
-        """Return lowercase suffix including the dot, or empty string if none."""
         if isinstance(path, Path):
             return path.suffix.lower()
         dot: int = path.rfind(".")
@@ -36,7 +34,6 @@ class ContentTypeResolver:
 
     @staticmethod
     def _extract_source_path(settings: SourceSettings) -> Path | str | None:
-        """Return the path to inspect for content type, or None if not applicable."""
         match settings.kind:
             case SourceKind.LOCAL:
                 assert isinstance(settings, LocalSourceSettings)
@@ -63,13 +60,35 @@ class ContentTypeResolver:
                 return None
 
     def resolve(self, settings: SourceSettings) -> ContentType:
-        """Resolve content type from settings or raise ContentTypeResolutionError."""
+        """
+        Determine the `ContentType` for the given source settings.
+
+        The resolution is based on the file extension or key/parameter name
+        provided in the settings. Raises `ContentTypeResolutionError` if the
+        content type cannot be determined.
+
+        Parameters
+        ----------
+        settings : SourceSettings
+            The settings of the source whose content type is to be resolved.
+
+        Returns
+        -------
+        ContentType
+            The resolved content type for the source.
+
+        Raises
+        ------
+        ContentTypeResolutionError
+            If the content type cannot be determined from the settings.
+        """
+        
         path: Path | str | None = self._extract_source_path(settings)
         if path is None:
             raise ContentTypeResolutionError(settings)
 
         ext: str = self._extract_extension(path)
-        if not ext in self._content_type_map:
+        if ext not in self._content_type_map:
             raise ContentTypeResolutionError(settings)
         
         return self._content_type_map[ext]

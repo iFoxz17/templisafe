@@ -5,9 +5,9 @@ import boto3
 
 from templisafe.settings.source.aws.aws_source_settings import AwsSourceSettings
 from templisafe.source.source import Source
-from templisafe.settings.source.aws.aws_s3_bucket_source_settings import AwsS3BucketSourceSettings
 
 class AwsSource(Source, ABC):
+    """Abstract base class representing a AWS data source."""
     
     __slots__: tuple[str, ...] = ("_client", "_client_lock")
 
@@ -23,7 +23,7 @@ class AwsSource(Source, ABC):
         return self._settings
 
     def _get_client(self, aws_service: str, **kwargs) -> Any:
-        """Initialize the boto3 client lazily."""
+        """Initialize the boto3 client."""
 
         boto3_kwargs: dict[str, str] = {
             k: v 

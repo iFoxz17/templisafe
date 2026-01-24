@@ -7,11 +7,8 @@ from templisafe.settings.source.aws.aws_secrets_manager_source_settings import A
 from templisafe.source.aws.aws_source import AwsSource
 from templisafe.exceptions.source_error import AwsSourceError
 
-
 class AwsSecretsManagerSource(AwsSource):
-    """
-    Reads a secret from AWS Secrets Manager lazily, only connecting on read().
-    """
+    """Reads a secret from AWS Secrets Manager lazily, only connecting on read()."""
 
     def __init__(self, settings: AwsSecretsManagerSourceSettings) -> None:
         super().__init__(settings)

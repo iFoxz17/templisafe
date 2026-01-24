@@ -3,14 +3,8 @@ from templisafe.source.content_type_resolver import ContentTypeResolver
 from templisafe.source.source import Source
 from templisafe.source.source_manager import SourceManager
 
-#---------------------------------------------------------------------------------------------
-# Resolver
-#---------------------------------------------------------------------------------------------
-
 class SourceResolver:
-    """
-    Resolves a `Source` instance from either a `Source` object or `SourceSettings`.
-    """
+    """Resolves `Source` instances."""
 
     __slots__: tuple[str, ...] = ("_source_manager", "_content_type_resolver")
 

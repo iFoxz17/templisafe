@@ -18,6 +18,8 @@ from templisafe.source.http_source import HttpSource
 #---------------------------------------------------------------------------------------------
 
 class SourceFactory:
+    """Creates `Source` instances from source settings."""
+        
     _SOURCE_MAP: Mapping[type[SourceSettings], type[Source]] = MappingProxyType(
         {
             InlineSourceSettings: InlineSource,
@@ -31,6 +33,8 @@ class SourceFactory:
     )
     
     def create(self, settings: SourceSettings) -> Source:
+        """Create a `Source` instance for the given settings."""
+
         source_type: type[Source] | None = SourceFactory._SOURCE_MAP.get(type(settings))
         if source_type is None:
             raise UnsupportedSourceError(settings)
@@ -41,6 +45,8 @@ class SourceFactory:
 #---------------------------------------------------------------------------------------------
 
 class SourceManager:
+    """Manages the retrieval of `Source` instances."""
+
     __slots__: tuple[str, ...] = ("_settings", "_factory", "_resolver", "_sources")
 
     def __init__(
@@ -55,6 +61,8 @@ class SourceManager:
         self._sources: dict[SourceSettings, Source] = sources or {}
     
     def get_or_create(self, settings: SourceSettings) -> Source:
+        """Return a `Source` instance according to the given settings."""
+
         s: dict[SourceSettings, Source] = self._sources
         if settings in s:
             return s[settings]
@@ -65,4 +73,6 @@ class SourceManager:
         return source 
 
     def __contains__(self, settings: SourceSettings) -> bool:
+        """Return whether a `Source` instance for the given settings is cached."""
+
         return settings in self._sources

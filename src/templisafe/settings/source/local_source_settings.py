@@ -5,7 +5,7 @@ from templisafe.settings.source.source_settings import SourceSettings, SourceKin
 
 class LocalSourceSettings(SourceSettings):
     """
-    Settings for local file sources.
+    Settings for local filesystem sources.
     The source `content_type` can be inferred from the `path` extension, if present.
     """
 

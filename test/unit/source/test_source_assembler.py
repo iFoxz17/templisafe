@@ -1,10 +1,12 @@
 import pytest
 
-from templisafe.source.source_assembler import SourceAssembler, DEFAULT_MANAGER_SETTINGS
+from templisafe.source.source_assembler import SourceAssembler, DEFAULT_MANAGER_SETTINGS_YAML
 from templisafe.source.source_resolver import SourceResolver
 from templisafe.source.source_manager import SourceManager
 from templisafe.source.content_type_resolver import ContentTypeResolver
 from templisafe.settings.manager_settings import ManagerSettings
+
+DEFAULT_MANAGER_SETTINGS: ManagerSettings =ManagerSettings.from_yaml(DEFAULT_MANAGER_SETTINGS_YAML)
 
 def test_source_assembler_with_explicit_settings():
     """SourceAssembler.assemble returns a SourceResolver using provided ManagerSettings."""
@@ -23,7 +25,7 @@ def test_source_assembler_with_default_settings():
     """SourceAssembler.assemble returns a SourceResolver using DEFAULT_MANAGER_SETTINGS if None passed."""
     assembler = SourceAssembler()
 
-    resolver = assembler.assemble(None)
+    resolver = assembler.assemble()
 
     assert isinstance(resolver, SourceResolver)
     assert isinstance(resolver._source_manager, SourceManager)

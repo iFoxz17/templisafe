@@ -6,7 +6,6 @@ from templisafe.settings.source.aws.aws_s3_bucket_source_settings import AwsS3Bu
 from templisafe.source.aws.aws_source import AwsSource
 from templisafe.exceptions.source_error import AwsSourceError
 
-
 class AwsS3BucketSource(AwsSource):
     """Reads content from an S3 bucket lazily, only connecting on read()."""
 

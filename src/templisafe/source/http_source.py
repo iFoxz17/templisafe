@@ -6,6 +6,8 @@ from templisafe.settings.source.http_source_settings import HttpSourceSettings
 from templisafe.exceptions.source_error import HttpSourceError
 
 class HttpSource(Source):
+    """A source implementation that retrieves content from an HTTP URL."""
+
     def __init__(self, settings: HttpSourceSettings) -> None:
         super().__init__(settings)
 
@@ -16,7 +18,6 @@ class HttpSource(Source):
 
     @overrides
     def read(self) -> str:
-        """Fetch content from the URL"""
         try:
             response = requests.get(self.url)
             response.raise_for_status()

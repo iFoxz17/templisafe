@@ -6,11 +6,8 @@ from templisafe.settings.source.aws.aws_ssm_parameter_source_settings import Aws
 from templisafe.source.aws.aws_source import AwsSource
 from templisafe.exceptions.source_error import AwsSourceError
 
-
 class AwsSsmParameterSource(AwsSource):
-    """
-    Reads a parameter from AWS SSM Parameter Store lazily, only connecting on read().
-    """
+    """Reads a parameter from AWS SSM Parameter Store lazily, only connecting on read()."""
 
     def __init__(self, settings: AwsSsmParameterSourceSettings) -> None:
         super().__init__(settings)
@@ -22,10 +19,6 @@ class AwsSsmParameterSource(AwsSource):
 
     @overrides
     def read(self) -> str:
-        """
-        Fetch the parameter value from SSM and return it as a string.
-        """
-
         client = self._get_client("ssm")
         settings: SourceSettings = self._settings
         assert isinstance(settings, AwsSsmParameterSourceSettings)
@@ -38,8 +31,8 @@ class AwsSsmParameterSource(AwsSource):
             value = resp.get("Parameter", {}).get("Value")
             if value is None:
                 raise AwsSourceError(
-                    f"Failed to read AWS SSM parameter: "
-                    "parameter {self.parameter_name} has no value")
+                    "Failed to read AWS SSM parameter: "
+                    f"parameter {self.parameter_name} has no value")
             return value
         except ClientError as e:
             raise AwsSourceError(f"Failed to read AWS SSM parameter: {settings.parameter_name}") from e

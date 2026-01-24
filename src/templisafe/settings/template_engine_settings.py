@@ -13,16 +13,13 @@ class TemplateEngineKind(str, Enum):
     CUSTOM = "custom"
 
 class TemplateEngineSettings(Settings):
+    """Settings class for defining template engines."""
+
     kind: TemplateEngineKind = Field(..., description="The template engine kind")
     config: dict[str, Any] = Field({}, description="The configurations of the engine")
 
     @classmethod
     def _prepare_kwargs(cls: type[T], kwargs: dict[str, Any]) -> dict[str, Any]:
-        """
-        Normalize 'kind', 'config' and return normalized_kwargs.
-        Raises if multiple config sources are provided.
-        """
-
         kind: Any = kwargs.pop("kind", None)
         if kind is None:
             raise ValueError("Missing 'kind' field to determine engine type")
@@ -78,7 +75,7 @@ class TemplateEngineSettings(Settings):
     @classmethod
     @overrides
     def create(cls: type[T], **kwargs) -> T:
-        """Factory method to create the correct TemplateEngineSettings subclass."""
+        """Factory method to create a TemplateEngineSettings instance."""
         prepared: dict[str, Any] = cls._prepare_kwargs(kwargs)
         kwargs = prepared["kwargs"]
 

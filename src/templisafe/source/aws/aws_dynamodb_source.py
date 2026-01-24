@@ -8,11 +8,8 @@ from templisafe.source.aws.aws_source import AwsSource
 from templisafe.settings.source.aws.aws_dynamodb_source_settings import AwsDynamoDBSourceSettings
 from templisafe.exceptions.source_error import AwsSourceError
 
-
 class AwsDynamoDBSource(AwsSource):
-    """
-    Reads an item from DynamoDB lazily, only connecting on read().
-    """
+    """Reads an item from DynamoDB lazily, only connecting on read()."""
 
     def __init__(self, settings: AwsDynamoDBSourceSettings) -> None:
         super().__init__(settings)
@@ -34,9 +31,6 @@ class AwsDynamoDBSource(AwsSource):
 
     @overrides
     def read(self) -> str:
-        """
-        Fetch the item from DynamoDB and return it as a JSON string.
-        """
         client: Any = self._get_client("dynamodb")
         settings: AwsSourceSettings = self.settings
         assert isinstance(settings, AwsDynamoDBSourceSettings)

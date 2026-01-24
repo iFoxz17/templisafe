@@ -4,9 +4,7 @@ from pydantic import Field
 from templisafe.settings.source.source_settings import SourceSettings
 
 class AwsSourceSettings(SourceSettings, ABC):
-    """
-    Base settings shared by all AWS-backed sources.
-    """
+    """Base settings shared by all AWS-backed sources."""
 
     aws_access_key_id: str | None = Field(
         default=None,

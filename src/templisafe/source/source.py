@@ -4,6 +4,8 @@ from templisafe.util.util import ContentType
 from templisafe.settings.source.source_settings import SourceSettings
     
 class Source(ABC):
+    """Abstract base class representing a data source."""
+
     def __init__(self, settings: SourceSettings) -> None:
         self._settings: SourceSettings = settings
 
@@ -14,7 +16,12 @@ class Source(ABC):
 
     @abstractmethod
     def read(self) -> str:
-        pass
+        """
+        Retrieve the content of the source as a string.
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(settings={self._settings})"
+        Returns
+        -------
+        str
+            The content of the source.
+        """
+        pass
