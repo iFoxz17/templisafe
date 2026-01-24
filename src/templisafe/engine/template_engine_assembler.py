@@ -35,7 +35,7 @@ class TemplateEngineAssembler:
 
         Returns
         -------
-        SourceResolver
+        TemplateEngineResolver
             A `TemplateEngineResolver` ready to resolve engines.
         """
 

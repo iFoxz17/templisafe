@@ -27,9 +27,9 @@ class Compiler:
         return index
 
     def _create_empty_schema(self, var_names: set[str]) -> Schema:
-        """Create a schema with an empty Pydantic model having all variables as Optional[object]."""
-        
+        # Lazy imports since this method could be used rarely
         from pydantic import create_model, Field
+        
         fields: dict[str, Any] = {name: (object, Field(None)) for name in var_names}
         model_cls: type = create_model("EmptySchema", **fields)
         return Schema(model_cls=model_cls)
@@ -39,7 +39,7 @@ class Compiler:
         template: Template,
         schema: Schema | None = None,
     ) -> Compilation:
-        """Compile a template with an optional schema, returning a Compilation with diagnostics."""
+        """Compile a template with an optional schema, returning a `Compilation` with diagnostics."""
 
         template_vars: set[str] = template.vars
 
@@ -103,6 +103,3 @@ class Compiler:
             _spec=CompilationSpec(template=template, schema=schema),
             diagnostics=tuple(diagnostics),
         )
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"

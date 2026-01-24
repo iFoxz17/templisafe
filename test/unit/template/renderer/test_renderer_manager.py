@@ -1,80 +1,75 @@
 import pytest
-from unittest.mock import create_autospec
 
+from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.template.renderer.renderer import Renderer
-from templisafe.template.renderer.renderer_manager import (
-    RendererFactory,
-    RendererManager,
-)
+from templisafe.template.renderer.renderer_manager import RendererFactory, RendererManager
 
-# ------------------------------------------------------------------
+
+# -----------------------------
 # Fixtures
-# ------------------------------------------------------------------
+# -----------------------------
 
 @pytest.fixture
-def settings():
-    # instance=True avoids abstract / missing attributes issues
-    return create_autospec(RendererSettings, instance=True)
+def factory() -> RendererFactory:
+    """Return a RendererFactory instance."""
+    return RendererFactory()
+
+
+@pytest.fixture(params=[True, False], ids=["cache_enabled", "cache_disabled"])
+def manager(request) -> RendererManager:
+    """Return a RendererManager with caching enabled or disabled."""
+    settings = ManagerSettings(cache=request.param)
+    return RendererManager(settings=settings)
+
 
 @pytest.fixture
-def renderer():
-    return create_autospec(Renderer, instance=True)
+def renderer_settings() -> RendererSettings:
+    """Return a basic RendererSettings object."""
+    return RendererSettings(index_key="_index")
 
-# ------------------------------------------------------------------
+
+# -----------------------------
 # RendererFactory tests
-# ------------------------------------------------------------------
+# -----------------------------
 
-def test_factory_creates_renderer(settings):
-    factory = RendererFactory()
-
-    renderer = factory.create(settings)
-
+def test_factory_creates_renderer(factory: RendererFactory, renderer_settings: RendererSettings):
+    """RendererFactory returns a Renderer instance for given settings."""
+    renderer = factory.create(renderer_settings)
     assert isinstance(renderer, Renderer)
-    assert renderer._settings is settings
+    assert renderer._settings == renderer_settings
 
 
-# ------------------------------------------------------------------
+# -----------------------------
 # RendererManager tests
-# ------------------------------------------------------------------
+# -----------------------------
 
-def test_get_or_create_creates_new_renderer(settings):
-    manager = RendererManager()
+def test_manager_get_or_create(manager: RendererManager, renderer_settings: RendererSettings):
+    """RendererManager returns Renderer instances and respects caching."""
+    renderer1 = manager.get_or_create(renderer_settings)
+    renderer2 = manager.get_or_create(renderer_settings)
 
-    renderer = manager.get_or_create(settings)
+    assert isinstance(renderer1, Renderer)
+    assert isinstance(renderer2, Renderer)
 
-    assert isinstance(renderer, Renderer)
-    assert renderer._settings is settings
-    assert settings in manager
-
-
-def test_get_or_create_returns_cached_instance(settings):
-    manager = RendererManager()
-
-    r1 = manager.get_or_create(settings)
-    r2 = manager.get_or_create(settings)
-
-    assert r1 is r2
-
-
-def test_contains_returns_false_when_not_present(settings):
-    manager = RendererManager()
-
-    assert settings not in manager
+    if manager._settings.cache:
+        # Should be the same instance if caching enabled
+        assert renderer1 is renderer2
+        assert renderer_settings in manager
+    else:
+        # Should be different instances if caching disabled
+        assert renderer1 is not renderer2
+        assert renderer_settings not in manager
 
 
-def test_contains_returns_true_when_present(settings):
-    manager = RendererManager()
-    manager.get_or_create(settings)
+def test_manager_contains_only_cached_renderers(manager: RendererManager, renderer_settings: RendererSettings):
+    """__contains__ reflects only cached renderers."""
+    # Initially nothing cached
+    assert renderer_settings not in manager
 
-    assert settings in manager
+    renderer = manager.get_or_create(renderer_settings)
 
-
-def test_preseeded_renderers_are_used(settings, renderer):
-    manager = RendererManager(
-        renderers={settings: renderer}
-    )
-
-    result = manager.get_or_create(settings)
-
-    assert result is renderer
+    if manager._settings.cache:
+        assert renderer_settings in manager
+    else:
+        assert renderer_settings not in manager

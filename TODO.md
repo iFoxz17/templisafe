@@ -15,6 +15,7 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 - [ ] Document pydantic fields (In particular of Settings)
 
 ## Medium Priority
+- [ ] Refactor TemplateEngineSettings config parameter, which can be also a json or yaml string
 - [ ] Improve error messages
 - [ ] Advertise library on r/python
 - [ ] Advertise library on hackernews

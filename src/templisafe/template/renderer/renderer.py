@@ -15,7 +15,7 @@ from templisafe.template.template_model import (
 )
 
 class Renderer:
-    """Renders compiled templates using Jinja2 Environment, with diagnostics."""
+    """Renders compiled templates using a template engine."""
 
     __slots__: tuple[str, ...] = ("_settings",)
 
@@ -38,6 +38,7 @@ class Renderer:
         variants_set: VariantSet,
     ) -> Rendering:
         """Validate multiple variants against the compiled query schema."""
+
         all_diagnostics: list[Diagnostic] = []
         overall_outcome: Outcome = Outcome.SUCCESS
 
@@ -136,6 +137,7 @@ class Renderer:
         variants_set: VariantSet,
         engine: TemplateEngine,
     ) -> Rendering:
+        """Render multiple variants against the compiled query schema."""
         
         validation: Rendering = self.validate(compiled, variants_set)
         if validation.outcome == Outcome.ERROR:
@@ -173,6 +175,3 @@ class Renderer:
             _spec=rendered_query,
             diagnostics=validation.diagnostics,
         )
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(_settings={self._settings!r})"

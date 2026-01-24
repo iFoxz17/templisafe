@@ -44,9 +44,6 @@ class Template:
     template_str: str
     vars: set[str]
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(template_str={self.template_str!r}, vars={self.vars!r})"
-
 @dataclass(frozen=True, slots=True)
 class CompilationSpec:
     """Represents a compiled template with its schema."""
@@ -132,9 +129,6 @@ class Variant:
     def __iter__(self) -> Iterator[Binding]:
         return iter(self._binding_by_name.values())
 
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(_binding_by_name={self._binding_by_name!r})"
-    
 @dataclass(frozen=True, slots=True)
 class VariantSet:
     """Holds multiple template variants for different parameterizations."""
@@ -148,6 +142,7 @@ class VariantSet:
 @dataclass(frozen=True, slots=True)
 class Parameterization:
     """Holds a variant with its effectively rendered template."""
+    
     variant: Variant
     rendered_str: str
 
@@ -198,9 +193,6 @@ class RenderingSpec:
 
     def __iter__(self) -> Iterator[Parameterization]:
         return iter(self._param_by_name.values())
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(_param_by_name={self._param_by_name!r})"
 
 @dataclass(frozen=True, slots=True)
 class Rendering:

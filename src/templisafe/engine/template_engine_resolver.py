@@ -17,7 +17,7 @@ class TemplateEngineResolver:
         
     def resolve(self, template_engine: TemplateEngine | TemplateEngineSettings | None = None) -> TemplateEngine:
         """
-        Resolve a TemplateEngine instance.
+        Resolve a `TemplateEngine` instance.
 
         This method supports three scenarios based on the type of the `template_engine` argument:
         1. If it is already a `TemplateEngine`, it is returned as-is.
