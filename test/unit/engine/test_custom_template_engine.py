@@ -26,7 +26,7 @@ class MyCustomEngine(TemplateEngine):
 @pytest.fixture
 def custom_engine() -> TemplateEngine:
     """Return an instance of the custom engine."""
-    settings = TemplateEngineSettings.create(kind="custom", config={})
+    settings = TemplateEngineSettings.create(engine_kind="custom", config={})
     return MyCustomEngine(settings)
 
 

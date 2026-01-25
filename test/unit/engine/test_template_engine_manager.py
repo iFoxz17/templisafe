@@ -35,7 +35,7 @@ def manager(request) -> TemplateEngineManager:
 @pytest.fixture
 def jinja_settings() -> TemplateEngineSettings:
     return TemplateEngineSettings(
-        kind=TemplateEngineKind.JINJA,
+        engine_kind=TemplateEngineKind.JINJA,
         config={}
     )
 
@@ -43,7 +43,7 @@ def jinja_settings() -> TemplateEngineSettings:
 @pytest.fixture
 def django_settings() -> TemplateEngineSettings:
     return TemplateEngineSettings(
-        kind=TemplateEngineKind.DJANGO,
+        engine_kind=TemplateEngineKind.DJANGO,
         config={}
     )
 
@@ -73,7 +73,7 @@ def test_factory_creates_engines(
 
 def test_factory_custom_engine():
     settings = TemplateEngineSettings(
-        kind=TemplateEngineKind.CUSTOM,
+        engine_kind=TemplateEngineKind.CUSTOM,
         config={}
     )
 

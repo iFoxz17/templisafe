@@ -39,12 +39,12 @@ def test_create_with_valid_dict(valid_dict):
 
 
 def test_create_missing_index_key_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         CompilerSettings.create()
 
 
 def test_create_invalid_type_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         CompilerSettings.create(index_key=None)
 
 

@@ -1,101 +1,108 @@
 """
-Loaders for structured configuration formats (YAML, JSON, TOML).
+Loaders for structured configuration formats (YAML, JSON, TOML, XML).
 """
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Union
 from overrides import overrides
 
-from templisafe.exceptions.load_error import LoadError
+from templisafe.exceptions.config_error import ConfigError
 
-class Loader(ABC):
-    """
-    Abstract base class for configuration loaders.
-    """
+Config = Union[dict[str, Any], list[Any]]
+
+class ConfigLoader(ABC):
+    """Abstract base class for configuration loaders."""
 
     __slots__: tuple[str, ...] = ()
 
     @abstractmethod
-    def load(self, raw: str) -> dict[str, Any]:
+    def load(self, raw: str) -> Config:
         """
-        Parse a raw string into a configuration dictionary.
+        Parse a raw string into a `Config`.
 
-        :param raw: Raw configuration string
-        :raises LoadError: If parsing fails or the result is invalid
+        Parameters
+        ----------
+        raw : str
+            The Raw configuration string
+
+        Returns
+        -------
+        Config
+            The loaded configuration.
+
+        Raises
+        ------
+        LoadError
+            If configuration parsing fails or the result is invalid.
         """
-        raise NotImplementedError
+        pass
     
-    def _finalize_import(self, config: Any, err_msg: str) -> dict[str, Any]:
-        if not isinstance(config, dict):
-            raise LoadError(err_msg)
+    def _finalize_import(self, config: Any, err_msg: str) -> Config:
+        if not isinstance(config, (dict, list)):
+            raise ConfigError(err_msg)
         return config
 
-class YamlLoader(Loader):
-    """
-    YAML configuration loader.
-    """
+
+class YamlConfigLoader(ConfigLoader):
+    """YAML configuration loader."""
 
     @overrides
-    def load(self, raw: str) -> dict[str, Any]:
+    def load(self, raw: str) -> Config:
         import yaml
 
         try:
             config: Any = yaml.safe_load(raw)
         except yaml.YAMLError as e:
-            raise LoadError(
+            raise ConfigError(
                 f"Failed to load YAML configuration: {e}"
             ) from e
 
         return self._finalize_import(
             config,
-            "YAML configuration must be a mapping, got {type(config).__name__}"
+            f"YAML configuration must be a list or a mapping, got {type(config).__name__}"
             )
 
 
-class JsonLoader(Loader):
-    """
-    JSON configuration loader.
-    """
+class JsonConfigLoader(ConfigLoader):
+    """JSON configuration loader."""
 
     @overrides
-    def load(self, raw: str) -> dict[str, Any]:
+    def load(self, raw: str) -> Config:
         import json
 
         try:
             config: Any = json.loads(raw)
         except json.JSONDecodeError as e:
-            raise LoadError(
+            raise ConfigError(
                 "Failed to load JSON configuration "
                 f"(line {e.lineno}, column {e.colno}): {e.msg}"
             ) from e
 
         return self._finalize_import(
             config,
-            f"JSON configuration must be an object, got {type(config).__name__}"
+            f"JSON configuration must be a list or an object, got {type(config).__name__}"
             )
 
 
-class TomlLoader(Loader):
-    """
-    TOML configuration loader.
-    """
+class TomlConfigLoader(ConfigLoader):
+    """TOML configuration loader."""
 
     @overrides
-    def load(self, raw: str) -> dict[str, Any]:
+    def load(self, raw: str) -> Config:
         try:
             import tomllib                      # Python 3.11+
         except ModuleNotFoundError:
             try:
                 import tomli as tomllib         # type: ignore[import-not-found]
             except ModuleNotFoundError as e:
-                raise LoadError(
+                raise ConfigError(
                     "TOML support requires Python >= 3.11 or the 'tomli' package installed"
                 ) from e
 
         try:
             config: Any = tomllib.loads(raw)
         except Exception as e:
-            raise LoadError(
+            raise ConfigError(
                 f"Failed to load TOML configuration: {e}"
             ) from e
         
@@ -104,24 +111,23 @@ class TomlLoader(Loader):
             f"TOML configuration must be a table, got {type(config).__name__}"
             )
     
-class XmlLoader(Loader):
-    """
-    XML configuration loader.
-    """
+
+class XmlConfigLoader(ConfigLoader):
+    """XML configuration loader."""
 
     @overrides
-    def load(self, raw: str) -> dict[str, Any]:
+    def load(self, raw: str) -> Config:
         try:
             import xml.etree.ElementTree as ET
         except ModuleNotFoundError as e:
-            raise LoadError(
+            raise ConfigError(
                 "XML support requires the standard library 'xml.etree.ElementTree'"
             ) from e
 
         try:
             root = ET.fromstring(raw)
         except ET.ParseError as e:
-            raise LoadError(f"Failed to parse XML configuration: {e}") from e
+            raise ConfigError(f"Failed to parse XML configuration: {e}") from e
 
         def _element_to_dict(element: ET.Element) -> dict[str, Any]:
             data: dict[str, Any] = {}
@@ -141,7 +147,7 @@ class XmlLoader(Loader):
         try:
             config = _element_to_dict(root)
         except Exception as e:
-            raise LoadError(f"Failed to convert XML to dict: {e}") from e
+            raise ConfigError(f"Failed to convert XML to dict: {e}") from e
 
         return self._finalize_import(
             config,
@@ -150,9 +156,10 @@ class XmlLoader(Loader):
 
 
 __all__ = [
-    "Loader",
-    "YamlLoader",
-    "JsonLoader",
-    "TomlLoader",
-    "XmlLoader",
+    "Config",
+    "ConfigLoader",
+    "YamlConfigLoader",
+    "JsonConfigLoader",
+    "TomlConfigLoader",
+    "XmlConfigLoader",
 ]

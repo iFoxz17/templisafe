@@ -9,7 +9,7 @@ cache: false
 '''
 
 DEFAULT_TEMPLATE_ENGINE_SETTINGS_YAML: str = '''
-kind: jinja
+engine_kind: jinja
 config: {}
 '''
 

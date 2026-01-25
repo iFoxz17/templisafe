@@ -2,7 +2,7 @@ from typing import Any, Callable
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed, Future
 
-from templisafe.executor.config_loader import ConfigLoader
+from templisafe.config.config_loader_facade import ConfigLoader
 from templisafe.source.source import Source
 from templisafe.settings.settings import Settings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings

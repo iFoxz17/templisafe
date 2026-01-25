@@ -47,7 +47,7 @@ class SourceFactory:
 class SourceManager:
     """Manages the retrieval of `Source` instances."""
 
-    __slots__: tuple[str, ...] = ("_settings", "_factory", "_resolver", "_sources")
+    __slots__: tuple[str, ...] = ("_settings", "_factory", "_sources")
 
     def __init__(
             self, 

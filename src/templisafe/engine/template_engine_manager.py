@@ -28,9 +28,9 @@ class TemplateEngineFactory:
     def create(self, settings: TemplateEngineSettings) -> TemplateEngine:
         """Create a `TemplateEngine` instance for the given settings."""
 
-        engine_type: type[TemplateEngine] | None = self._ENGINE_MAP.get(settings.kind)
+        engine_type: type[TemplateEngine] | None = self._ENGINE_MAP.get(settings.engine_kind)
         if engine_type is None:
-            raise UnsupportedTemplateEngineError(settings.kind)
+            raise UnsupportedTemplateEngineError(settings.engine_kind)
         return engine_type(settings)
 
 #---------------------------------------------------------------------------------------------

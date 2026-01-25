@@ -2,6 +2,7 @@ import pytest
 import json
 import yaml
 
+from templisafe.exceptions.settings_error import SettingsError
 from templisafe.settings.schema_parser_settings import SchemaParserSettings, Settings
 
 # ---------------------------------------------------------------------------
@@ -89,5 +90,5 @@ def test_invalid_allowed_types():
 def test_missing_required_field():
     incomplete = MINIMAL_CONFIG.copy()
     incomplete.pop("schema_key")
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         SchemaParserSettings.create(**incomplete)

@@ -1,6 +1,7 @@
 import pytest
-from typing import Dict, Any, Type
+from typing import Any
 
+from templisafe.config.config_loader import Config
 from templisafe.settings.settings import Settings, SettingsError
 
 # Concrete subclass for testing
@@ -9,7 +10,7 @@ class DummySettings(Settings):
     bar: int
 
     @classmethod
-    def _parse_config(cls: Type["DummySettings"], config: Dict[str, Any]) -> "DummySettings":
+    def _parse_config(cls: type["DummySettings"], config: Config) -> "DummySettings":
         # Simply validate with Pydantic
         return cls.model_validate(config)
     
@@ -19,9 +20,9 @@ class DummySettingsXml(Settings):
     bar: int
 
     @classmethod
-    def _parse_config(cls: Type["DummySettingsXml"], config: Dict[str, Any]) -> "DummySettingsXml":
+    def _parse_config(cls: type["DummySettingsXml"], config: Config) -> "DummySettingsXml":
         # Simply validate with Pydantic
-        return cls.model_validate(config['settings'])
+        return cls.model_validate(cls._validate_config(config)['settings'])
 
 
 # Sample configurations
@@ -85,8 +86,7 @@ def test_create_directly_without_kind():
 
 
 def test_create_with_invalid_field_raises():
-    # Should raise ValueError because 'bar' is required int, not str
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(SettingsError) as excinfo:
         DummySettings.create(foo="oops", bar="not-an-int")
     
 

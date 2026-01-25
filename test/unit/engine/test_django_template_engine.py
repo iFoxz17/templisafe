@@ -25,7 +25,7 @@ def configure_django():
 @pytest.fixture
 def basic_settings() -> TemplateEngineSettings:
     """Provide basic Django engine settings with default config."""
-    return TemplateEngineSettings(kind=TemplateEngineKind.DJANGO, config={})
+    return TemplateEngineSettings(engine_kind=TemplateEngineKind.DJANGO, config={})
 
 @pytest.fixture
 def engine(basic_settings) -> DjangoTemplateEngine:
@@ -99,7 +99,7 @@ def test_lazy_import_error(monkeypatch):
     monkeypatch.setattr("builtins.__import__", fake_import)
 
     from templisafe.settings.template_engine_settings import TemplateEngineSettings, TemplateEngineKind
-    settings = TemplateEngineSettings(kind=TemplateEngineKind.DJANGO, config={})
+    settings = TemplateEngineSettings(engine_kind=TemplateEngineKind.DJANGO, config={})
 
     from templisafe.engine.django_template_engine import DjangoTemplateEngine
 

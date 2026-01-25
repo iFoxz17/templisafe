@@ -28,12 +28,12 @@ def manager(factory) -> TemplateEngineManager:
 
 @pytest.fixture
 def jinja_settings() -> TemplateEngineSettings:
-    return TemplateEngineSettings(kind=TemplateEngineKind.JINJA, config={})
+    return TemplateEngineSettings(engine_kind=TemplateEngineKind.JINJA, config={})
 
 
 @pytest.fixture
 def django_settings() -> TemplateEngineSettings:
-    return TemplateEngineSettings(kind=TemplateEngineKind.DJANGO, config={})
+    return TemplateEngineSettings(engine_kind=TemplateEngineKind.DJANGO, config={})
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ class MyCustomEngine(TemplateEngine):
 @pytest.fixture
 def custom_engine() -> TemplateEngine:
     """Return an instance of the custom engine."""
-    settings = TemplateEngineSettings.create(kind="custom", config={})
+    settings = TemplateEngineSettings.create(engine_kind="custom", config={})
     return MyCustomEngine(settings)
 
 def test_resolve_custom_engine(resolver: TemplateEngineResolver, custom_engine):
@@ -101,6 +101,6 @@ def test_resolve_custom_engine(resolver: TemplateEngineResolver, custom_engine):
 
 def test_resolve_custom_engine_settings_raises(resolver: TemplateEngineResolver):
     with pytest.raises(UnsupportedTemplateEngineError):
-        _ = resolver.resolve(TemplateEngineSettings.create(kind="custom", config={}))
+        _ = resolver.resolve(TemplateEngineSettings.create(engine_kind="custom", config={}))
 
 

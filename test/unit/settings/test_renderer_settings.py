@@ -31,11 +31,11 @@ def test_create_success():
     assert instance.index_key == "idx"
 
 def test_create_missing_index_key_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         RendererSettings.create()
 
 def test_create_invalid_field_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         RendererSettings.create(index_key="idx", extra="not_allowed")
 
 

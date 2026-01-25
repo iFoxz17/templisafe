@@ -4,10 +4,10 @@ from typing import Any
 
 from templisafe.source.source import Source
 from templisafe.settings.settings import Settings
-from templisafe.loader.loader import *
+from templisafe.config.config_loader import *
 from templisafe.util.util import ContentType
-from templisafe.exceptions.load_error import UnsopportedLoadError
-from templisafe.resolver.config_loader import ConfigLoader
+from templisafe.exceptions.config_error import UnsopportedConfigError
+from templisafe.config.config_loader_facade import ConfigLoaderFacade
 
 
 # --- Dummy Settings class for testing ---
@@ -67,7 +67,7 @@ def test_yaml_loader_called(monkeypatch):
     source = FakeSource(ContentType.YAML, YAML_RAW)
     config = loader.load_config(source)
     assert config["foo"] == "yaml"
-    assert isinstance(loader._yaml_loader, YamlLoader)
+    assert isinstance(loader._yaml_loader, YamlConfigLoader)
 
 
 def test_json_loader_called(monkeypatch):
@@ -75,7 +75,7 @@ def test_json_loader_called(monkeypatch):
     source = FakeSource(ContentType.JSON, JSON_RAW)
     config = loader.load_config(source)
     assert config["foo"] == "json"
-    assert isinstance(loader._json_loader, JsonLoader)
+    assert isinstance(loader._json_loader, JsonConfigLoader)
 
 
 def test_toml_loader_called(monkeypatch):
@@ -83,7 +83,7 @@ def test_toml_loader_called(monkeypatch):
     source = FakeSource(ContentType.TOML, TOML_RAW)
     config = loader.load_config(source)
     assert config["foo"] == "toml"
-    assert isinstance(loader._toml_loader, TomlLoader)
+    assert isinstance(loader._toml_loader, TomlConfigLoader)
 
 
 def test_xml_loader_called():
@@ -92,13 +92,13 @@ def test_xml_loader_called():
     config = loader.load_config(source)
     assert config["settings"]["foo"] == "xml"
     assert config["settings"]["bar"] == "42"
-    assert isinstance(loader._xml_loader, XmlLoader)
+    assert isinstance(loader._xml_loader, XmlConfigLoader)
 
 
 def test_unsupported_content_type_raises():
     loader = ConfigLoader()
     source = FakeSource("unsupported_type", "data")     # type: ignore
-    with pytest.raises(UnsopportedLoadError):
+    with pytest.raises(UnsopportedConfigError):
         loader.load_config(source)
 
 
@@ -142,16 +142,16 @@ def test_lazy_initialization():
     assert loader._xml_loader is None
 
     loader.load_config(source_yaml)
-    assert isinstance(loader._yaml_loader, YamlLoader)
+    assert isinstance(loader._yaml_loader, YamlConfigLoader)
     assert loader._json_loader is None
     assert loader._toml_loader is None
     assert loader._xml_loader is None
 
     loader.load_config(source_json)
-    assert isinstance(loader._json_loader, JsonLoader)
+    assert isinstance(loader._json_loader, JsonConfigLoader)
 
     loader.load_config(source_toml)
-    assert isinstance(loader._toml_loader, TomlLoader)
+    assert isinstance(loader._toml_loader, TomlConfigLoader)
 
     loader.load_config(source_xml)
-    assert isinstance(loader._xml_loader, XmlLoader)
+    assert isinstance(loader._xml_loader, XmlConfigLoader)

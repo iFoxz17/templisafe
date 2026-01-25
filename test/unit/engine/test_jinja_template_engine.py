@@ -8,7 +8,7 @@ from templisafe.engine.jinja_template_engine import JinjaTemplateEngine
 @pytest.fixture
 def basic_settings() -> TemplateEngineSettings:
     """Provide basic Jinja engine settings with default config."""
-    return TemplateEngineSettings(kind=TemplateEngineKind.JINJA, config={})
+    return TemplateEngineSettings(engine_kind=TemplateEngineKind.JINJA, config={})
 
 @pytest.fixture
 def engine(basic_settings) -> JinjaTemplateEngine:
@@ -74,7 +74,7 @@ def test_lazy_import_error(monkeypatch):
     monkeypatch.setattr("builtins.__import__", fake_import)
 
     from templisafe.settings.template_engine_settings import TemplateEngineSettings, TemplateEngineKind
-    settings = TemplateEngineSettings(kind=TemplateEngineKind.JINJA, config={})
+    settings = TemplateEngineSettings(engine_kind=TemplateEngineKind.JINJA, config={})
 
     with pytest.raises(ImportError, match="Jinja2 is not installed"):
         JinjaTemplateEngine(settings)

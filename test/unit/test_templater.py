@@ -119,7 +119,7 @@ def templater(
         compiler_manager=compiler_manager,
         renderer_manager=renderer_manager,
         outcome_handler=outcome_handler,
-        template_engine_default_settings=TemplateEngineSettings(kind=TemplateEngineKind.JINJA, config={}),
+        template_engine_default_settings=TemplateEngineSettings(engine_kind=TemplateEngineKind.JINJA, config={}),
         compiler_default_settings=CompilerSettings(index_key="_index"),
         renderer_default_settings=RendererSettings(index_key="_index"),
     )

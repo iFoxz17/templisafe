@@ -2,6 +2,7 @@ import pytest
 import yaml
 import json
 
+from templisafe.exceptions.settings_error import SettingsError 
 from templisafe.settings.settings import Settings
 from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.util.util import ContentType
@@ -22,7 +23,7 @@ def test_create_derived_class_without_kind():
     assert settings.bindings_key == "bindings"
 
 def test_create_base_class_without_kind_raises():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         test = Settings.create(
             variants_key="vars",
             default_variants_name="default",
@@ -47,7 +48,7 @@ def test_create_base_class_with_kind_dispatch():
 
 
 def test_create_invalid_kind():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         VariantParserSettings.create(
             kind="invalid",
             variants_key="vars",
@@ -58,7 +59,7 @@ def test_create_invalid_kind():
 
 
 def test_create_missing_variants_key():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         VariantParserSettings.create(
             default_variants_name="default",
             variant_name_key="name",
@@ -67,7 +68,7 @@ def test_create_missing_variants_key():
 
 
 def test_create_missing_variant_name_key():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         VariantParserSettings.create(
             variants_key="vars",
             default_variants_name="name",
@@ -75,7 +76,7 @@ def test_create_missing_variant_name_key():
         )
 
 def test_create_missing_bindings_key():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         VariantParserSettings.create(
             variants_key="vars",
             variant_name_key="name",
@@ -84,7 +85,7 @@ def test_create_missing_bindings_key():
 
 
 def test_create_missing_default_variants_name():
-    with pytest.raises(ValueError):
+    with pytest.raises(SettingsError):
         VariantParserSettings.create(
             variants_key="vars",
             variant_name_key="name",

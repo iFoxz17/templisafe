@@ -26,7 +26,7 @@ from templisafe.source.source import Source
 
 
 from templisafe.executor.source_executor import SourceExecutor
-from templisafe.executor.config_loader import ConfigLoader
+from templisafe.config.config_loader_facade import ConfigLoader
 
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_manager import TemplateEngineManager

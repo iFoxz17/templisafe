@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from enum import Enum
 from overrides import overrides
 
+from templisafe.config.config_loader import Config
 from templisafe.settings.settings import Settings
 from templisafe.util.util import ContentType
 
@@ -54,8 +55,8 @@ class SourceSettings(Settings, ABC):
 
     @classmethod
     @overrides
-    def _parse_config(cls, config: dict[str, Any]) -> "SourceSettings":
-        prepared: dict[str, Any] = cls._prepare_kwargs(config)
+    def _parse_config(cls, config: Config) -> "SourceSettings":
+        prepared: dict[str, Any] = cls._prepare_kwargs(cls._validate_config(config))
         target_cls: Type[SourceSettings] = prepared["target_cls"]
         kwargs: dict[str, Any] = prepared["kwargs"]
 

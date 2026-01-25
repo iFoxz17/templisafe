@@ -14,7 +14,7 @@ CUSTOM_MANAGER_SETTINGS_YAML = """
 cache: false
 """
 CUSTOM_TEMPLATE_ENGINE_SETTINGS_YAML = """
-kind: jinja
+engine_kind: jinja
 config:
   autoescape: true
 """

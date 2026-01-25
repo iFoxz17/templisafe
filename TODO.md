@@ -6,11 +6,12 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 ---
 
 ## High Priority
-- [ ] Implement custom source
+- [ ] SourceSettings cannot be created from Settings.create since they need subclass dispatch: handle this inside ConfigLoaderFacade.load_settings()
 - [ ] Setup github repo: automate release pipeline to create tags on release branch
 - [ ] Add a test for Templater concurrency
 - [ ] Develop contribuiting section
 - [ ] Develop IaC use case
+- [ ] Develop email use case to show concurrency in handling thousands of sources
 - [ ] Release the library on pip
 - [ ] Document pydantic fields (In particular of Settings)
 
