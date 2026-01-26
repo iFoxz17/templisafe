@@ -2,7 +2,7 @@ from templisafe.source.content_type_resolver import ContentTypeResolver
 from templisafe.source.source_manager import SourceFactory, SourceManager
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.source.source_resolver import SourceResolver
-from templisafe.util.util import DEFAULT_MANAGER_SETTINGS_YAML
+from templisafe.util import DEFAULT_MANAGER_SETTINGS
 
 class SourceAssembler:
     """Assembles a `SourceResolver` with all necessary components."""
@@ -26,7 +26,7 @@ class SourceAssembler:
         
         factory: SourceFactory = SourceFactory()
         manager: SourceManager = SourceManager(
-            settings=manager_settings or ManagerSettings.from_yaml(DEFAULT_MANAGER_SETTINGS_YAML),
+            settings=manager_settings or DEFAULT_MANAGER_SETTINGS,
             factory=factory
         )
         content_type_resolver: ContentTypeResolver = ContentTypeResolver()

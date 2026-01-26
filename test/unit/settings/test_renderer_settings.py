@@ -1,7 +1,7 @@
 import pytest
 
 from templisafe.exceptions.settings_error import SettingsError
-from templisafe.settings.renderer_settings import RendererSettings, Settings
+from templisafe.settings.renderer_settings import RendererSettings, Settings, _INDEX_KEY_DEFAULT
 
 
 # -----------------------------
@@ -30,9 +30,9 @@ def test_create_success():
     assert isinstance(instance, RendererSettings)
     assert instance.index_key == "idx"
 
-def test_create_missing_index_key_raises():
-    with pytest.raises(SettingsError):
-        RendererSettings.create()
+def test_create_defaults():
+    settings: RendererSettings = RendererSettings.create()
+    assert settings.index_key == _INDEX_KEY_DEFAULT
 
 def test_create_invalid_field_raises():
     with pytest.raises(SettingsError):

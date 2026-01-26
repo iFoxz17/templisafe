@@ -3,7 +3,7 @@ import warnings
 
 from templisafe.template.template_model import Compilation, Rendering
 from templisafe.template.template_model import Outcome
-from templisafe.util.util import DiagnosticPolicy
+from templisafe.util import DiagnosticPolicy
 from templisafe.exceptions.compilation_error import CompilationFailureError
 from templisafe.exceptions.rendering_error import RenderingFailureError
 

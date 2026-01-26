@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from templisafe.settings.source import *
 from templisafe.settings.source.aws.aws_ssm_parameter_source_settings import AwsSsmParameterSourceSettings
 from templisafe.exceptions.source_error import ContentTypeResolutionError
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 
 CONTENT_TYPE_MAP: Mapping[str, ContentType] = MappingProxyType({
     ".j2": ContentType.TEXT,

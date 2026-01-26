@@ -35,6 +35,12 @@ CUSTOM_DICT_CONFIG = {
 # Tests
 # -------------------------
 
+def test_create_default():
+    settings = TemplateEngineSettings.create()
+    assert isinstance(settings, TemplateEngineSettings)
+    assert settings.engine_kind == TemplateEngineKind.JINJA
+    assert settings.config == {}
+
 def test_create_from_dict():
     settings = TemplateEngineSettings.from_dict(DICT_CONFIG)
     assert isinstance(settings, TemplateEngineSettings)
@@ -64,12 +70,6 @@ def test_create_from_json():
 
 def test_create_invalid_kind():
     config = {"kind": "invalid", "config": {}}
-    with pytest.raises(ValueError):
-        TemplateEngineSettings.from_dict(config)
-
-
-def test_create_missing_kind():
-    config = {"config": {}}
     with pytest.raises(ValueError):
         TemplateEngineSettings.from_dict(config)
 
@@ -134,10 +134,6 @@ def test_create_kwargs_no_config():
     assert isinstance(settings, TemplateEngineSettings)
     assert settings.engine_kind == TemplateEngineKind.JINJA
     assert settings.config == {}
-
-def test_create_kwargs_missing_kind():
-    with pytest.raises(ValueError):
-        TemplateEngineSettings.create(config={})
 
 def test_create_kwargs_invalid_kind():
     with pytest.raises(ValueError):

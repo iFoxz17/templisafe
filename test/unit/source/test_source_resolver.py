@@ -10,7 +10,7 @@ from templisafe.source.source_resolver import SourceResolver
 from templisafe.source.local_source import LocalSource
 from templisafe.source.inline_source import InlineSource
 from templisafe.settings.source.source_settings import SourceSettings
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 
 # -----------------------------
 # Fixtures

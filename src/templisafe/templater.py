@@ -16,7 +16,7 @@ from templisafe.source.source import Source
 
 from templisafe.engine.template_engine import TemplateEngine
 
-from templisafe.loader.loader_facade import LoaderFacade
+from templisafe.parser.loader_facade import LoaderFacade
 
 from templisafe.source.source_resolver import SourceResolver
 from templisafe.template.template_model import (

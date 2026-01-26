@@ -2,8 +2,7 @@ import pytest
 
 from templisafe.template.compiler.compiler_assembler import (
     CompilerAssembler,
-    DEFAULT_COMPILER_SETTINGS_YAML,
-    DEFAULT_MANAGER_SETTINGS_YAML
+    DEFAULT_MANAGER_SETTINGS
 )
 from templisafe.template.compiler.compiler_resolver import CompilerResolver
 from templisafe.template.compiler.compiler_manager import CompilerManager
@@ -19,8 +18,7 @@ index_key: custom_index
 """
 
 
-DEFAULT_MANAGER_SETTINGS: ManagerSettings = ManagerSettings.from_yaml(DEFAULT_MANAGER_SETTINGS_YAML)
-DEFAULT_COMPILER_SETTINGS: CompilerSettings = CompilerSettings.from_yaml(DEFAULT_COMPILER_SETTINGS_YAML)
+DEFAULT_COMPILER_SETTINGS: CompilerSettings = CompilerSettings.create()
 
 
 # -----------------------------

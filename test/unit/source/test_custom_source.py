@@ -3,7 +3,7 @@ from overrides import overrides
 from templisafe.settings.source.custom_source_settings import CustomSourceSettings
 from templisafe.settings.source.source_settings import SourceSettings 
 from templisafe.source.source import Source
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 
 class CustomSource(Source):
     def __init__(self, settings: SourceSettings) -> None:

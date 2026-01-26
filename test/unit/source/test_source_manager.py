@@ -10,7 +10,7 @@ from templisafe.source.http_source import HttpSource
 from templisafe.source.aws import *
 from templisafe.settings.source import *
 from templisafe.exceptions.source_error import UnsupportedSourceError
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 
 # -----------------------------
 # SourceManager fixture (cache enabled and disabled)

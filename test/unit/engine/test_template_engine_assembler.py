@@ -2,7 +2,6 @@ import pytest
 
 from templisafe.engine.template_engine_assembler import (
     TemplateEngineAssembler, 
-    DEFAULT_TEMPLATE_ENGINE_SETTINGS_YAML,
     DEFAULT_MANAGER_SETTINGS_YAML
 )
 from templisafe.engine.template_engine_resolver import TemplateEngineResolver
@@ -20,9 +19,7 @@ config:
 """
 
 DEFAULT_MANAGER_SETTINGS: ManagerSettings = ManagerSettings.from_yaml(DEFAULT_MANAGER_SETTINGS_YAML)
-DEFAULT_TEMPLATE_ENGINE_SETTINGS: TemplateEngineSettings = (
-    TemplateEngineSettings.from_yaml(DEFAULT_TEMPLATE_ENGINE_SETTINGS_YAML)
-)
+DEFAULT_TEMPLATE_ENGINE_SETTINGS: TemplateEngineSettings = TemplateEngineSettings.create()
 
 
 def test_assemble_with_defaults():

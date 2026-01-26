@@ -5,8 +5,15 @@ import json
 from templisafe.exceptions.settings_error import SettingsError 
 from templisafe.settings.settings import Settings
 from templisafe.settings.variant_parser_settings import VariantParserSettings
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 
+def test_create_defaults():
+    settings = VariantParserSettings.create()
+    assert isinstance(settings, VariantParserSettings)
+    assert settings.variants_key == "variants"
+    assert settings.default_variants_name == "default"
+    assert settings.variant_name_key == "name"
+    assert settings.bindings_key == "bindings"
 
 def test_create_derived_class_without_kind():
     # Should create the base VariantParserSettings instance
@@ -56,42 +63,6 @@ def test_create_invalid_kind():
             variant_name_key="name",
             bindings_key="bindings"
         )
-
-
-def test_create_missing_variants_key():
-    with pytest.raises(SettingsError):
-        VariantParserSettings.create(
-            default_variants_name="default",
-            variant_name_key="name",
-            bindings_key="bindings"
-        )
-
-
-def test_create_missing_variant_name_key():
-    with pytest.raises(SettingsError):
-        VariantParserSettings.create(
-            variants_key="vars",
-            default_variants_name="name",
-            bindings_key="bindings"
-        )
-
-def test_create_missing_bindings_key():
-    with pytest.raises(SettingsError):
-        VariantParserSettings.create(
-            variants_key="vars",
-            variant_name_key="name",
-            default_variants_name="default"
-        )
-
-
-def test_create_missing_default_variants_name():
-    with pytest.raises(SettingsError):
-        VariantParserSettings.create(
-            variants_key="vars",
-            variant_name_key="name",
-            bindings_key="bindings"
-        )
-
 
 def test_from_dict_dispatch():
     config = {

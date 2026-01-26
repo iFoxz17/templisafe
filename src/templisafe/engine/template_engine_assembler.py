@@ -2,15 +2,10 @@ from templisafe.engine.template_engine_manager import TemplateEngineFactory, Tem
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
 from templisafe.engine.template_engine_resolver import TemplateEngineResolver
-# from templisafe.util.util import DEFAULT_MANAGER_SETTINGS_YAML
+#from templisafe.util import DEFAULT_MANAGER_SETTINGS
 
 DEFAULT_MANAGER_SETTINGS_YAML: str = '''
 cache: false
-'''
-
-DEFAULT_TEMPLATE_ENGINE_SETTINGS_YAML: str = '''
-engine_kind: jinja
-config: {}
 '''
 
 class TemplateEngineAssembler:
@@ -48,7 +43,7 @@ class TemplateEngineAssembler:
             template_engine_manager=manager,
             default_settings=(
                 default_template_engine_settings or 
-                TemplateEngineSettings.from_yaml(DEFAULT_TEMPLATE_ENGINE_SETTINGS_YAML)
+                TemplateEngineSettings.create()
             )
         )
 

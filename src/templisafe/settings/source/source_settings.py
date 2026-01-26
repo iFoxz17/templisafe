@@ -4,9 +4,9 @@ from pydantic import ValidationError
 from enum import Enum
 from overrides import overrides
 
-from templisafe.config.config_loader import Config
+from templisafe.parser.config.config_parser import Config
 from templisafe.settings.settings import Settings
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 
 class SourceKind(str, Enum):
     INLINE = "inline"

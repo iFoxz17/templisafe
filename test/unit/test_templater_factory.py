@@ -6,7 +6,7 @@ from templisafe.templater import Templater
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings, TemplateEngineKind
-from templisafe.util.util import DiagnosticPolicy
+from templisafe.util import DiagnosticPolicy
 from templisafe.source.source import Source
 
 

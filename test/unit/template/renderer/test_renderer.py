@@ -26,7 +26,7 @@ def renderer_settings() -> RendererSettings:
 
 @pytest.fixture
 def engine() -> JinjaTemplateEngine:
-    settings = TemplateEngineSettings.create(kind="jinja", config={})
+    settings = TemplateEngineSettings.create(engine_kind="jinja", config={})
     return JinjaTemplateEngine(settings)
 
 @pytest.fixture

@@ -3,9 +3,9 @@ from dataclasses import dataclass, fields
 
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.executor.source_executor import SourceExecutor
-from templisafe.loader.schema.schema_parser import SchemaParser
-from templisafe.loader.template.template_parser import TemplateParser
-from templisafe.loader.variant.variant_parser import VariantParser
+from templisafe.parser.schema.schema_parser import SchemaParser
+from templisafe.parser.template.template_parser import TemplateParser
+from templisafe.parser.variant.variant_parser import VariantParser
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
 from templisafe.source.source import Source
 from templisafe.settings.source.source_settings import SourceSettings

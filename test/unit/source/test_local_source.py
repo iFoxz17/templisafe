@@ -1,6 +1,6 @@
 import pytest
 
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 from templisafe.source.local_source import LocalSource
 from templisafe.settings.source.source_settings import SourceSettings
 from templisafe.settings.source.local_source_settings import LocalSourceSettings

@@ -31,6 +31,14 @@ FULL_CONFIG = {
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+def test_create_base_defaults():
+    settings = Settings.create(kind="schema_parser_settings")
+    assert isinstance(settings, SchemaParserSettings)
+    assert settings.schema_key == "schema"
+    assert settings.type_key == "type"
+    assert settings.allowed_types == ()
+    assert settings.type_aliases == frozenset()
+
 def test_create_base_minimal():
     settings = Settings.create(kind="schema_parser_settings", **MINIMAL_CONFIG)
     assert isinstance(settings, SchemaParserSettings)
@@ -86,9 +94,3 @@ def test_invalid_allowed_types():
     settings = SchemaParserSettings.create(**config)
     # Pydantic converts string to tuple of characters
     assert settings.allowed_types == tuple("not-a-list")
-
-def test_missing_required_field():
-    incomplete = MINIMAL_CONFIG.copy()
-    incomplete.pop("schema_key")
-    with pytest.raises(SettingsError):
-        SchemaParserSettings.create(**incomplete)

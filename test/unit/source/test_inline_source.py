@@ -1,7 +1,7 @@
 from templisafe.source.inline_source import InlineSource
 from templisafe.settings.source.source_settings import SourceSettings 
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 
 
 def test_inline_source_initialization_and_read():

@@ -3,7 +3,8 @@ from templisafe.templater_factory import TemplaterFactory
 
 from templisafe.template.template_model import *
 from templisafe.settings import *
-from templisafe.util.util import ContentType, DiagnosticPolicy
+from templisafe.content.content import ContentType
+from templisafe.util import DiagnosticPolicy
 
 __all__ = [
     "Templater",

@@ -3,7 +3,7 @@ from pydantic import ValidationError, Field
 from enum import Enum
 from overrides import overrides
 
-from templisafe.config.config_loader import Config
+from templisafe.parser.config.config_parser import Config
 from templisafe.settings.settings import Settings, SettingsKind
 
 T = TypeVar("T", bound="TemplateEngineSettings")
@@ -16,21 +16,25 @@ class TemplateEngineKind(str, Enum):
 class TemplateEngineSettings(Settings):
     """Settings class for defining template engines."""
 
-    engine_kind: TemplateEngineKind = Field(..., description="The template engine kind")
-    config: dict[str, Any] = Field({}, description="The configurations of the engine")
+    engine_kind: TemplateEngineKind = Field(
+        TemplateEngineKind.JINJA, 
+        description="The template engine kind"
+        )
+    config: dict[str, Any] = Field(
+        default={}, 
+        description="The configurations of the engine"
+        )
 
     @classmethod
     def _prepare_kwargs(cls: type[T], kwargs: dict[str, Any]) -> dict[str, Any]:
+        
         engine_kind: Any = kwargs.pop("engine_kind", None)
-        if engine_kind is None:
-            raise ValueError("Missing 'engine_kind' field to determine engine type")
-
         if isinstance(engine_kind, str):
             try:
                 engine_kind = TemplateEngineKind(engine_kind.lower())
             except ValueError:
                 raise ValueError(f"Invalid kind: {engine_kind!r}")
-        kwargs["engine_kind"] = engine_kind
+            kwargs["engine_kind"] = engine_kind
 
         # Check for multiple config sources
         config_sources = ["config", "config_yaml", "config_json"]

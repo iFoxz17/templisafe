@@ -2,9 +2,9 @@ from typing import Any, Union
 from dataclasses import dataclass, fields
 
 from templisafe.executor.source_executor import SourceExecutor
-from templisafe.loader.schema.schema_parser import SchemaParser
-from templisafe.loader.template.template_parser import TemplateParser
-from templisafe.loader.variant.variant_parser import VariantParser
+from templisafe.parser.schema.schema_parser import SchemaParser
+from templisafe.parser.template.template_parser import TemplateParser
+from templisafe.parser.variant.variant_parser import VariantParser
 
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings

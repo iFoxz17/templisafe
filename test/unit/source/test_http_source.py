@@ -3,7 +3,7 @@ import pytest
 from templisafe.source.http_source import HttpSource
 from templisafe.settings.source.http_source_settings import HttpSourceSettings
 from templisafe.exceptions.source_error import HttpSourceError
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 
 
 def test_http_source_reads_json_content(requests_mock):

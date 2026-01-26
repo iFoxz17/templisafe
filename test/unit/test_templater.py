@@ -3,7 +3,6 @@ import pytest
 from unittest.mock import create_autospec
 import time
 
-from templisafe.resolver import source_resolver
 from templisafe.settings.template_engine_settings import TemplateEngineKind, TemplateEngineSettings
 from templisafe.templater import Templater
 from templisafe.outcome_handler import OutcomeHandler
@@ -11,14 +10,13 @@ from templisafe.template.template_model import (
     CompilationSpec, Parameterization, RenderingSpec, Template, Schema, VariantSet,
     Compilation, Rendering, Build, Outcome
 )
-from templisafe.resolver.source_resolver import SourceResolutionResult, SourceResolver
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.source.source import Source
 from templisafe.source.source_manager import SourceManager
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_manager import TemplateEngineManager
-from templisafe.loader.loader_facade import LoaderFacade
+from templisafe.parser.loader_facade import LoaderFacade
 from templisafe.template.compiler.compiler import Compiler
 from templisafe.template.compiler.compiler_manager import CompilerManager
 from templisafe.template.renderer.renderer import Renderer

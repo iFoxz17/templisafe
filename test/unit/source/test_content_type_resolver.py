@@ -6,7 +6,7 @@ from templisafe.settings.source.http_source_settings import HttpSourceSettings
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 from templisafe.settings.source.local_source_settings import LocalSourceSettings
 from templisafe.exceptions.source_error import ContentTypeResolutionError
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 from templisafe.source.content_type_resolver import ContentTypeResolver
 
 # -----------------------------

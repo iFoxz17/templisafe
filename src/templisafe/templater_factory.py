@@ -11,7 +11,7 @@ from templisafe.templater import Templater
 from templisafe.outcome_handler import OutcomeHandler
 from templisafe.default_handler import DefaultHandler
 
-from templisafe.util.util import DiagnosticPolicy
+from templisafe.util import DiagnosticPolicy
 
 from templisafe.settings.settings import Settings
 from templisafe.settings.template_parser_settings import TemplateParserSettings
@@ -26,15 +26,15 @@ from templisafe.source.source import Source
 
 
 from templisafe.executor.source_executor import SourceExecutor
-from templisafe.config.config_loader_facade import ConfigLoader
+from templisafe.parser.config.config_parser_resolver import ConfigParser
 
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_manager import TemplateEngineManager
 
-from templisafe.loader.loader_facade import LoaderFacade
-from templisafe.loader.template.template_loader import TemplateLoader
-from templisafe.loader.schema.schema_loader import SchemaLoader, _INDEX_KEY_KEY
-from templisafe.loader.variant.variant_loader import VariantLoader
+from templisafe.parser.loader_facade import LoaderFacade
+from templisafe.parser.template.template_loader import TemplateLoader
+from templisafe.parser.schema.schema_loader import SchemaLoader, _INDEX_KEY_KEY
+from templisafe.parser.variant.variant_loader import VariantLoader
 
 class TemplaterFactory:
     '''

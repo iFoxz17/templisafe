@@ -2,7 +2,7 @@ import pytest
 import json
 import yaml
 
-from templisafe.settings.compiler_settings import CompilerSettings, Settings
+from templisafe.settings.compiler_settings import CompilerSettings, Settings, _INDEX_KEY_DEFAULT
 from templisafe.exceptions.settings_error import SettingsError
 
 # -----------------------------
@@ -38,9 +38,9 @@ def test_create_with_valid_dict(valid_dict):
     assert settings.index_key == valid_dict["index_key"]
 
 
-def test_create_missing_index_key_raises():
-    with pytest.raises(SettingsError):
-        CompilerSettings.create()
+def test_create_defaults():
+    settings: CompilerSettings = CompilerSettings.create()
+    assert settings.index_key == _INDEX_KEY_DEFAULT
 
 
 def test_create_invalid_type_raises():

@@ -2,8 +2,7 @@ import pytest
 
 from templisafe.template.renderer.renderer_assembler import (
     RendererAssembler,
-    DEFAULT_RENDERER_SETTINGS_YAML,
-    DEFAULT_MANAGER_SETTINGS_YAML
+    DEFAULT_MANAGER_SETTINGS
 )
 from templisafe.template.renderer.renderer_resolver import RendererResolver
 from templisafe.template.renderer.renderer_manager import RendererManager
@@ -19,8 +18,7 @@ index_key: custom_index
 """
 
 
-DEFAULT_MANAGER_SETTINGS: ManagerSettings = ManagerSettings.from_yaml(DEFAULT_MANAGER_SETTINGS_YAML)
-DEFAULT_RENDERER_SETTINGS: RendererSettings = RendererSettings.from_yaml(DEFAULT_RENDERER_SETTINGS_YAML)
+DEFAULT_RENDERER_SETTINGS: RendererSettings = RendererSettings.create()
 
 
 # -----------------------------

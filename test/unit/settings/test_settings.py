@@ -1,7 +1,7 @@
 import pytest
 from typing import Any
 
-from templisafe.config.config_loader import Config
+from templisafe.parser.config.config_parser import Config
 from templisafe.settings.settings import Settings, SettingsError
 
 # Concrete subclass for testing

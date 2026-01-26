@@ -3,7 +3,7 @@ import warnings
 from types import SimpleNamespace
 
 from templisafe.template.template_model import Outcome, Compilation, Rendering
-from templisafe.util.util import DiagnosticPolicy
+from templisafe.util import DiagnosticPolicy
 from templisafe.exceptions.compilation_error import CompilationFailureError
 from templisafe.exceptions.rendering_error import RenderingFailureError
 from templisafe.outcome_handler import OutcomeHandler

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from templisafe.util.util import ContentType
+from templisafe.content.content import ContentType
 from templisafe.settings.source.source_settings import SourceSettings
     
 class Source(ABC):

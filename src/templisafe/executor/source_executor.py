@@ -2,7 +2,7 @@ from typing import Any, Callable
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed, Future
 
-from templisafe.config.config_loader_facade import ConfigLoader
+from templisafe.parser.config.config_parser_resolver import ConfigParser
 from templisafe.source.source import Source
 from templisafe.settings.settings import Settings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
@@ -43,9 +43,9 @@ class SourceExecutorResult:
 class SourceExecutor:
     __slots__ = ("_settings", "_config_loader")
 
-    def __init__(self, settings: SourceExecutorSettings, config_loader: ConfigLoader | None = None) -> None:
+    def __init__(self, settings: SourceExecutorSettings, config_loader: ConfigParser | None = None) -> None:
         self._settings: SourceExecutorSettings = settings
-        self._config_loader: ConfigLoader = config_loader or ConfigLoader()
+        self._config_loader: ConfigParser = config_loader or ConfigParser()
 
     def _read_or_none(self, source: Source | None) -> str | None:
         return source.read() if source else None 

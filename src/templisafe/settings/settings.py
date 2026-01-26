@@ -5,7 +5,7 @@ from enum import Enum
 
 from templisafe.exceptions.settings_error import SettingsError
 from templisafe.exceptions.config_error import ConfigError
-from templisafe.config.config_loader import *
+from templisafe.parser.config.config_parser import *
 
 class SettingsKind(str, Enum):
     MANAGER_SETTINGS = "manager_settings"
@@ -74,28 +74,28 @@ class Settings(BaseModel, ABC):
     @classmethod
     def _load_yaml(cls, config_str: str) -> dict[str, Any]:
         try:
-            return cls._validate_config(YamlConfigLoader().load(config_str))    
+            return cls._validate_config(YamlParser().parse(config_str))    
         except ConfigError as e:
             raise SettingsError("Cannot parse YAML configuration") from e
         
     @classmethod
     def _load_json(cls, config_str: str) -> dict[str, Any]:
         try:
-            return cls._validate_config(JsonConfigLoader().load(config_str))  
+            return cls._validate_config(JsonParser().parse(config_str))  
         except ConfigError as e:
             raise SettingsError("Cannot parse JSON configuration") from e
         
     @classmethod
     def _load_toml(cls, config_str: str) -> dict[str, Any]:
         try:
-            return cls._validate_config(TomlConfigLoader().load(config_str))    
+            return cls._validate_config(TomlParser().parse(config_str))    
         except ConfigError as e:
             raise SettingsError("Cannot parse TOML configuration") from e
         
     @classmethod
     def _load_xml(cls, config_str: str) -> dict[str, Any]:
         try:
-            return cls._validate_config(XmlConfigLoader().load(config_str))
+            return cls._validate_config(XmlParser().parse(config_str))
         except ConfigError as e:
             raise SettingsError("Cannot parse XML configuration") from e
     
