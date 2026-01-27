@@ -8,6 +8,7 @@ from templisafe.exceptions.config_error import ConfigError
 from templisafe.parser.config.config_parser import *
 
 class SettingsKind(str, Enum):
+    SOURCE_SETTINGS = "source_settings"
     MANAGER_SETTINGS = "manager_settings"
     TEMPLATE_PARSER_SETTINGS = "template_parser_settings" 
     SCHEMA_PARSER_SETTINGS = "schema_parser_settings"
@@ -20,7 +21,7 @@ class SettingsKind(str, Enum):
 T = TypeVar("T", bound="Settings")
 
 class Settings(BaseModel, ABC):
-    """Abstract base class for all settings with centralized loading."""
+    """Abstract base class for all settings with centralized creation."""
 
     model_config = ConfigDict(
         frozen=True,
@@ -54,7 +55,10 @@ class Settings(BaseModel, ABC):
                                 
                 maybe_target_cls: type | None = cls._KIND_MAP.get(kind)
                 if maybe_target_cls is None:
-                    raise SettingsError(f"Unknown settings kind: {kind!r}")
+                    raise SettingsError(
+                        f"Unregistered settings kind: {kind!r}. "
+                        "Use the correct settings subclass create method"
+                        )
                 target_cls = maybe_target_cls
         try:
             return cast(T, target_cls.model_validate(kwargs))

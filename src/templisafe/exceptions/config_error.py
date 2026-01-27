@@ -13,12 +13,3 @@ class UnsopportedConfigError(ConfigError):
         super().__init__(
             f"Unsupported configuration content type: {content_type!r}"
         )
-
-class SettingsConfigError(ConfigError):
-    """Raised when trying to create a `Settings` from an unallowed `Config`."""
-
-    def __init__(self, config: Any) -> None:
-        self.config: Any = config
-        super().__init__(
-            f"Cannot create a settings instance from the configuration type: {config!r}"
-        )

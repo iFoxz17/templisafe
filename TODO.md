@@ -6,7 +6,10 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 ---
 
 ## High Priority
-- [ ] SourceSettings cannot be created from Settings.create since they need subclass dispatch: handle this inside ConfigLoaderFacade.load_settings()
+- [ ] Add support for HOCON configuration language
+- [ ] Add support for INI configuration language
+- [ ] Add support for .env configuration language
+- [ ] Implement EnvSource
 - [ ] Setup github repo: automate release pipeline to create tags on release branch
 - [ ] Add a test for Templater concurrency
 - [ ] Develop contribuiting section

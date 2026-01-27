@@ -1,3 +1,4 @@
+from typing import Any
 import pytest
 import yaml
 
@@ -560,6 +561,56 @@ variants:
     assert b1.value == 600
     assert b2.value == "sot"
 
+# -----------------------------
+# Bad input
+# -----------------------------
+
+def test_input_is_not_a_list(settings):
+    parser = VariantParser(settings)
+    config: dict = {
+        "variants": {
+            "name": "variant1", 
+            "bindings": {
+                "a": 2,
+                "b": "test"
+            }
+        }
+
+    }
+    vset: VariantSet = parser.parse(config)   # type: ignore
+
+    assert vset.names == {"variant1"}
+    v1 = next(v for v in vset.variants if v.name == "variant1")
+    a = v1.get("a")
+    assert a is not None and a.value == 2
+    b = v1.get("b")
+    assert b is not None and b.value == "test"
+
+def test_input_is_a_list_of_non_dicts(settings):
+    parser = VariantParser(settings)
+    config: list[Any] = [
+        {
+          "variants": {
+              "name": "variant1", 
+              "bindings": {
+                  "a": 2,
+                  "b": "test"
+              }
+          }
+        },
+        {
+          "variants": {
+              "name": "variant2", 
+              "bindings": {
+                  "a": 2,
+                  "b": "test"
+              }
+          }
+        },
+        ["not a list"]
+    ]
+    with pytest.raises(IllegalVariantError):  
+      parser.parse(config)
 
 # -----------------------------
 # Duplicate variant names

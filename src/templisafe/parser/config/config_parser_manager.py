@@ -14,7 +14,7 @@ from templisafe.content.content import ContentType
 class ConfigParserFactory:
     """Creates `ConfigParser` instances from content types."""
 
-    _CONFIG_LOADER_MAP: Mapping[ContentType, type[ConfigParser]] = MappingProxyType(
+    _CONFIG_TYPE_MAP: Mapping[ContentType, type[ConfigParser]] = MappingProxyType(
         {
             ContentType.YAML: YamlParser,
             ContentType.JSON: JsonParser,
@@ -26,11 +26,11 @@ class ConfigParserFactory:
     def create(self, content_type: ContentType) -> ConfigParser:
         """Create a `ConfigParser` instance for the given content type."""
 
-        cl_map: Mapping[ContentType, type[ConfigParser]] = self._CONFIG_LOADER_MAP
+        cl_map: Mapping[ContentType, type[ConfigParser]] = self._CONFIG_TYPE_MAP
         if content_type not in cl_map:
             raise UnsopportedConfigError(content_type)
-        loader_type: type[ConfigParser] = cl_map[content_type]
-        return loader_type()
+        parser_type: type[ConfigParser] = cl_map[content_type]
+        return parser_type()
 
 #---------------------------------------------------------------------------------------------
 # Manager
@@ -39,32 +39,32 @@ class ConfigParserFactory:
 class ConfigParserManager:
     """Manages the retrieval of `ConfigParser` instances."""
 
-    __slots__: tuple[str, ...] = ("_settings", "_factory", "_config_loaders")
+    __slots__: tuple[str, ...] = ("_settings", "_factory", "_config_parsers")
 
     def __init__(
             self, 
             settings: ManagerSettings, 
             factory: ConfigParserFactory | None = None,
-            config_loaders: dict[ContentType, ConfigParser] | None = None
+            config_parsers: dict[ContentType, ConfigParser] | None = None
             ) -> None:
         
         self._settings: ManagerSettings = settings
         self._factory: ConfigParserFactory = factory or ConfigParserFactory()
-        self._config_loaders: dict[ContentType, ConfigParser] = config_loaders or {}
+        self._config_parsers: dict[ContentType, ConfigParser] = config_parsers or {}
     
     def get_or_create(self, content_type: ContentType) -> ConfigParser:
         """Return a `ConfigParser` instance according to the given content type."""
 
-        l: dict[ContentType, ConfigParser] = self._config_loaders
-        if content_type in l:
-            return l[content_type]
+        p: dict[ContentType, ConfigParser] = self._config_parsers
+        if content_type in p:
+            return p[content_type]
         
-        loader: ConfigParser = self._factory.create(content_type)
+        parser: ConfigParser = self._factory.create(content_type)
         if self._settings.cache:
-            l[content_type] = loader
-        return loader 
+            p[content_type] = parser
+        return parser 
 
     def __contains__(self, content_type: ContentType) -> bool:
-        """Return whether a `ConfigParser` instance for the given content_type is cached."""
+        """Return whether a `ConfigParser` instance for the given content type is cached."""
 
-        return content_type in self._config_loaders
+        return content_type in self._config_parsers

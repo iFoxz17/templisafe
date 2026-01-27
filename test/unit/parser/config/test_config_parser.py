@@ -4,87 +4,87 @@ from templisafe.exceptions.config_error import ConfigError
 from templisafe.parser.config.config_parser import *
 
 
-def test_loader_is_abstract():
+def test_config_parser_is_abstract():
     with pytest.raises(TypeError):
         ConfigParser()        # type: ignore
 
 # -----------------
-# YAML Loader
+# YAML Config_parser
 # -----------------
 
-def test_yaml_loader_mapping():
+def test_yaml_config_parser_mapping():
     raw = """
     a: 1
     b:
       c: 2
     """
 
-    loader = YamlParser()
-    config: Config = loader.parse(raw)
+    config_parser = YamlParser()
+    config: Config = config_parser.parse(raw)
 
     assert config == {"a": 1, "b": {"c": 2}}
 
-def test_yaml_loader_list():
+def test_yaml_config_parser_list():
     raw = """
     - a: 1
     - b:
         c: 2
     """
 
-    loader = YamlParser()
-    config: Config = loader.parse(raw)
+    config_parser = YamlParser()
+    config: Config = config_parser.parse(raw)
 
     assert config == [{"a": 1}, {"b": {"c": 2}}]
 
 
-def test_yaml_loader_invalid_yaml():
+def test_yaml_config_parser_invalid_yaml():
     raw = """
     a: 1
       b: 2
     """
 
-    loader = YamlParser()
+    config_parser = YamlParser()
 
     with pytest.raises(ConfigError):
-        loader.parse(raw)
+        config_parser.parse(raw)
 
 
 # -----------------
-# JSON Loader
+# JSON Config_parser
 # -----------------
 
-def test_json_loader_object():
+def test_json_config_parser_object():
     raw = '{"a": 1, "b": {"c": 2}}'
 
-    loader = JsonParser()
-    config = loader.parse(raw)
+    config_parser = JsonParser()
+    config = config_parser.parse(raw)
 
     assert config == {"a": 1, "b": {"c": 2}}
 
 
-def test_json_loader_list():
+def test_json_config_parser_list():
     raw = '[1, 2, 3]'
 
-    loader = JsonParser()
+    config_parser = JsonParser()
 
-    config = loader.parse(raw)
+    config = config_parser.parse(raw)
     assert config == [1, 2, 3]
 
 
-def test_json_loader_invalid_json():
+def test_json_config_parser_invalid_json():
     raw = '{"a": 1,}'
 
-    loader = JsonParser()
+    config_parser = JsonParser()
 
     with pytest.raises(ConfigError):
-        loader.parse(raw)
+        config_parser.parse(raw)
 
 
 # -----------------
-# TOML Loader
+# TOML Config_parser
 # -----------------
 
-def test_toml_loader_object():
+def test_toml_config_parser_object():
     raw = """
     a = 1
 
@@ -92,25 +92,25 @@ def test_toml_loader_object():
     c = 2
     """
 
-    loader = TomlParser()
-    config = loader.parse(raw)
+    config_parser = TomlParser()
+    config = config_parser.parse(raw)
 
     assert config == {"a": 1, "b": {"c": 2}}
 
 
-def test_toml_loader_invalid_toml():
+def test_toml_config_parser_invalid_toml():
     raw = """
     a = 1
     b =
     """
 
-    loader = TomlParser()
+    config_parser = TomlParser()
 
     with pytest.raises(ConfigError):
-        loader.parse(raw)
+        config_parser.parse(raw)
 
 
-def test_toml_loader_missing_dependency(monkeypatch):
+def test_toml_config_parser_missing_dependency(monkeypatch):
     import builtins
 
     real_import = builtins.__import__
@@ -122,17 +122,17 @@ def test_toml_loader_missing_dependency(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", fake_import)
 
-    loader = TomlParser()
+    config_parser = TomlParser()
 
     with pytest.raises(ConfigError):
-        loader.parse("a = 1")
+        config_parser.parse("a = 1")
 
 
 # -----------------
-# XML Loader
+# XML Config_parser
 # -----------------
 
-def test_xml_loader_mapping():
+def test_xml_config_parser_mapping():
     raw = """
     <root>
         <a>1</a>
@@ -142,8 +142,8 @@ def test_xml_loader_mapping():
     </root>
     """
 
-    loader = XmlParser()
-    config: Config = loader.parse(raw)
+    config_parser = XmlParser()
+    config: Config = config_parser.parse(raw)
 
     assert config == {
         "root": {
@@ -155,7 +155,7 @@ def test_xml_loader_mapping():
     }
 
 
-def test_xml_loader_list():
+def test_xml_config_parser_list():
     raw = """
     <root>
         <item>
@@ -167,8 +167,8 @@ def test_xml_loader_list():
     </root>
     """
 
-    loader = XmlParser()
-    config: Config = loader.parse(raw)
+    config_parser = XmlParser()
+    config: Config = config_parser.parse(raw)
 
     assert config == {
         "root": { 
@@ -180,15 +180,15 @@ def test_xml_loader_list():
     }
 
 
-def test_xml_loader_invalid_xml():
+def test_xml_config_parser_invalid_xml():
     raw = """
     <root>
         <a>1</b>
     </root>
     """
 
-    loader = XmlParser()
+    config_parser = XmlParser()
 
     with pytest.raises(ConfigError):
-        loader.parse(raw)
+        config_parser.parse(raw)
 
