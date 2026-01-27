@@ -30,7 +30,7 @@ class Renderer:
         return index
 
     def _diagnostic_message(self, variant_name: str, msg: str) -> str:
-        return f"'{variant_name}' - {msg}"
+        return f"Variant '{variant_name}' - {msg}"
 
     def validate(
         self,

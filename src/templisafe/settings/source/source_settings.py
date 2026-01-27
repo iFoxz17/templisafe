@@ -18,6 +18,7 @@ class SourceKind(str, Enum):
     AWS_DYNAMODB = "aws_dynamodb"
     CUSTOM = "custom"
 
+    
 class SourceSettings(Settings, ABC):
     """Base abstract class for defining source settings."""
 

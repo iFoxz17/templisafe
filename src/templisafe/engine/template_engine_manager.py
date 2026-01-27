@@ -16,7 +16,7 @@ class TemplateEngineFactory:
     """Creates `TemplateEngine` instances from engine settings."""
 
     __slots__: tuple[str, ...] = ()
-
+    
     _ENGINE_MAP: MappingProxyType[TemplateEngineKind, type[TemplateEngine]] = MappingProxyType({
         TemplateEngineKind.JINJA: JinjaTemplateEngine,
         TemplateEngineKind.DJANGO: DjangoTemplateEngine,

@@ -28,7 +28,8 @@ dependencies = [
     "PyYAML>=6.0",
     "Jinja2>=3.0",
     "pydantic>=2.0",
-    "overrides>=7.3"
+    "overrides>=7.3",
+    "tenacity"
 ]
 
 # Optional development dependencies
