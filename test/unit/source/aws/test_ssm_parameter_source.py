@@ -2,6 +2,7 @@ import pytest
 import boto3
 from moto import mock_aws
 
+from templisafe.content.content import ContentType
 from templisafe.source.aws.aws_ssm_parameter_source import AwsSsmParameterSource
 from templisafe.settings.source.aws.aws_ssm_parameter_source_settings import (
     AwsSsmParameterSourceSettings,
@@ -23,6 +24,7 @@ TEST_PARAMETER_VALUE = "super-secret-value"
 def ssm_settings() -> AwsSsmParameterSourceSettings:
     """SSM settings pointing to the mock parameter."""
     return AwsSsmParameterSourceSettings(
+        content_type=ContentType.TEXT,
         parameter_name=TEST_PARAMETER_NAME,
         aws_access_key_id="FAKE_KEY",
         aws_secret_access_key="FAKE_SECRET",
@@ -67,6 +69,7 @@ def test_read_returns_content(moto_ssm, ssm_settings):
 
 def test_client_uses_settings_credentials(moto_ssm):
     settings = AwsSsmParameterSourceSettings(
+        content_type=ContentType.TEXT,
         parameter_name=TEST_PARAMETER_NAME,
         aws_access_key_id="FAKE_KEY",
         aws_secret_access_key="FAKE_SECRET",
@@ -92,6 +95,7 @@ def test_boto3_resolves_env_credentials(moto_ssm, monkeypatch):
 
     # Let boto3 resolve credentials automatically
     settings = AwsSsmParameterSourceSettings(
+        content_type=ContentType.TEXT,
         parameter_name=TEST_PARAMETER_NAME
     )
 
@@ -109,6 +113,7 @@ def test_read_raises_on_missing_parameter(moto_ssm):
     """Test that reading a non-existent parameter raises S3SourceError."""
     source = AwsSsmParameterSource(
         AwsSsmParameterSourceSettings(
+            content_type=ContentType.TEXT,
             parameter_name="/missing/parameter",
             aws_access_key_id="FAKE_KEY",
             aws_secret_access_key="FAKE_SECRET",
@@ -124,6 +129,7 @@ def test_read_with_decryption_disabled(moto_ssm_not_encrypted):
     """Test that with_decryption=False is passed correctly."""
     
     settings = AwsSsmParameterSourceSettings(
+        content_type=ContentType.TEXT,
         parameter_name=TEST_PARAMETER_NAME,
         with_decryption=False,
         aws_access_key_id="FAKE_KEY",

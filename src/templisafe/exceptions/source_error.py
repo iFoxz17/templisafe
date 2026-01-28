@@ -1,9 +1,19 @@
 from pathlib import Path
-from templisafe.source.source import SourceSettings
+from typing import Any
 
 class SourceError(Exception):
     """Base class for source-related exceptions."""
     pass
+
+class MissingContentTypeError(SourceError):
+    """Raised when trying to create a source without a content type."""
+
+    __slots__: tuple[str, ...] = ("settings",)
+
+    def __init__(self, settings: Any) -> None:
+        self.settings = settings
+        message = f"Cannot create a source without its content type: {settings}"
+        super().__init__(message)
 
 class LocalSourceError(SourceError):
     """Raised when a local source file cannot be found."""
@@ -13,9 +23,6 @@ class LocalSourceError(SourceError):
     def __init__(self, path: Path) -> None:
         self.path = path
         super().__init__(f"File not found: {path!r}")
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(path={self.path!r})"
     
 class HttpSourceError(SourceError):
     """Raised when an HTTP source cannot be fetched."""
@@ -25,9 +32,6 @@ class HttpSourceError(SourceError):
     def __init__(self, url: str) -> None:
         self.url = url
         super().__init__(f"Failed to fetch URL: {url!r}")
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(url={self.url!r})"
 
 class AwsSourceError(Exception):
     """Raised when an aws source cannot be accessed or read."""
@@ -40,25 +44,18 @@ class UnsupportedSourceError(SourceError):
     
     __slots__: tuple[str, ...] = ("settings",)
 
-    def __init__(self, settings: SourceSettings) -> None:
+    def __init__(self, settings: Any) -> None:
         self.settings = settings
         super().__init__(f"Missing source implementation for settings: {settings!r}")
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(settings={self.settings!r})"
     
 class ContentTypeResolutionError(SourceError):
     """Raised when the content type of a source cannot be resolved."""
 
     __slots__: tuple[str, ...] = ("settings",)
 
-    def __init__(self, settings: SourceSettings) -> None:
+    def __init__(self, settings: Any) -> None:
         self.settings = settings
         message = f"Unable to resolve content type for settings {settings}"
         super().__init__(message)
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(settings={self.settings!r})"
-
 
 

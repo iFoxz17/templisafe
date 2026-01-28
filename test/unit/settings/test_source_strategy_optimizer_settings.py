@@ -30,6 +30,7 @@ def custom_settings():
         no_latency_weight=1,
         low_latency_weight=5,
         high_latency_weight=100,
+        default_latency_weight=80,
         threshold=50,
     )
 
@@ -41,6 +42,7 @@ def test_default_weights(default_settings: StrategyOptimizerSettings):
     assert default_settings.no_latency_weight == 0
     assert default_settings.low_latency_weight == 10
     assert default_settings.high_latency_weight == 50
+    assert default_settings.default_latency_weight == 50
     assert default_settings.threshold == 100
     assert isinstance(default_settings.source_latency_map, MappingProxyType)
     assert InlineSource in default_settings.source_latency_map
@@ -52,6 +54,7 @@ def test_custom_weights(custom_settings: StrategyOptimizerSettings):
     assert custom_settings.no_latency_weight == 1
     assert custom_settings.low_latency_weight == 5
     assert custom_settings.high_latency_weight == 100
+    assert custom_settings.default_latency_weight == 80
     assert custom_settings.threshold == 50
     assert isinstance(custom_settings.source_latency_map, MappingProxyType)
     assert InlineSource in custom_settings.source_latency_map
@@ -81,10 +84,12 @@ def test_override_threshold_and_weights():
         no_latency_weight=5,
         low_latency_weight=15,
         high_latency_weight=25,
+        default_latency_weight=25,
         threshold=42,
     )
     assert settings.no_latency_weight == 5
     assert settings.low_latency_weight == 15
+    assert settings.high_latency_weight == 25
     assert settings.high_latency_weight == 25
     assert settings.threshold == 42
 

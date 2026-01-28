@@ -2,6 +2,7 @@ import pytest
 import boto3
 from moto import mock_aws
 
+from templisafe.content.content import ContentType
 from templisafe.source.aws.aws_s3_bucket_source import AwsS3BucketSource
 from templisafe.settings.source.aws.aws_s3_bucket_source_settings import AwsS3BucketSourceSettings
 from templisafe.exceptions.source_error import AwsSourceError
@@ -17,6 +18,7 @@ TEST_CONTENT = "Hello Moto!"
 def s3_settings() -> AwsS3BucketSourceSettings:
     """S3 settings pointing to the mock S3 bucket."""
     return AwsS3BucketSourceSettings(
+        content_type=ContentType.TEXT,
         bucket=TEST_BUCKET,
         key=TEST_KEY,
         aws_access_key_id="FAKE_KEY",
@@ -60,6 +62,7 @@ def test_read_with_env_credentials(moto_s3_bucket, monkeypatch):
 
     # let boto3 resolve aws_access_key_id, aws_secret_access_key and region_name
     settings = AwsS3BucketSourceSettings(
+        content_type=ContentType.TEXT,
         bucket=TEST_BUCKET,
         key=TEST_KEY,
     )
@@ -72,6 +75,7 @@ def test_read_with_env_credentials(moto_s3_bucket, monkeypatch):
 
 def test_client_uses_settings_credentials(moto_s3_bucket):
     settings = AwsS3BucketSourceSettings(
+        content_type=ContentType.TEXT,
         bucket=TEST_BUCKET,
         key=TEST_KEY,
         aws_access_key_id="FAKE_KEY",
@@ -96,6 +100,7 @@ def test_boto3_resolves_env_credentials(moto_s3_bucket, monkeypatch):
 
     # let boto3 resolve aws_access_key_id, aws_secret_access_key and region_name
     settings = AwsS3BucketSourceSettings(
+        content_type=ContentType.TEXT,
         bucket=TEST_BUCKET,
         key=TEST_KEY,
     )
@@ -112,6 +117,7 @@ def test_boto3_resolves_env_credentials(moto_s3_bucket, monkeypatch):
 def test_read_raises_on_missing_bucket(moto_s3_bucket):
     """Test that reading a non-existent object raises S3SourceError."""
     source = AwsS3BucketSource(AwsS3BucketSourceSettings(
+        content_type=ContentType.TEXT,
         bucket="missing-bucket",  # This bucket does not exist
         key=TEST_KEY,
         aws_access_key_id="FAKE_KEY",
@@ -125,6 +131,7 @@ def test_read_raises_on_missing_bucket(moto_s3_bucket):
 def test_read_raises_on_missing_object(moto_s3_bucket):
     """Test that reading a non-existent object raises S3SourceError."""
     source = AwsS3BucketSource(AwsS3BucketSourceSettings(
+        content_type=ContentType.TEXT,
         bucket=TEST_BUCKET,
         key="missing.txt",  # This object does not exist
         aws_access_key_id="FAKE_KEY",

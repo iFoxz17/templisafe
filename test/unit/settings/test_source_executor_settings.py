@@ -50,8 +50,8 @@ def test_stop_settings_from_dict():
 def test_wait_settings_defaults():
     wait = WaitSettings()
     assert wait.fixed_seconds is None
-    assert wait.exponential_base == 2.0
-    assert wait.multiplier_seconds == 1.0
+    assert wait.exponential_base is None
+    assert wait.multiplier_seconds is None
     assert wait.max_seconds is None
     assert wait.min_seconds is None
     assert wait.jitter is None

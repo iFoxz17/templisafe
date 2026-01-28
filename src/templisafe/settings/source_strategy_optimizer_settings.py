@@ -49,6 +49,11 @@ class StrategyOptimizerSettings(BaseModel):
         description="The weight of a high latency source in the strategy calculation."
     )
 
+    default_latency_weight: int = Field(
+        default=50,
+        description="The weight of a source whose latency is unknown (like a custom source) in the strategy calculation."
+    )
+
     threshold: int = Field(
         default=100,
         description="The threshold to overcome or reach for threading."

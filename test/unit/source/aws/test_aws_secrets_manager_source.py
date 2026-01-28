@@ -2,6 +2,7 @@ import pytest
 import boto3
 from moto import mock_aws
 
+from templisafe.content.content import ContentType
 from templisafe.source.aws.aws_secrets_manager_source import AwsSecretsManagerSource
 from templisafe.settings.source.aws.aws_secrets_manager_source_settings import AwsSecretsManagerSourceSettings
 from templisafe.exceptions.source_error import AwsSourceError  # replace with proper error later if needed
@@ -16,6 +17,7 @@ TEST_SECRET_VALUE = '{"username":"admin","password":"1234"}'
 def secrets_manager_settings() -> AwsSecretsManagerSourceSettings:
     """Secrets Manager settings pointing to the mock secret."""
     return AwsSecretsManagerSourceSettings(
+        content_type=ContentType.TEXT,
         secret_id=TEST_SECRET_ID,
         aws_access_key_id="FAKE_KEY",
         aws_secret_access_key="FAKE_SECRET",
@@ -46,6 +48,7 @@ def test_read_returns_content(moto_secrets_manager, secrets_manager_settings):
 
 def test_client_uses_settings_credentials(moto_secrets_manager):
     settings = AwsSecretsManagerSourceSettings(
+        content_type=ContentType.TEXT,
         secret_id=TEST_SECRET_ID,
         aws_access_key_id="FAKE_KEY",
         aws_secret_access_key="FAKE_SECRET",
@@ -67,7 +70,7 @@ def test_boto3_resolves_env_credentials(moto_secrets_manager, monkeypatch):
     monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
 
     # let boto3 resolve aws_access_key_id, aws_secret_access_key and region_name
-    settings = AwsSecretsManagerSourceSettings(secret_id=TEST_SECRET_ID)
+    settings = AwsSecretsManagerSourceSettings(secret_id=TEST_SECRET_ID, content_type=ContentType.TEXT)
     source = AwsSecretsManagerSource(settings)
     source.read()
 
@@ -80,6 +83,7 @@ def test_boto3_resolves_env_credentials(moto_secrets_manager, monkeypatch):
 def test_read_raises_on_missing_secret(moto_secrets_manager):
     """Test that reading a non-existent secret raises S3SourceError."""
     source = AwsSecretsManagerSource(AwsSecretsManagerSourceSettings(
+        content_type=ContentType.TEXT,
         secret_id="missing-secret",
         aws_access_key_id="FAKE_KEY",
         aws_secret_access_key="FAKE_SECRET",
@@ -92,6 +96,7 @@ def test_read_raises_on_missing_secret(moto_secrets_manager):
 def test_read_with_version_stage(moto_secrets_manager):
     """Test that version_stage is passed to get_secret_value."""
     settings = AwsSecretsManagerSourceSettings(
+        content_type=ContentType.TEXT,
         secret_id=TEST_SECRET_ID,
         version_stage="AWSCURRENT",
         aws_access_key_id="FAKE_KEY",

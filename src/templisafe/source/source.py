@@ -1,19 +1,19 @@
 from abc import ABC, abstractmethod
 
 from templisafe.content.content import ContentType
+from templisafe.exceptions.source_error import MissingContentTypeError
 from templisafe.settings.source.source_settings import SourceSettings
     
 class Source(ABC):
     """Abstract base class representing a data source."""
 
     def __init__(self, settings: SourceSettings) -> None:
+        if settings.content_type is None:
+            raise MissingContentTypeError(settings)
+
         self._settings: SourceSettings = settings
-
-    @property
-    def content_type(self) -> ContentType:
-        assert self._settings.content_type is not None
-        return self._settings.content_type
-
+        self.content_type: ContentType = settings.content_type
+        
     @abstractmethod
     def read(self) -> str:
         """

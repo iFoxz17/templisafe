@@ -26,8 +26,8 @@ class WaitSettings(Settings):
     """Configuration for wait/backoff between retries."""
 
     fixed_seconds: float | None = Field(default=None, description="Fixed wait time between retries")
-    exponential_base: float | None = Field(default=2.0, description="Base for exponential backoff")
-    multiplier_seconds: float | None = Field(default=1.0, description="Multiplier for backoff")
+    exponential_base: float | None = Field(default=None, description="Base for exponential backoff")
+    multiplier_seconds: float | None = Field(default=None, description="Multiplier for backoff")
     min_seconds: float | None = Field(default=None, description="Minimum wait time")
     max_seconds: float | None = Field(default=None, description="Maximum wait time")
     jitter: float | None = Field(default=None, description="Random jitter to add to wait")
@@ -123,10 +123,14 @@ class SourceExecutorSettings(Settings):
     )
 
     @property
+    def has_strategy(self) -> bool:
+        return self.strategy is not None
+
+    @property
     def actual_strategy(self) -> SourceExecutorStrategy:
         if self.strategy is None:
-            raise ValueError("Execution strategy not resolved")
-        return self.actual_strategy
+            raise ValueError("Execution strategy not set")
+        return self.strategy
     
     def __hash__(self):
         return hash((

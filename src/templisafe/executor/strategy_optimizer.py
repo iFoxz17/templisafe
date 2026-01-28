@@ -30,7 +30,7 @@ class StrategyOptimizer:
         return wmap
 
     def _source_weight(self, source: Source) -> int:
-        return self._weight_map.get(type(source), self._settings.low_latency_weight)
+        return self._weight_map.get(type(source), self._settings.default_latency_weight)
 
     def strategy(self, request: list[SourceRequest]) -> SourceExecutorStrategy:
         """

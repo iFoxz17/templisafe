@@ -28,7 +28,7 @@ def source_manager(request) -> SourceManager:
 def local_settings(tmp_path: Path):
     file = tmp_path / "file.yaml"
     file.write_text("dummy")
-    return SourceSettings.create(kind="local", path=str(file), content_type=None)
+    return SourceSettings.create(kind="local", path=str(file), content_type="text")
 
 @pytest.fixture
 def inline_settings():
@@ -55,20 +55,20 @@ AWS_COMMON_KWARGS = {
 @pytest.fixture
 def s3_settings() -> AwsS3BucketSourceSettings:
     return AwsS3BucketSourceSettings(
-        content_type=None, bucket="my-bucket", key="my-key.yaml", **AWS_COMMON_KWARGS
+        content_type=ContentType.TEXT, bucket="my-bucket", key="my-key.yaml", **AWS_COMMON_KWARGS
     )
 
 @pytest.fixture
 def aws_secrets_manager_settings() -> AwsSecretsManagerSourceSettings:
     return AwsSecretsManagerSourceSettings(
-        content_type=None, secret_id="secret_id.json", version_id="version_id",
+        content_type=ContentType.TEXT, secret_id="secret_id.json", version_id="version_id",
         version_stage="version_stage", **AWS_COMMON_KWARGS
     )
 
 @pytest.fixture
 def aws_ssm_settings() -> AwsSsmParameterSourceSettings:
     return AwsSsmParameterSourceSettings(
-        content_type=None, parameter_name="parameter_name.toml", with_decryption=True, **AWS_COMMON_KWARGS
+        content_type=ContentType.TEXT, parameter_name="parameter_name.toml", with_decryption=True, **AWS_COMMON_KWARGS
     )
 
 @pytest.fixture

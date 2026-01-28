@@ -25,6 +25,10 @@ class SourceSettings(Settings, ABC):
     content_type: ContentType | None = None
 
     @property
+    def has_content_type(self) -> bool:
+        return self.content_type is not None
+
+    @property
     @abstractmethod
     def kind(self) -> SourceKind:
         """Return the kind of the source."""
