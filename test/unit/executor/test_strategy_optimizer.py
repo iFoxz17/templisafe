@@ -46,72 +46,54 @@ def optimizer(custom_settings) -> StrategyOptimizer:
 
 
 @pytest.fixture
-def sources_inline() -> list[SourceRequest]:
+def sources_inline() -> list[Source]:
     """Two inline sources (no latency)."""
     return [
-        SourceRequest(
-            id="1",
-            source=InlineSource(
-                settings=InlineSourceSettings(
-                    content_type=ContentType.TEXT,
-                    content="Hello"
-                )
+        InlineSource(
+            settings=InlineSourceSettings(
+                content_type=ContentType.TEXT,
+                content="Hello"
             )
         ),
-        SourceRequest(
-            id="2",
-            source=InlineSource(
-                settings=InlineSourceSettings(
-                    content_type=ContentType.TEXT,
-                    content="World"
-                )
+        InlineSource(
+            settings=InlineSourceSettings(
+                content_type=ContentType.TEXT,
+                content="World"
             )
-        ),
+        )
     ]
 
 
 @pytest.fixture
-def sources_mixed() -> list[SourceRequest]:
+def sources_mixed() -> list[Source]:
     """Mixed sources: inline, local, high latency (HTTP)."""
     return [
-        SourceRequest(
-            id="1",
-            source=InlineSource(
-                settings=InlineSourceSettings(
-                    content_type=ContentType.TEXT,
-                    content="A"
-                )
+        InlineSource(
+            settings=InlineSourceSettings(
+                content_type=ContentType.TEXT,
+                content="A"
             )
         ),
-        SourceRequest(
-            id="2",
-            source=LocalSource(
-                settings=LocalSourceSettings(
-                    content_type=ContentType.TEXT,
-                    path="/tmp/file.txt"
-                )
+        LocalSource(
+            settings=LocalSourceSettings(
+                content_type=ContentType.TEXT,
+                path="/tmp/file.txt"
             )
         ),
-        SourceRequest(
-            id="3",
-            source=HttpSource(
-                settings=HttpSourceSettings(
-                    content_type=ContentType.TEXT,
-                    url="http://example.com"
-                )
+        HttpSource(
+            settings=HttpSourceSettings(
+                content_type=ContentType.TEXT,
+                url="http://example.com"
             )
         ),
     ]
 
 
 @pytest.fixture
-def sources_many_local() -> list[SourceRequest]:
+def sources_many_local() -> list[Source]:
     """Many low latency sources to test threshold break."""
     return [
-        SourceRequest(
-            id=str(i),
-            source=LocalSource(LocalSourceSettings(content_type=ContentType.TEXT, path=f"/tmp/file{i}.txt"))
-        )
+        LocalSource(LocalSourceSettings(content_type=ContentType.TEXT, path=f"/tmp/file{i}.txt"))
         for i in range(500_000)
     ]
 

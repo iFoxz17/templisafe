@@ -5,7 +5,7 @@ from templisafe.source.source import Source
 from templisafe.source.source_resolver import SourceResolver
 
 class SourceProvider:
-    """Provides resolved `Source` instances from either `Source` objects or `SourceSettings` configurations."""
+    """Provides `Source` instances from either `Source` objects or `SourceSettings` configurations."""
     
     __slots__: tuple[str, ...] = ("_source_resolver", "_content_type_resolver")
 
@@ -15,7 +15,7 @@ class SourceProvider:
 
     def provide(self, source: Source | SourceSettings) -> Source:
         """
-        Resolve a `Source` instance from the given input.
+        Provide a `Source` instance from the given input.
 
         Parameters
         ----------
@@ -25,9 +25,9 @@ class SourceProvider:
         Returns
         -------
         Source
-            The resolved source instance, with content type inferred if necessary.
+            The source instance, with content type inferred if necessary.
         """
-        
+
         if isinstance(source, SourceSettings):
             if not source.has_content_type:
                 content_type: ContentType = self._content_type_resolver.resolve(source)

@@ -14,6 +14,10 @@ class SourceExecutorResolver:
             ) -> None:
         self._default_settings: SourceExecutorSettings = default_settings
         self._source_executor_manager: SourceExecutorManager = source_executor_manager
+
+    @property
+    def default_settings(self) -> SourceExecutorSettings:
+        return self._default_settings
         
     def resolve(self, source_executor: SourceExecutor | SourceExecutorSettings | None = None) -> SourceExecutor:
         """

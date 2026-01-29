@@ -11,15 +11,15 @@ DEFAULT_TEMPLATE_PARSER_SETTINGS = TemplateParserSettings()  # Assuming default 
 
 
 def test_resolve_with_default_settings():
-    resolver = TemplateParserResolver()
-    parser = resolver.resolve(DEFAULT_TEMPLATE_PARSER_SETTINGS)
+    resolver = TemplateParserResolver(DEFAULT_TEMPLATE_PARSER_SETTINGS)
+    parser = resolver.resolve()
 
     assert isinstance(parser, TemplateParser)
     assert parser._settings == DEFAULT_TEMPLATE_PARSER_SETTINGS
 
 
 def test_resolve_with_custom_settings():
-    resolver = TemplateParserResolver()
+    resolver = TemplateParserResolver(DEFAULT_TEMPLATE_PARSER_SETTINGS)
     custom_settings = TemplateParserSettings.from_yaml(CUSTOM_TEMPLATE_PARSER_SETTINGS_YAML)
     parser = resolver.resolve(custom_settings)
 
