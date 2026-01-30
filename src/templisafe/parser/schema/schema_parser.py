@@ -3,6 +3,7 @@ from types import MappingProxyType
 from datetime import date, datetime
 from pydantic import BaseModel, ValidationError, Field 
 
+from templisafe.parser.config.config_parser import Config
 from templisafe.template.template_model import Schema
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.exceptions.schema_error import (
@@ -294,14 +295,14 @@ class SchemaParser:
         return Schema(model_cls=ModelSchema)
 
 
-    def parse(self, schema_config: dict[str, Any]) -> Schema:
+    def parse(self, schema_config: Config) -> Schema:
         """
         Parse a schema configuration dictionary into a `Schema`.
 
         Parameters
         ----------
-        schema_config : dict[str, Any]
-            The schema configuration as a dictionary.
+        schema_config : Config
+            The schema configuration. Must be a dictionary.
 
         Returns
         -------

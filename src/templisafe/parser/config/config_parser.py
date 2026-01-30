@@ -3,12 +3,12 @@ Loaders for structured configuration formats (YAML, JSON, TOML, XML).
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 from overrides import overrides
 
 from templisafe.exceptions.config_error import ConfigError
 
-Config = Union[dict[str, Any], list[Any]]
+Config = dict[str, Any] | list[Any]
 
 class ConfigParser(ABC):
     """Abstract base class for configuration parsers."""

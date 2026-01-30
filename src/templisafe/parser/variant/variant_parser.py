@@ -1,6 +1,7 @@
 from typing import Any
 from pydantic import BaseModel, Field, ConfigDict
 
+from templisafe.parser.config.config_parser import Config
 from templisafe.settings.variant_parser_settings import VariantParserSettings
 from templisafe.template.template_model import VariantSet, Variant, Binding
 from templisafe.exceptions.variant_error import IllegalVariantError
@@ -106,7 +107,7 @@ class VariantParser:
 
         return VariantSet(variant_objs)
 
-    def parse(self, variant_configs: list[dict[str, Any]]) -> VariantSet:
+    def parse(self, variant_configs: Config) -> VariantSet:
         """
         Parse a list of variant configuration dictionaries into a `VariantSet`.
 
@@ -162,9 +163,9 @@ class VariantParser:
 
         Parameters
         ----------
-        variants_configs : list[dict[str, Any]]
-            A list of variant configuration dictionaries to parse. Each dictionary should
-            define variant(s) according to one of schemas described above.
+        variants_configs : Config
+            A list of variant configuration dictionaries to parse (or a single one).
+            Each dictionary should define variant(s) according to one of schemas described above.
 
         Returns
         -------

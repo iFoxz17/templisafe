@@ -25,3 +25,21 @@ class Source(ABC):
             The content of the source.
         """
         pass
+
+class AsyncSource(Source, ABC):
+    """Abstract class representing an async data source."""
+
+    def __init__(self, settings: SourceSettings) -> None:
+        super().__init__(settings)
+
+    @abstractmethod
+    async def aread(self) -> str:
+        """
+        Asynchronously retrieve the content of the source as a string.
+
+        Returns
+        -------
+        str
+            The content of the source.
+        """
+        pass

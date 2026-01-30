@@ -6,6 +6,7 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 ---
 
 ## High Priority
+- [ ] Implement async sources and SourceExecutorLine concept (dividing sources in three lines)  
 - [ ] Add support for HOCON configuration language
 - [ ] Add support for INI configuration language
 - [ ] Add support for .env configuration language

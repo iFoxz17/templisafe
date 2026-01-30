@@ -29,9 +29,13 @@ class HttpSourceError(SourceError):
 
     __slots__ = ("url",)
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, status_code: int | None = None) -> None:
         self.url = url
-        super().__init__(f"Failed to fetch URL: {url!r}")
+        self.status_code = status_code
+        msg = f"Failed to fetch URL {url!r}"
+        if status_code:
+            msg += f": GET method returned status code {status_code}"
+        super().__init__(msg)
 
 class AwsSourceError(Exception):
     """Raised when an aws source cannot be accessed or read."""
