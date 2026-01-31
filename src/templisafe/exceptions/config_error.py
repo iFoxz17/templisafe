@@ -5,7 +5,7 @@ class ConfigError(Exception):
     """Base class for config-related exceptions."""
     pass
 
-class UnsopportedConfigError(ConfigError):
+class UnsupportedConfigError(ConfigError):
     """Raised when trying to parse a configuration of an unsupported content type."""
 
     def __init__(self, content_type: ContentType) -> None:

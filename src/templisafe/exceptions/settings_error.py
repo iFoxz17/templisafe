@@ -4,7 +4,7 @@ class SettingsError(Exception):
     """Base class for settings-related exceptions."""
     pass
 
-class UnsopportedSettingsError(SettingsError):
+class UnsupportedSettingsError(SettingsError):
     """Raised when trying to parse a settings of an unsupported settings kind."""
 
     def __init__(self, settings_kind: Any) -> None:

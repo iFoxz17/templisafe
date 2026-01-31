@@ -1,6 +1,6 @@
 import pytest
 
-from templisafe.exceptions.config_error import UnsopportedConfigError
+from templisafe.exceptions.config_error import UnsupportedConfigError
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.parser.config.config_parser import *
 from templisafe.parser.config.config_parser_manager import ConfigParserFactory, ConfigParserManager
@@ -45,8 +45,8 @@ def test_factory_creates_loader(
 
 
 def test_factory_unsupported_content_type(factory: ConfigParserFactory):
-    """Unsupported content types raise UnsopportedConfigError."""
-    with pytest.raises(UnsopportedConfigError):
+    """Unsupported content types raise UnsupportedConfigError."""
+    with pytest.raises(UnsupportedConfigError):
         factory.create(ContentType.TEXT)
 
 

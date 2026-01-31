@@ -1,7 +1,7 @@
 from types import MappingProxyType
 from collections.abc import Mapping
 
-from templisafe.exceptions.config_error import UnsopportedConfigError
+from templisafe.exceptions.config_error import UnsupportedConfigError
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.parser.config.config_parser import *
 from templisafe.parser.config.config_parser import ConfigParser
@@ -28,7 +28,7 @@ class ConfigParserFactory:
 
         cl_map: Mapping[ContentType, type[ConfigParser]] = self._CONFIG_TYPE_MAP
         if content_type not in cl_map:
-            raise UnsopportedConfigError(content_type)
+            raise UnsupportedConfigError(content_type)
         parser_type: type[ConfigParser] = cl_map[content_type]
         return parser_type()
 
