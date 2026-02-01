@@ -6,7 +6,7 @@ from templisafe.settings.source.custom_source_settings import CustomSourceSettin
 from templisafe.source.source_manager import SourceManager, SourceFactory
 from templisafe.source.local_source import LocalSource
 from templisafe.source.inline_source import InlineSource
-from templisafe.source.http_source import HttpSource
+from templisafe.source.http.http_source import HttpSource
 from templisafe.source.aws import *
 from templisafe.settings.source import *
 from templisafe.exceptions.source_error import UnsupportedSourceError

@@ -2,8 +2,8 @@ import pytest
 import pytest_asyncio
 import requests
 
-from templisafe.source.http_source import HttpSource
-from templisafe.settings.source.http_source_settings import HttpSourceSettings
+from templisafe.source.http.http_source import HttpSource
+from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
 from templisafe.exceptions.source_error import HttpSourceError
 from templisafe.content.content import ContentType
 

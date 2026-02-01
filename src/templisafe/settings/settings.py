@@ -9,6 +9,8 @@ from templisafe.parser.config.config_parser import *
 
 class SettingsKind(str, Enum):
     SOURCE_SETTINGS = "source_settings"
+    HTTP_SYNC_SESSION_SETTINGS = "http_sync_session_settings"
+    HTTP_ASYNC_SESSION_SETTINGS = "http_async_session_settings"
     MANAGER_SETTINGS = "manager_settings"
     TEMPLATE_PARSER_SETTINGS = "template_parser_settings" 
     SCHEMA_PARSER_SETTINGS = "schema_parser_settings"

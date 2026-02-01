@@ -2,7 +2,7 @@ import pytest
 
 from templisafe.settings.source.aws import *
 from templisafe.settings.source.custom_source_settings import CustomSourceSettings
-from templisafe.settings.source.http_source_settings import HttpSourceSettings
+from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 from templisafe.settings.source.local_source_settings import LocalSourceSettings
 from templisafe.exceptions.source_error import ContentTypeResolutionError

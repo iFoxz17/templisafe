@@ -12,10 +12,10 @@ from templisafe.settings.source_strategy_optimizer_settings import (
 from templisafe.executor.strategy_optimizer import StrategyOptimizer
 from templisafe.source.inline_source import InlineSource
 from templisafe.source.local_source import LocalSource
-from templisafe.source.http_source import HttpSource
+from templisafe.source.http.http_source import HttpSource
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 from templisafe.settings.source.local_source_settings import LocalSourceSettings
-from templisafe.settings.source.http_source_settings import HttpSourceSettings
+from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
 from templisafe.content.content import ContentType
 from templisafe.source.source import Source
 
