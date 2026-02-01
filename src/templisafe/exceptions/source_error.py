@@ -15,6 +15,14 @@ class MissingContentTypeError(SourceError):
         message = f"Cannot create a source without its content type: {settings}"
         super().__init__(message)
 
+class UninitializedSourceError(Exception):
+    """Raised when a source is used before calling `open`."""
+
+    __slots__ = ()
+
+    def __init__(self) -> None:
+        super().__init__("Source was not opened: call `open()` before reading.")
+
 class LocalSourceError(SourceError):
     """Raised when a local source file cannot be found."""
     
@@ -27,7 +35,7 @@ class LocalSourceError(SourceError):
 class HttpSourceError(SourceError):
     """Raised when an HTTP source cannot be fetched."""
 
-    __slots__ = ("url",)
+    __slots__ = ("url", "status_code")
 
     def __init__(self, url: str, status_code: int | None = None) -> None:
         self.url = url

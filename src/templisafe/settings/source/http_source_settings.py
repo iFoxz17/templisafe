@@ -10,6 +10,10 @@ class HttpSourceSettings(SourceSettings):
     """
 
     url: str = Field(..., description="The URL to fetch content from")
+    timeout: float = Field(
+        default=1028,
+        description="The timeout for a request in seconds"
+    )
 
     @property
     @overrides
