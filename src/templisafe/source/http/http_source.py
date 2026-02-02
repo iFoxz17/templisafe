@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 from overrides import overrides
-import requests
-import aiohttp
+from requests import Session, Response, RequestException
+from aiohttp import ClientSession, ClientTimeout, ClientError
 
 from templisafe.source.source import AsyncSource
 from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
 from templisafe.exceptions.source_error import HttpSourceError, UninitializedSourceError
 
-from .sync.http_sync_session_pool import SyncSessionPool
+from .sync.http_sync_session_pool import HttpSyncSessionPool
 from .async_.http_async_session_pool import HttpAsyncSessionPool
 
 ##############################################################################################
@@ -16,7 +16,7 @@ from .async_.http_async_session_pool import HttpAsyncSessionPool
 
 @dataclass(slots=True, frozen=True)
 class HttpSessionPool:
-    sync_pool: SyncSessionPool
+    sync_pool: HttpSyncSessionPool
     async_pool: HttpAsyncSessionPool
 
 ##############################################################################################
@@ -41,8 +41,8 @@ class HttpSource(AsyncSource):
         super().__init__(settings)
 
         self._session_pool: HttpSessionPool = session_pool
-        self._sync_session: requests.Session | None = None
-        self._async_session: aiohttp.ClientSession | None = None
+        self._sync_session: Session | None = None
+        self._async_session: ClientSession | None = None
 
     @property
     def settings(self) -> HttpSourceSettings:
@@ -69,15 +69,15 @@ class HttpSource(AsyncSource):
 
     @overrides
     def read(self) -> str:
-        session: requests.Session | None = self._sync_session
+        session: Session | None = self._sync_session
         if session is None:
             raise UninitializedSourceError()
         
         try:
-            response: requests.Response = session.get(self.url, timeout=self.settings.timeout)
+            response: Response = session.get(self.url, timeout=self.settings.timeout)
             response.raise_for_status()
             return response.text
-        except requests.RequestException as e:
+        except RequestException as e:
             raise HttpSourceError(self.url) from e
 
     #-----------------------------
@@ -96,14 +96,14 @@ class HttpSource(AsyncSource):
         
     @overrides
     async def aread(self) -> str:
-        session: aiohttp.ClientSession | None = self._async_session
+        session: ClientSession | None = self._async_session
         if session is None:
             raise UninitializedSourceError()
         
         try:
-            timeout: aiohttp.ClientTimeout = aiohttp.ClientTimeout(total=self.settings.timeout)
+            timeout: ClientTimeout = ClientTimeout(total=self.settings.timeout)
             async with session.get(self.url, timeout=timeout) as response:
                 response.raise_for_status()
                 return await response.text()
-        except aiohttp.ClientError as e:
+        except ClientError as e:
             raise HttpSourceError(self.url) from e

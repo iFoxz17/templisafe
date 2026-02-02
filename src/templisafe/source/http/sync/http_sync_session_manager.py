@@ -1,7 +1,7 @@
-import requests
+from requests import Session
 from requests.adapters import HTTPAdapter
 
-from templisafe.settings.source.http.http_sync_session_settings import HttpSyncSessionSettings
+from templisafe.settings.source.http.http_session_settings import HttpSyncSessionSettings
 
 ##############################################################################################
 # Factory
@@ -15,9 +15,9 @@ class HttpSyncSessionFactory:
     def __init__(self) -> None:
         pass
 
-    def create(self, settings: HttpSyncSessionSettings) -> requests.Session:
-        session = requests.Session()
-        adapter = HTTPAdapter(
+    def create(self, settings: HttpSyncSessionSettings) -> Session:
+        session: Session = Session()
+        adapter: HTTPAdapter = HTTPAdapter(
             pool_connections=settings.pool_connections,
             pool_maxsize=settings.pool_maxsize
         )
@@ -41,9 +41,9 @@ class HttpSyncSessionManager:
             ) -> None:
         self._settings: HttpSyncSessionSettings = settings
         self._factory: HttpSyncSessionFactory = factory or HttpSyncSessionFactory()
-        self._session: requests.Session | None = None
+        self._session: Session | None = None
 
-    def get_or_create(self) -> requests.Session:
+    def get_or_create(self) -> Session:
         if self._session is None:
             self._session = self._factory.create(self._settings)
         return self._session

@@ -2,8 +2,7 @@ from pydantic import Field
 from overrides import overrides
 
 from templisafe.settings.source.source_settings import SourceSettings, SourceKind
-from .http_sync_session_settings import HttpSyncSessionSettings
-from .http_async_session_settings import HttpAsyncSessionSettings
+from .http_session_settings import HttpSyncSessionSettings, HttpAsyncSessionSettings
 
 class HttpSourceSettings(SourceSettings):
     """
