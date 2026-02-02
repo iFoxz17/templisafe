@@ -1,11 +1,23 @@
+from dataclasses import dataclass
 from overrides import overrides
 import requests
 import aiohttp
 
 from templisafe.source.source import AsyncSource
-from templisafe.source.http.http_session_manager import HttpSessionManager
 from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
 from templisafe.exceptions.source_error import HttpSourceError, UninitializedSourceError
+
+from .sync.http_sync_session_pool import SyncSessionPool
+from .async_.http_async_session_pool import HttpAsyncSessionPool
+
+##############################################################################################
+# Http session pool
+##############################################################################################
+
+@dataclass(slots=True, frozen=True)
+class HttpSessionPool:
+    sync_pool: SyncSessionPool
+    async_pool: HttpAsyncSessionPool
 
 ##############################################################################################
 # Http source
@@ -19,16 +31,16 @@ class HttpSource(AsyncSource):
         - Asynchronous reads use a shared `aiohttp.ClientSession`.  
     """
 
-    __slots__: tuple[str, ...] = ("_session_manager", "_sync_session", "_async_session")
+    __slots__: tuple[str, ...] = ("_session_pool", "_sync_session", "_async_session")
 
     def __init__(
             self, 
             settings: HttpSourceSettings,
-            session_manager: HttpSessionManager
+            session_pool: HttpSessionPool
             ) -> None:
         super().__init__(settings)
 
-        self._session_manager: HttpSessionManager = session_manager
+        self._session_pool: HttpSessionPool = session_pool
         self._sync_session: requests.Session | None = None
         self._async_session: aiohttp.ClientSession | None = None
 
@@ -47,12 +59,13 @@ class HttpSource(AsyncSource):
      
     @overrides
     def open(self) -> None:
-        self._sync_session = self._session_manager.get_or_create_sync()
+        self._sync_session = self._session_pool.sync_pool.acquire()
         
     @overrides
     def close(self) -> None:
-        self._session_manager.reset_sync()
-        self._sync_session = None
+        if self._sync_session is not None:
+            self._session_pool.sync_pool.release(self._sync_session)
+            self._sync_session = None
 
     @overrides
     def read(self) -> str:
@@ -73,12 +86,13 @@ class HttpSource(AsyncSource):
 
     @overrides
     async def aopen(self) -> None:
-        self._async_session = await self._session_manager.get_or_create_async()
+        self._async_session = await self._session_pool.async_pool.acquire()
 
     @overrides
     async def aclose(self) -> None:
-        await self._session_manager.reset_async()
-        self._async_session = None
+        if self._async_session is not None:
+            await self._session_pool.async_pool.release(self._async_session)
+            self._async_session = None
         
     @overrides
     async def aread(self) -> str:

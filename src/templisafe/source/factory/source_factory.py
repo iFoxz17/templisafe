@@ -3,7 +3,7 @@ from collections.abc import Mapping
 
 from templisafe.settings.source import *
 
-from templisafe.source.factory.http_source_factory import HttpSourceFactory
+from templisafe.source.http.http_source_factory import HttpSourceFactory
 from templisafe.source.source import Source
 from templisafe.source.inline_source import InlineSource
 from templisafe.source.local_source import LocalSource

@@ -6,7 +6,7 @@ from templisafe.settings.source.source_settings import (
     SourceKind,
 )
 from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
-from templisafe.settings.source.http.http_session_settings import (
+from templisafe.settings.source.http.http_async_session_settings import (
     HttpSyncSessionSettings,
     HttpAsyncSessionSettings,
 )

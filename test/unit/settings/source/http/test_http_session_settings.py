@@ -1,7 +1,7 @@
 import pytest
 
 from templisafe.settings.settings import Settings, SettingsKind
-from templisafe.settings.source.http.http_session_settings import (
+from templisafe.settings.source.http.http_async_session_settings import (
     HttpSyncSessionSettings,
     HttpAsyncSessionSettings,
 )

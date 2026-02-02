@@ -2,14 +2,11 @@ from pydantic import Field
 
 from templisafe.settings.settings import Settings, SettingsKind
 
-class HttpSyncSessionSettings(Settings):
-    """Configuration for the shared synchronous HTTP session."""
-
 class HttpAsyncSessionSettings(Settings):
     """Configuration for the shared asynchronous HTTP session."""
 
     max_connections: int = Field(
-        default=1000,
+        default=100,
         description=(
             "Maximum total number of simultaneous open connections. "
             "Set to 0 to disable the limit (unbounded). "
@@ -18,7 +15,7 @@ class HttpAsyncSessionSettings(Settings):
     )
 
     max_connections_per_host: int = Field(
-        default=1000,
+        default=100,
         description=(
             "Maximum number of simultaneous open connections per host. "
             "Set to 0 to disable the limit (unbounded). "
@@ -44,6 +41,4 @@ class HttpAsyncSessionSettings(Settings):
         ge=0,
     )
 
-
-Settings.register_kind(SettingsKind.HTTP_SYNC_SESSION_SETTINGS, HttpSyncSessionSettings)
 Settings.register_kind(SettingsKind.HTTP_ASYNC_SESSION_SETTINGS, HttpAsyncSessionSettings)
