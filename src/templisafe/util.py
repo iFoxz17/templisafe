@@ -30,6 +30,12 @@ class DiagnosticPolicy(str, Enum):
     LOG = "log"
     STRICT = "strict"
 
+class DiagnosticLevel(Enum):
+    DEBUG = "debug"
+    WARNING = "warning"
+    ERROR = "error"
+
+
 def dict_to_frozenset(data: dict[Any, Union[Any, Iterable[Any]]]) -> frozenset[tuple[Any, tuple[Any, ...]]]:
     """
     Convert a dictionary into a frozenset of (key, tuple_of_values) pairs.
