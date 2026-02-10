@@ -8,13 +8,31 @@ from .async_.http_async_session_pool import HttpAsyncSessionPool, HttpAsyncSessi
 from .async_.http_async_session_manager import HttpAsyncSessionManager
 
 class HttpSourceFactory:
-    """Creates `HttpSource` instances from http source settings."""
+    """
+    Factory for creating `HttpSource` instances with properly configured
+    synchronous and asynchronous session pools.
+    """
 
     def _create_sync_pool(
             self, 
             manager: HttpSyncSessionManager,
             sync_settings: HttpSyncSessionSettings
             ) -> HttpSyncSessionPool:
+        """
+        Create a synchronous session pool for a given manager and settings.
+
+        Parameters
+        ----------
+        manager : HttpSyncSessionManager
+            Manager responsible for creating and resetting sync sessions.
+        sync_settings : HttpSyncSessionSettings
+            Settings defining pool connections, max slots and concurrency.
+
+        Returns
+        -------
+        HttpSyncSessionPool
+            A fully configured synchronous session pool.
+        """
         
         max_connections: int = sync_settings.pool_connections * sync_settings.pool_maxsize
         if sync_settings.max_concurrency is not None:
@@ -36,7 +54,22 @@ class HttpSourceFactory:
             manager: HttpAsyncSessionManager,
             async_settings: HttpAsyncSessionSettings
             ) -> HttpAsyncSessionPool:
-        
+        """
+        Create an asynchronous session pool for a given manager and settings.
+
+        Parameters
+        ----------
+        manager : HttpAsyncSessionManager
+            Manager responsible for creating and resetting async sessions.
+        async_settings : HttpAsyncSessionSettings
+            Settings defining max connections, concurrency and max slots.
+
+        Returns
+        -------
+        HttpAsyncSessionPool
+            A fully configured asynchronous session pool.
+        """
+
         max_connections: int = min(
             async_settings.max_connections,
             async_settings.max_connections_per_host
@@ -57,7 +90,24 @@ class HttpSourceFactory:
             )
         
     def create(self, settings: HttpSourceSettings) -> HttpSource:
-        """Create a `HttpSource` instance for the given settings."""
+        """
+        Create a `HttpSource` instance from the provided settings.
+
+        This method will:
+        1. Create sync and async managers from the settings.
+        2. Create appropriate session pools.
+        3. Combine them into a `HttpSessionPool` and return a `HttpSource`.
+
+        Parameters
+        ----------
+        settings : HttpSourceSettings
+            The HTTP source settings used to configure managers and pools.
+
+        Returns
+        -------
+        HttpSource
+            A fully initialized HTTP source with session pools ready to use.
+        """
 
         sync_settings: HttpSyncSessionSettings = settings.sync_session_settings
         async_settings: HttpAsyncSessionSettings = settings.async_session_settings

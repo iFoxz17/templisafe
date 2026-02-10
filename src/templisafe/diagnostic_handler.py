@@ -33,14 +33,14 @@ class DiagnosticHandler:
     # Singleton interface
     # ------------------------------------------------------------------
     @classmethod
-    def create(cls, policy: DiagnosticPolicy) -> "DiagnosticHandler":
+    def create(cls, policy: DiagnosticPolicy | None = None) -> "DiagnosticHandler":
         """
         Create the singleton DiagnosticHandler.
 
         Parameters
         ----------
-        policy : DiagnosticPolicy
-            The diagnostic policy to apply globally.
+        policy : DiagnosticPolicy | None
+            The diagnostic policy to apply globally. Defaults to the production suggested policy.
 
         Returns
         -------
@@ -51,26 +51,21 @@ class DiagnosticHandler:
             raise RuntimeError("DiagnosticHandler singleton already created")
         
         cls._instance = cls.__new__(cls)
-        cls._instance._policy = policy
+        cls._instance._policy = policy or DiagnosticPolicy.LOG
         return cls._instance
 
     @classmethod
-    def get(cls) -> "DiagnosticHandler":
+    def get_or_create(cls) -> "DiagnosticHandler":
         """
-        Get the singleton instance.
+        Get or create the singleton instance.
 
         Returns
         -------
         DiagnosticHandler
             The singleton instance.
-
-        Raises
-        ------
-        RuntimeError
-            If the singleton was not created yet.
         """
         if cls._instance is None:
-            raise RuntimeError("DiagnosticHandler singleton not created yet")
+            cls._instance = cls.create()
         return cls._instance
 
     # ------------------------------------------------------------------
@@ -94,6 +89,7 @@ class DiagnosticHandler:
         msg: str,
         level: DiagnosticLevel,
         *,
+        logger: logging.Logger | None = None,
         exception_cls: type[Exception] | None = None,
         exception_payload: object | None = None,
         warning_stack_level: int = 2,
@@ -107,9 +103,12 @@ class DiagnosticHandler:
             Diagnostic message to be handled.
         level : DiagnosticLevel
             Severity level of the diagnostic event.
+        logger : logging.Logger | None
+            Optional logger used for DEBUG and ERROR logging. If not provided,
+            the root ``templisafe`` logger is used.
         exception_cls : type[Exception] | None
-            Exception class to raise for WARNING or ERROR levels when
-            the policy is STRICT or for ERROR in LOG.
+            Exception class to raise for WARNING or ERROR levels when the
+            policy is STRICT, or for ERROR level when the policy is LOG.
         exception_payload : object | None
             Optional payload passed to the exception constructor.
         warning_stack_level : int
@@ -118,49 +117,58 @@ class DiagnosticHandler:
         Raises
         ------
         Exception
-            If the policy is STRICT and `exception_cls` is provided for WARNING or ERROR,
-            or if the policy is LOG and the level is ERROR and `exception_cls` is provided.
+            If the policy is STRICT and `exception_cls` is provided for
+            WARNING or ERROR, or if the policy is LOG and the level is ERROR
+            and `exception_cls` is provided.
         """
         policy = self._policy
+        log = logger or logging.getLogger("templisafe")
 
         if policy is DiagnosticPolicy.IGNORE:
             return
 
         if level is DiagnosticLevel.DEBUG:
-            logging.debug(msg)
+            log.debug(msg)
             return
 
         if policy is DiagnosticPolicy.STRICT:
-            logging.error(msg)
+            log.error(msg)
             if exception_cls is not None:
-                raise exception_cls(exception_payload) if exception_payload else exception_cls()
+                raise exception_cls(exception_payload) if exception_payload is not None else exception_cls()
             return
 
         # LOG policy
         if level is DiagnosticLevel.WARNING:
             warnings.warn(msg, stacklevel=warning_stack_level)
-        elif level is DiagnosticLevel.ERROR:
-            logging.error(msg)
+            return
+
+        if level is DiagnosticLevel.ERROR:
+            log.error(msg)
             if exception_cls is not None:
-                raise exception_cls(exception_payload) if exception_payload else exception_cls()
+                raise exception_cls(exception_payload) if exception_payload is not None else exception_cls()
+
 
     # ------------------------------------------------------------------
     # Helper methods
     # ------------------------------------------------------------------
-    def debug(self, msg: str) -> None:
-        self.handle(msg, DiagnosticLevel.DEBUG)
+    def debug(self, msg: str, *, logger: logging.Logger | None = None) -> None:
+        """Handle a debug-level diagnostic message."""
+        self.handle(msg, DiagnosticLevel.DEBUG, logger=logger)
 
     def warn(
         self,
         msg: str,
         *,
+        logger: logging.Logger | None = None,
         exception_cls: type[Exception] | None = None,
         exception_payload: object | None = None,
         warning_stack_level: int = 2,
     ) -> None:
+        """Handle a warning-level diagnostic message."""
         self.handle(
             msg,
             DiagnosticLevel.WARNING,
+            logger=logger,
             exception_cls=exception_cls,
             exception_payload=exception_payload,
             warning_stack_level=warning_stack_level,
@@ -170,14 +178,15 @@ class DiagnosticHandler:
         self,
         msg: str,
         *,
+        logger: logging.Logger | None = None,
         exception_cls: type[Exception] | None = None,
         exception_payload: object | None = None,
-        warning_stack_level: int = 2,
     ) -> None:
+        """Handle an error-level diagnostic message."""
         self.handle(
             msg,
             DiagnosticLevel.ERROR,
+            logger=logger,
             exception_cls=exception_cls,
             exception_payload=exception_payload,
-            warning_stack_level=warning_stack_level,
         )

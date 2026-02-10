@@ -11,7 +11,7 @@ class HttpSessionOverflowError(HttpSessionError):
     def __init__(self, max_sessions: int | None = None) -> None:
         self.max_sessions = max_sessions
         
-        message = f"HTTP sessions overflow: cannot exceed max number of sessions"
+        message = f"HTTP sessions overflow: max number of sessions reached"
         if max_sessions:
             message += f" ({max_sessions})"
         
