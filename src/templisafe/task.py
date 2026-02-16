@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import Enum, auto
+from typing import Any
 
+import attr
 from overrides import overrides
 
 from templisafe.engine.template_engine import TemplateEngine
