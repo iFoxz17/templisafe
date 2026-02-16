@@ -23,13 +23,15 @@ class ConfigParserFactory:
         }
     )
 
+    def support(self, content_type: ContentType) -> bool:
+        return content_type in self._CONFIG_TYPE_MAP
+        
     def create(self, content_type: ContentType) -> ConfigParser:
         """Create a `ConfigParser` instance for the given content type."""
 
-        cl_map: Mapping[ContentType, type[ConfigParser]] = self._CONFIG_TYPE_MAP
-        if content_type not in cl_map:
+        if not self.support(content_type):
             raise UnsupportedConfigError(content_type)
-        parser_type: type[ConfigParser] = cl_map[content_type]
+        parser_type: type[ConfigParser] = self._CONFIG_TYPE_MAP[content_type]
         return parser_type()
 
 #---------------------------------------------------------------------------------------------
@@ -51,6 +53,9 @@ class ConfigParserManager:
         self._settings: ManagerSettings = settings
         self._factory: ConfigParserFactory = factory or ConfigParserFactory()
         self._config_parsers: dict[ContentType, ConfigParser] = config_parsers or {}
+
+    def support(self, content_type: ContentType) -> bool:
+        return self._factory.support(content_type)
     
     def get_or_create(self, content_type: ContentType) -> ConfigParser:
         """Return a `ConfigParser` instance according to the given content type."""

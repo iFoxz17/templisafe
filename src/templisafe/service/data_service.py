@@ -1,72 +1,66 @@
-from abc import ABC
-from dataclasses import dataclass, make_dataclass, field, asdict
+from dataclasses import make_dataclass, field, fields
+from typing import Any, get_type_hints
 
 from templisafe.content.content import Content
 from templisafe.provider.content_provider import ContentGroup, ContentProvider, SourceGroup
 from templisafe.service.field_selector import FieldSelector
-from templisafe.service.source_service import SourceBundle
 from templisafe.settings.source_executor_settings import SourceExecutorSettings
 from templisafe.source.source import Source
 from templisafe.task import TaskBundle
 
-
-@dataclass(frozen=True, slots=True)
-class DataBundle(ABC):
-    """Base class for dynamically generated dataclasses containing resolved `Content` fields."""
-    pass
-
-
 class DataService:
-    """Service responsible for resolving data from task and source bundles."""
+    """Service responsible for resolving Content fields from a TaskBundle."""
 
-    __slots__: tuple[str, ...] = ("_content_provider", "_field_selector")
+    __slots__ = ("_content_provider", "_field_selector")
 
     def __init__(self, content_provider: ContentProvider, field_selector: FieldSelector) -> None:
         self._content_provider: ContentProvider = content_provider
         self._field_selector: FieldSelector = field_selector
 
-    def process(self, task_bundle: TaskBundle, source_bundle: SourceBundle) -> DataBundle:
+    def process(self, source_bundle: TaskBundle) -> TaskBundle:
         """
-        Process a `TaskBundle` and a `SourceBundle` to produce a `DataBundle`.
-
-        Parameters
-        ----------
-        task_bundle : TaskBundle
-            The input task containing fields that may include `Source` objects.
-        source_bundle : SourceBundle
-            A previously resolved `SourceBundle` with additional `Source` objects.
-
-        Returns
-        -------
-        DataBundle
-            A dynamically created dataclass containing only resolved `Content` fields.
+        Process a TaskBundle with all fields at least at the Source level
+        and produce a DataBundle with resolved Content fields.
         """
+        # Get source executor settings if present
+        source_executor_settings: SourceExecutorSettings | None = source_bundle.source_executor_settings
 
-        source_executor_settings: SourceExecutorSettings | None = task_bundle.source_executor_settings
+        # Select all fields that are Source
+        source_fields: dict[str, Source] = self._field_selector.select_by_type(
+            source_bundle, types=Source
+        )
 
-        # Extract Source fields from the task bundle
-        task_sources: dict[str, Source] = self._field_selector.select_by_type(task_bundle, types=Source)
+        # Build a SourceGroup from the selected fields
+        source_group = SourceGroup(source_fields)
 
-        # Extract Source fields from the source bundle
-        source_sources: dict[str, Source] = asdict(source_bundle)
-
-        # Merge all source fields for the content provider
-        merged_sources: dict[str, Source] = task_sources | source_sources
-        source_group = SourceGroup(merged_sources)
-
-        # Produce content from the sources
+        # Produce Content from the sources
         content_group: ContentGroup = self._content_provider.provide(
             source_group=source_group,
             source_executor=source_executor_settings
-            )
+        )
+        contents: dict[str, Content] = content_group.contents
 
-        # Dynamically create a DataBundle dataclass with only resolved fields
-        DerivedDataBundle: type[DataBundle] = make_dataclass(
+        type_hints: dict[str, Any] = get_type_hints(type(source_bundle))
+
+        # Dynamically create field definitions for the new dataclass
+        fs: list[tuple[str, type, Any]] = []
+        for f in fields(source_bundle):
+            if f.name in contents:
+                # Narrow type to Content
+                fs.append((f.name, Content, field(default=contents[f.name])))
+            else:
+                # Keep original type and value
+                field_type: type = type_hints.get(f.name, f.type)
+                fs.append((f.name, field_type, field(default=getattr(source_bundle, f.name))))
+
+        # Create the narrowed dataclass
+        DataBundle: type[TaskBundle] = make_dataclass(
             cls_name="DataBundle",
-            fields=[(k, Content, field(default=v)) for k, v in content_group.contents],
-            bases=(DataBundle,),
+            fields=fs,
+            bases=(type(source_bundle),),
             frozen=True,
             slots=True,
+            kw_only=True,
         )
 
-        return DerivedDataBundle()
+        return DataBundle()

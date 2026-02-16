@@ -10,6 +10,9 @@ class ConfigParserProvider:
     def __init__(self, config_parser_resolver: ConfigParserResolver) -> None:
         self._config_parser_resolver: ConfigParserResolver = config_parser_resolver
 
+    def support(self, content_type: ContentType) -> bool:
+        return self._config_parser_resolver.support(content_type)
+
     def provide(self, content_type: ContentType) -> ConfigParser:
         """
         Provide a `ConfigParser` instance for the given content type.

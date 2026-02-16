@@ -3,7 +3,6 @@ from dataclasses import dataclass, fields
 from enum import Enum, auto
 from typing import Any
 
-import attr
 from overrides import overrides
 
 from templisafe.engine.template_engine import TemplateEngine
@@ -24,7 +23,6 @@ class TaskType(Enum):
     RENDERING = auto()
     BUILD = auto()
 
-
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TaskBundle(ABC):
     """
@@ -32,12 +30,12 @@ class TaskBundle(ABC):
 
     Attributes
     ----------
-    template_engine : TemplateEngine | TemplateEngineSettings | Source | SourceSettings | None
+    template_engine : SourceSettings | Source | TemplateEngineSettings | TemplateEngine | None
         The engine or engine settings to use for template processing.
     source_executor_settings : Source | SourceSettings | SourceExecutorSettings | None
         Settings or source to execute external sources.
     """
-    template_engine: TemplateEngine | TemplateEngineSettings | Source | SourceSettings | None = None
+    template_engine: SourceSettings | Source | TemplateEngineSettings | TemplateEngine | None = None
     source_executor_settings: SourceExecutorSettings | None = None
 
     @property
@@ -54,22 +52,22 @@ class CompilationBundle(TaskBundle):
 
     Attributes
     ----------
-    template : str | Source | SourceSettings
+    template: SourceSettings | Source | str
         The template or source for the compilation.
-    schema : Config | Source | SourceSettings | None
+    schema : SourceSettings | Source | Config | None
         The schema or source for schema input.
-    template_parser_settings : Source | SourceSettings | TemplateParserSettings | None
+    template_parser_settings : SourceSettings | Source | TemplateParserSettings | Config | None
         Optional template parser configuration.
-    schema_parser_settings : Source | SourceSettings | SchemaParserSettings | None
+    schema_parser_settings : SourceSettings | Source | SchemaParserSettings | Config | None
         Optional schema parser configuration.
-    compiler_settings : Source | SourceSettings | CompilerSettings | None
+    compiler_settings : SourceSettings | Source | CompilerSettings | Config | None
         Optional compiler settings.
     """
-    template: str | Source | SourceSettings
-    schema: Config | Source | SourceSettings | None = None
-    template_parser_settings: Source | SourceSettings | TemplateParserSettings | None = None
-    schema_parser_settings: Source | SourceSettings | SchemaParserSettings | None = None
-    compiler_settings: Source | SourceSettings | CompilerSettings | None = None
+    template: SourceSettings | Source | str
+    schema: SourceSettings | Source | Config | None = None
+    template_parser_settings: SourceSettings | Source | TemplateParserSettings | Config | None = None
+    schema_parser_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
+    compiler_settings: SourceSettings | Source | CompilerSettings | Config | None = None
 
     @property
     @overrides
@@ -86,17 +84,17 @@ class RenderingBundle(TaskBundle):
     ----------
     compiled : CompilationSpec
         Compiled template specification.
-    variants : Config | Source | SourceSettings | list[Source | SourceSettings]
+    variants : SourceSettings | Source | list[Source | SourceSettings] | Config
         Variant definitions or sources.
-    variant_parser_settings : Source | SourceSettings | SchemaParserSettings | None
+    variant_parser_settings : SourceSettings | Source | SchemaParserSettings | Config | None
         Optional parser settings for variants.
-    renderer_settings : Source | SourceSettings | SchemaParserSettings | None
+    renderer_settings : SourceSettings | Source | SchemaParserSettings | Config | None
         Optional renderer settings.
     """
     compiled: CompilationSpec
-    variants: Config | Source | SourceSettings | list[Source | SourceSettings]
-    variant_parser_settings: Source | SourceSettings | SchemaParserSettings | None = None
-    renderer_settings: Source | SourceSettings | SchemaParserSettings | None = None
+    variants: SourceSettings | Source | list[Source | SourceSettings] | Config
+    variant_parser_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
+    renderer_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
 
     @property
     @overrides
@@ -111,31 +109,31 @@ class BuildBundle(TaskBundle):
 
     Attributes
     ----------
-    template : str | Source | SourceSettings
+    template : SourceSettings | Source | str
         Template or source.
-    variants : Config | Source | SourceSettings | list[Source | SourceSettings]
+    variants : SourceSettings | Source | list[Source | SourceSettings] | Config
         Variant definitions or sources.
-    schema : Config | Source | SourceSettings | None
+    schema : SourceSettings | Source | Config | None
         Schema for the build.
-    template_parser_settings : Source | SourceSettings | TemplateParserSettings | None
+    template_parser_settings : SourceSettings | Source | TemplateParserSettings | Config | None
         Optional template parser settings.
-    schema_parser_settings : Source | SourceSettings | SchemaParserSettings | None
+    schema_parser_settings : SourceSettings | Source | SchemaParserSettings | Config | None
         Optional schema parser settings.
-    variant_parser_settings : Source | SourceSettings | SchemaParserSettings | None
+    variant_parser_settings : SourceSettings | Source | SchemaParserSettings | Config | None
         Optional variant parser settings.
-    compiler_settings : Source | SourceSettings | CompilerSettings | None
+    compiler_settings : SourceSettings | Source | CompilerSettings | Config | None
         Optional compiler settings.
-    renderer_settings : Source | SourceSettings | SchemaParserSettings | None
+    renderer_settings : SourceSettings | Source | SchemaParserSettings | Config | None
         Optional renderer settings.
     """
-    template: str | Source | SourceSettings
-    variants: Config | Source | SourceSettings | list[Source | SourceSettings]
-    schema: Config | Source | SourceSettings | None = None
-    template_parser_settings: Source | SourceSettings | TemplateParserSettings | None = None
-    schema_parser_settings: Source | SourceSettings | SchemaParserSettings | None = None
-    variant_parser_settings: Source | SourceSettings | SchemaParserSettings | None = None
-    compiler_settings: Source | SourceSettings | CompilerSettings | None = None
-    renderer_settings: Source | SourceSettings | SchemaParserSettings | None = None
+    template: SourceSettings | Source | str
+    variants: SourceSettings | Source | list[Source | SourceSettings] | Config
+    schema: SourceSettings | Source | Config | None = None
+    template_parser_settings: SourceSettings | Source | TemplateParserSettings | Config | None = None
+    schema_parser_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
+    variant_parser_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
+    compiler_settings: SourceSettings | Source | CompilerSettings | Config | None = None
+    renderer_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
 
     @property
     @overrides

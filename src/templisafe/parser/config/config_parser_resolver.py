@@ -12,6 +12,9 @@ class ConfigParserResolver:
             config_parser_manager: ConfigParserManager,
             ) -> None:
         self._config_parser_manager: ConfigParserManager = config_parser_manager
+
+    def support(self, content_type: ContentType) -> bool:
+        return self._config_parser_manager.support(content_type)
         
     def resolve(self, content_type: ContentType) -> ConfigParser:
         """

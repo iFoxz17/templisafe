@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.0 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.3.0">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.3.6 Chrome/140.0.7339.249 Electron/38.8.0 Safari/537.36" version="29.3.6">
   <diagram name="Pagina-1" id="cA7FOYz2AIG1FiqRyRLl">
-    <mxGraphModel dx="4228" dy="2903" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="4431" dy="3075" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1294,13 +1294,13 @@
           <mxGeometry height="30" width="236.77" y="47" as="geometry" />
         </mxCell>
         <mxCell id="NXEMXMubgMviTXa1-2p6-538" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=39;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;lt;&amp;lt;service&amp;gt;&amp;gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); background-color: transparent;&quot;&gt;ResourceService&lt;/span&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="77" width="406.51" x="1241.7499999999998" y="780" as="geometry" />
+          <mxGeometry height="77" width="438.26" x="1225.87" y="780" as="geometry" />
         </mxCell>
         <mxCell id="NXEMXMubgMviTXa1-2p6-539" parent="NXEMXMubgMviTXa1-2p6-538" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
-          <mxGeometry height="8" width="406.51" y="39" as="geometry" />
+          <mxGeometry height="8" width="438.26" y="39" as="geometry" />
         </mxCell>
-        <mxCell id="NXEMXMubgMviTXa1-2p6-540" parent="NXEMXMubgMviTXa1-2p6-538" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(&lt;span style=&quot;text-align: center;&quot;&gt;TaskBundle&lt;/span&gt;, Data&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;, ComponenBundle):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Resource&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
-          <mxGeometry height="30" width="406.51" y="47" as="geometry" />
+        <mxCell id="NXEMXMubgMviTXa1-2p6-540" parent="NXEMXMubgMviTXa1-2p6-538" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(ComponenBundle):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Resource&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
+          <mxGeometry height="30" width="438.26" y="47" as="geometry" />
         </mxCell>
         <mxCell id="NXEMXMubgMviTXa1-2p6-541" parent="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=39;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;lt;&amp;lt;service&amp;gt;&amp;gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255)); background-color: transparent;&quot;&gt;ComponentService&lt;/span&gt;&lt;/div&gt;" vertex="1">
           <mxGeometry height="77" width="340.22" x="46.63999999999988" y="796.5" as="geometry" />
@@ -1308,7 +1308,7 @@
         <mxCell id="NXEMXMubgMviTXa1-2p6-542" parent="NXEMXMubgMviTXa1-2p6-541" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
           <mxGeometry height="8" width="340.22" y="39" as="geometry" />
         </mxCell>
-        <mxCell id="NXEMXMubgMviTXa1-2p6-543" parent="NXEMXMubgMviTXa1-2p6-541" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(&lt;span style=&quot;text-align: center;&quot;&gt;TaskBundle&lt;/span&gt;, Settings&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Component&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
+        <mxCell id="NXEMXMubgMviTXa1-2p6-543" parent="NXEMXMubgMviTXa1-2p6-541" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(Settings&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Component&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
           <mxGeometry height="30" width="340.22" y="47" as="geometry" />
         </mxCell>
         <mxCell id="NXEMXMubgMviTXa1-2p6-544" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;b&gt;ResourceBundle&lt;/b&gt;" vertex="1">
@@ -1344,7 +1344,7 @@
         <mxCell id="NXEMXMubgMviTXa1-2p6-552" parent="NXEMXMubgMviTXa1-2p6-551" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
           <mxGeometry height="8" width="308.1" y="39" as="geometry" />
         </mxCell>
-        <mxCell id="NXEMXMubgMviTXa1-2p6-553" parent="NXEMXMubgMviTXa1-2p6-551" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(TaskBundle,&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;SourceBundle&lt;/span&gt;):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Content&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
+        <mxCell id="NXEMXMubgMviTXa1-2p6-553" parent="NXEMXMubgMviTXa1-2p6-551" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(&lt;span style=&quot;text-align: center;&quot;&gt;SourceBundle&lt;/span&gt;):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Content&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
           <mxGeometry height="30" width="308.1" y="47" as="geometry" />
         </mxCell>
         <mxCell id="NXEMXMubgMviTXa1-2p6-554" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;b&gt;ContentBundle&lt;/b&gt;" vertex="1">
@@ -1427,7 +1427,7 @@
         <mxCell id="NXEMXMubgMviTXa1-2p6-572" parent="NXEMXMubgMviTXa1-2p6-571" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
           <mxGeometry height="8" width="306.04" y="39" as="geometry" />
         </mxCell>
-        <mxCell id="NXEMXMubgMviTXa1-2p6-573" parent="NXEMXMubgMviTXa1-2p6-571" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(&lt;span style=&quot;text-align: center;&quot;&gt;TaskBundle&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;, DataBundle&lt;/span&gt;):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Settings&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
+        <mxCell id="NXEMXMubgMviTXa1-2p6-573" parent="NXEMXMubgMviTXa1-2p6-571" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(&lt;span style=&quot;text-align: center;&quot;&gt;ConfigBundle&lt;/span&gt;):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Settings&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
           <mxGeometry height="30" width="306.04" y="47" as="geometry" />
         </mxCell>
         <mxCell id="NXEMXMubgMviTXa1-2p6-574" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;b&gt;SettingsBundle&lt;/b&gt;" vertex="1">
@@ -1445,7 +1445,7 @@
         <mxCell id="NXEMXMubgMviTXa1-2p6-577" parent="NXEMXMubgMviTXa1-2p6-576" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="" vertex="1">
           <mxGeometry height="8" width="306.04" y="39" as="geometry" />
         </mxCell>
-        <mxCell id="NXEMXMubgMviTXa1-2p6-578" parent="NXEMXMubgMviTXa1-2p6-576" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(&lt;span style=&quot;text-align: center;&quot;&gt;TaskBundle, DataBundle&lt;/span&gt;):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Config&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
+        <mxCell id="NXEMXMubgMviTXa1-2p6-578" parent="NXEMXMubgMviTXa1-2p6-576" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="+ process(&lt;span style=&quot;text-align: center;&quot;&gt;ContentBundle&lt;/span&gt;):&amp;nbsp;&lt;span style=&quot;text-align: center;&quot;&gt;Config&lt;/span&gt;&lt;span style=&quot;text-align: center;&quot;&gt;Bundle&lt;/span&gt;" vertex="1">
           <mxGeometry height="30" width="306.04" y="47" as="geometry" />
         </mxCell>
         <mxCell id="NXEMXMubgMviTXa1-2p6-579" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" value="&lt;b&gt;ConfigBundle&lt;/b&gt;" vertex="1">
