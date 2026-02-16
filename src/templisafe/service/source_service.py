@@ -12,9 +12,11 @@ from templisafe.task import TaskBundle
 
 @dataclass(frozen=True, slots=True)
 class SourceBundle(ABC):
+    """Base class for dynamically generated dataclasses containing resolved `Source` fields."""
     pass
 
 class SourceService:
+    """Service responsible for resolving `Source` and `SourceSettings` fields from a `TaskBundle`."""
 
     __slots__: tuple[str, ...] = ("_source_provider", "_field_selector")
 
@@ -27,7 +29,21 @@ class SourceService:
         self._field_selector: FieldSelector = field_selector 
 
     def process(self, task_bundle: TaskBundle) -> SourceBundle:
-        resolved_fields: dict[str, Any] = (
+        """
+        Extract and resolve all `Source` and `SourceSettings` fields from a `TaskBundle`.
+
+        Parameters
+        ----------
+        task_bundle : TaskBundle
+            The input task containing fields that may include Source or SourceSettings.
+
+        Returns
+        -------
+        SourceBundle
+            A dynamically created dataclass containing only the resolved `Source` fields.
+        """
+
+        source_fields: dict[str, Any] = (
             self._field_selector.select_by_type(
                 obj=task_bundle, 
                 types=(Source, SourceSettings)
@@ -40,10 +56,10 @@ class SourceService:
             fields=[
                 (
                     k, 
-                    type(v), 
+                    Source, 
                     field(default=self._source_provider.provide(v))
                 ) 
-                for k, v in resolved_fields.items()],
+                for k, v in source_fields.items()],
             bases=(SourceBundle,),
             frozen=True,
             slots=True,

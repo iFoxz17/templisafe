@@ -38,7 +38,7 @@ class TaskBundle(ABC):
         Settings or source to execute external sources.
     """
     template_engine: TemplateEngine | TemplateEngineSettings | Source | SourceSettings | None = None
-    source_executor_settings: Source | SourceSettings | SourceExecutorSettings | None = None
+    source_executor_settings: SourceExecutorSettings | None = None
 
     @property
     @abstractmethod
