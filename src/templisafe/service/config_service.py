@@ -10,7 +10,7 @@ from templisafe.task import TaskBundle
 class ConfigService:
     """Service responsible for resolving Config fields from a DataBundle."""
 
-    __slots__ = ("_config_parser_provider", "_field_selector")
+    __slots__: tuple[str, ...] = ("_config_parser_provider", "_field_selector")
 
     def __init__(self, config_parser_provider: ConfigParserProvider, field_selector: FieldSelector) -> None:
         self._config_parser_provider: ConfigParserProvider = config_parser_provider
@@ -29,7 +29,8 @@ class ConfigService:
         for name, content in content_fields.items():
             content_type: ContentType = content.type_
             parser: ConfigParser = self._config_parser_provider.provide(content_type) 
-            config_fields[name] = parser.parse(content.payload)
+            config: Config = parser.parse(content.payload)
+            config_fields[name] = config
 
         # Get type hints from the input bundle for any non-Content fields
         type_hints: dict[str, Any] = get_type_hints(type(data_bundle))

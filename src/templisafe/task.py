@@ -1,10 +1,12 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, fields
+from __future__ import annotations
+from dataclasses import dataclass, field
+from typing import Any, Iterable, Iterator, KeysView, ValuesView, ItemsView, Mapping, ClassVar, Type, TypeVar, Annotated
+
+from abc import ABC
 from enum import Enum, auto
-from typing import Any
+from pydantic import BaseModel, Field, ConfigDict
 
-from overrides import overrides
-
+from templisafe.metadata import MetaValue, Metadata
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.parser.config.config_parser import Config
 from templisafe.settings.compiler_settings import CompilerSettings
@@ -16,144 +18,223 @@ from templisafe.settings.template_parser_settings import TemplateParserSettings
 from templisafe.source.source import Source
 from templisafe.template.template_model import CompilationSpec
 
+# ============================================================
+# Task Type
+# ============================================================
 
 class TaskType(Enum):
-    """Enumeration of task types."""
     COMPILATION = auto()
     RENDERING = auto()
     BUILD = auto()
 
-@dataclass(frozen=True, slots=True, kw_only=True)
-class TaskBundle(ABC):
-    """
-    Base class for all task bundles.
+# ============================================================
+# Field Category
+# ============================================================
 
-    Attributes
-    ----------
-    template_engine : SourceSettings | Source | TemplateEngineSettings | TemplateEngine | None
-        The engine or engine settings to use for template processing.
-    source_executor_settings : Source | SourceSettings | SourceExecutorSettings | None
-        Settings or source to execute external sources.
-    """
-    template_engine: SourceSettings | Source | TemplateEngineSettings | TemplateEngine | None = None
-    source_executor_settings: SourceExecutorSettings | None = None
+class FieldCategory(Enum):
+    RESOURCE = auto()
+    COMPONENT = auto()
+
+FIELD_CATEGORY_KEY: str = "category"
+
+def CategoryMetadata(category: FieldCategory) -> Metadata:
+    """Create a Metadata object storing the category for a field."""
+    return Metadata({FIELD_CATEGORY_KEY: MetaValue(value=category, description="Bundle field category")})
+
+# ============================================================
+# Base Bundle
+# ============================================================
+
+class TaskBundle(BaseModel, ABC):
+    """Base class for all task bundles."""
+
+    model_config = ConfigDict(
+        frozen=True,
+        arbitrary_types_allowed=True,
+    )
+
+    _type: ClassVar[TaskType]
+
+    template_engine: Annotated[
+        SourceSettings | Source | TemplateEngineSettings | TemplateEngine | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    source_executor_settings: Annotated[
+        SourceExecutorSettings | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    # --------------------------------------------------------
+
+    def _by_category(self, category: FieldCategory) -> dict[str, Any]:
+        """Return a dict of field names to values filtered by category metadata."""
+        result = {}
+        cls = type(self)
+        for name, field_info in cls.model_fields.items():
+            metadata: Iterable = getattr(field_info, "metadata", ())
+            for meta in metadata:
+                if isinstance(meta, Metadata):
+                    cat = meta.get(FIELD_CATEGORY_KEY)
+                    if isinstance(cat, MetaValue) and cat.value is category:
+                        result[name] = getattr(self, name)
+        return result
+
+    # --------------------------------------------------------
 
     @property
-    @abstractmethod
-    def type_(self) -> TaskType:
-        """Return the type of task represented by this bundle."""
-        pass
+    def type(self) -> TaskType:
+        return self._type
 
+    @property
+    def resources(self) -> dict[str, Any]:
+        return self._by_category(FieldCategory.RESOURCE)
 
-@dataclass(frozen=True, slots=True)
+    @property
+    def components(self) -> dict[str, Any]:
+        return self._by_category(FieldCategory.COMPONENT)
+
+# ============================================================
+# Compilation Bundle
+# ============================================================
+
 class CompilationBundle(TaskBundle):
-    """
-    Bundle representing a compilation task.
 
-    Attributes
-    ----------
-    template: SourceSettings | Source | str
-        The template or source for the compilation.
-    schema : SourceSettings | Source | Config | None
-        The schema or source for schema input.
-    template_parser_settings : SourceSettings | Source | TemplateParserSettings | Config | None
-        Optional template parser configuration.
-    schema_parser_settings : SourceSettings | Source | SchemaParserSettings | Config | None
-        Optional schema parser configuration.
-    compiler_settings : SourceSettings | Source | CompilerSettings | Config | None
-        Optional compiler settings.
-    """
-    template: SourceSettings | Source | str
-    schema: SourceSettings | Source | Config | None = None
-    template_parser_settings: SourceSettings | Source | TemplateParserSettings | Config | None = None
-    schema_parser_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
-    compiler_settings: SourceSettings | Source | CompilerSettings | Config | None = None
+    _type: ClassVar[TaskType] = TaskType.COMPILATION
 
-    @property
-    @overrides
-    def type_(self) -> TaskType:
-        return TaskType.COMPILATION
+    template: Annotated[
+        SourceSettings | Source | str,
+        Field(default=...),
+        CategoryMetadata(FieldCategory.RESOURCE)
+    ]
 
+    schema_: Annotated[
+        SourceSettings | Source | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.RESOURCE)
+    ] = None
 
-@dataclass(frozen=True, slots=True)
+    template_parser_settings: Annotated[
+        SourceSettings | Source | TemplateParserSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    schema_parser_settings: Annotated[
+        SourceSettings | Source | SchemaParserSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    compiler_settings: Annotated[
+        SourceSettings | Source | CompilerSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+# ============================================================
+# Rendering Bundle
+# ============================================================
+
 class RenderingBundle(TaskBundle):
-    """
-    Bundle representing a rendering task.
 
-    Attributes
-    ----------
-    compiled : CompilationSpec
-        Compiled template specification.
-    variants : SourceSettings | Source | list[Source | SourceSettings] | Config
-        Variant definitions or sources.
-    variant_parser_settings : SourceSettings | Source | SchemaParserSettings | Config | None
-        Optional parser settings for variants.
-    renderer_settings : SourceSettings | Source | SchemaParserSettings | Config | None
-        Optional renderer settings.
-    """
-    compiled: CompilationSpec
-    variants: SourceSettings | Source | list[Source | SourceSettings] | Config
-    variant_parser_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
-    renderer_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
+    _type: ClassVar[TaskType] = TaskType.RENDERING
 
-    @property
-    @overrides
-    def type_(self) -> TaskType:
-        return TaskType.RENDERING
+    compiled: Annotated[
+        CompilationSpec,
+        Field(default=...),
+        CategoryMetadata(FieldCategory.RESOURCE)
+    ]
 
+    variants: Annotated[
+        SourceSettings | Source | list[Source | SourceSettings] | Config,
+        Field(default=...),
+        CategoryMetadata(FieldCategory.RESOURCE)
+    ]
 
-@dataclass(frozen=True, slots=True)
+    variant_parser_settings: Annotated[
+        SourceSettings | Source | SchemaParserSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    renderer_settings: Annotated[
+        SourceSettings | Source | SchemaParserSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+# ============================================================
+# Build Bundle
+# ============================================================
+
 class BuildBundle(TaskBundle):
-    """
-    Bundle representing a build task combining compilation and rendering.
 
-    Attributes
-    ----------
-    template : SourceSettings | Source | str
-        Template or source.
-    variants : SourceSettings | Source | list[Source | SourceSettings] | Config
-        Variant definitions or sources.
-    schema : SourceSettings | Source | Config | None
-        Schema for the build.
-    template_parser_settings : SourceSettings | Source | TemplateParserSettings | Config | None
-        Optional template parser settings.
-    schema_parser_settings : SourceSettings | Source | SchemaParserSettings | Config | None
-        Optional schema parser settings.
-    variant_parser_settings : SourceSettings | Source | SchemaParserSettings | Config | None
-        Optional variant parser settings.
-    compiler_settings : SourceSettings | Source | CompilerSettings | Config | None
-        Optional compiler settings.
-    renderer_settings : SourceSettings | Source | SchemaParserSettings | Config | None
-        Optional renderer settings.
-    """
-    template: SourceSettings | Source | str
-    variants: SourceSettings | Source | list[Source | SourceSettings] | Config
-    schema: SourceSettings | Source | Config | None = None
-    template_parser_settings: SourceSettings | Source | TemplateParserSettings | Config | None = None
-    schema_parser_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
-    variant_parser_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
-    compiler_settings: SourceSettings | Source | CompilerSettings | Config | None = None
-    renderer_settings: SourceSettings | Source | SchemaParserSettings | Config | None = None
+    _type: ClassVar[TaskType] = TaskType.BUILD
 
-    @property
-    @overrides
-    def type_(self) -> TaskType:
-        return TaskType.BUILD
+    template: Annotated[
+        SourceSettings | Source | str,
+        Field(default=...),
+        CategoryMetadata(FieldCategory.RESOURCE)
+    ]
 
+    variants: Annotated[
+        SourceSettings | Source | list[Source | SourceSettings] | Config,
+        Field(default=...),
+        CategoryMetadata(FieldCategory.RESOURCE)
+    ]
 
-@dataclass(frozen=True, slots=True)
-class Task:
-    """
-    Represents a task to execute with its corresponding bundle.
+    schema_: Annotated[
+        SourceSettings | Source | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.RESOURCE)
+    ] = None
 
-    Attributes
-    ----------
-    bundle : TaskBundle
-        The bundle containing all necessary data to execute the task.
-    """
+    template_parser_settings: Annotated[
+        SourceSettings | Source | TemplateParserSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    schema_parser_settings: Annotated[
+        SourceSettings | Source | SchemaParserSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    variant_parser_settings: Annotated[
+        SourceSettings | Source | SchemaParserSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    compiler_settings: Annotated[
+        SourceSettings | Source | CompilerSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+    renderer_settings: Annotated[
+        SourceSettings | Source | SchemaParserSettings | Config | None,
+        Field(default=None),
+        CategoryMetadata(FieldCategory.COMPONENT)
+    ] = None
+
+# ============================================================
+# Task Wrapper
+# ============================================================
+
+class Task(BaseModel):
+
+    model_config = ConfigDict(
+        frozen=True,
+        arbitrary_types_allowed=True,
+    )
+
     bundle: TaskBundle
 
     @property
-    def type_(self) -> TaskType:
-        """Infer the task type from the bundle."""
-        return self.bundle.type_
+    def type(self) -> TaskType:
+        return self.bundle.type

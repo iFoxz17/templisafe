@@ -1,71 +1,117 @@
-from pydantic import BaseModel
 import pytest
+from pydantic import ValidationError, BaseModel
+
 from templisafe.task import (
-    TaskBundle, CompilationBundle, RenderingBundle, BuildBundle, Task, TaskType
+    TaskBundle,
+    CompilationBundle,
+    RenderingBundle,
+    BuildBundle,
+    Task,
+    TaskType,
+    FieldCategory,
 )
-from templisafe.template.template_model import CompilationSpec, Schema, Template
+from templisafe.metadata import MetaValue, Metadata
+from templisafe.template.template_model import CompilationSpec, Template, Schema
 from templisafe.parser.config.config_parser import Config
 
-# -------------------------
-# TaskBundle base class
-# -------------------------
-
-def test_taskbundle_is_abstract():
-    with pytest.raises(TypeError):
-        TaskBundle()  # type: ignore
-
-# -------------------------
+# ============================================================
 # CompilationBundle
-# -------------------------
+# ============================================================
 
 def test_compilation_bundle_properties():
     bundle = CompilationBundle(template="my_template")
-    assert bundle.template == "my_template"
-    assert bundle.type_ == TaskType.COMPILATION
 
-# -------------------------
+    # Field values
+    assert bundle.template == "my_template"
+    assert bundle.type == TaskType.COMPILATION
+
+    # Metadata classification
+    resources = bundle.resources
+    components = bundle.components
+    assert "template" in resources
+    assert "template_parser_settings" in components
+    assert components["template_parser_settings"] is None
+
+# ============================================================
 # RenderingBundle
-# -------------------------
+# ============================================================
 
 def test_rendering_bundle_properties():
-    compiled = CompilationSpec(
-        template=Template('t', set()),
-        schema=(Schema(BaseModel))
-    )
-    variants = {"key": "value"}
+    compiled = CompilationSpec(template=Template("{{ t }}", set()), schema=Schema(BaseModel))
+    variants = {"v1": "data"}
+
     bundle = RenderingBundle(compiled=compiled, variants=variants)
+
     assert bundle.compiled == compiled
     assert bundle.variants == variants
-    assert bundle.type_ == TaskType.RENDERING
+    assert bundle.type == TaskType.RENDERING
 
-# -------------------------
+    resources = bundle.resources
+    components = bundle.components
+    assert "compiled" in resources
+    assert "variants" in resources
+    assert "renderer_settings" in components
+    assert components["renderer_settings"] is None
+
+# ============================================================
 # BuildBundle
-# -------------------------
+# ============================================================
 
 def test_build_bundle_properties():
-    variants = {"key": "v"}
+    variants = {"v1": "data"}
     bundle = BuildBundle(template="t", variants=variants)
+
     assert bundle.template == "t"
     assert bundle.variants == variants
-    assert bundle.type_ == TaskType.BUILD
+    assert bundle.type == TaskType.BUILD
 
-# -------------------------
-# Task container
-# -------------------------
+    resources = bundle.resources
+    components = bundle.components
+    assert "template" in resources
+    assert "variants" in resources
+    assert "compiler_settings" in components
+
+# ============================================================
+# Task wrapper
+# ============================================================
 
 def test_task_type_inference():
     compilation_bundle = CompilationBundle(template="t")
-    compiled = CompilationSpec(
-        template=Template('t', set()),
-        schema=(Schema(BaseModel))
-    )
-    rendering_bundle = RenderingBundle(compiled=compiled, variants={})
-    build_bundle = BuildBundle(template="t", variants={})
+    compiled = CompilationSpec(template=Template("t", set()), schema=Schema(BaseModel))
+    rendering_bundle = RenderingBundle(compiled=compiled, variants={"v1": "data"})
+    build_bundle = BuildBundle(template="t", variants={"v1": "data"})
 
     task1 = Task(bundle=compilation_bundle)
     task2 = Task(bundle=rendering_bundle)
     task3 = Task(bundle=build_bundle)
 
-    assert task1.type_ == TaskType.COMPILATION
-    assert task2.type_ == TaskType.RENDERING
-    assert task3.type_ == TaskType.BUILD
+    assert task1.type == TaskType.COMPILATION
+    assert task2.type == TaskType.RENDERING
+    assert task3.type == TaskType.BUILD
+
+# ============================================================
+# Metadata container
+# ============================================================
+
+def test_metadata_assignment_and_access():
+    meta = Metadata({"key1": MetaValue("val", "desc")}, read_only=False)
+    # Access
+    assert meta["key1"].value == "val"
+    # Assignment allowed
+    meta["key2"] = MetaValue(42)
+    assert meta["key2"].value == 42
+    # Read-only enforcement
+    meta_readonly = Metadata({"k": MetaValue(1)})
+    with pytest.raises(TypeError):
+        meta_readonly["new"] = MetaValue(2)
+
+# ============================================================
+# CategoryMetadata helper
+# ============================================================
+
+def test_category_metadata_helper():
+    from templisafe.task import CategoryMetadata
+    cat_meta = CategoryMetadata(FieldCategory.COMPONENT)
+    val = cat_meta.get("category")
+    assert val.value == FieldCategory.COMPONENT
+    assert val.description == "Bundle field category"

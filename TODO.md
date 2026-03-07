@@ -6,11 +6,11 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 ---
 
 ## High Priority
+- [ ] Resolve bug in schema parser: optional variables with defaults to null becomes required
+- [ ] Save generated schema metadata (as index_key) using Annotated as done with Task
+- [ ] Parse the schema and the variants using a pydantic model
+- [ ] Manage Unions types in schema and variants 
 - [ ] Implement async sources and SourceExecutorLine concept (dividing sources in three lines)  
-- [ ] Add support for HOCON configuration language
-- [ ] Add support for INI configuration language
-- [ ] Add support for .env configuration language
-- [ ] Implement EnvSource
 - [ ] Setup github repo: automate release pipeline to create tags on release branch
 - [ ] Add a test for Templater concurrency
 - [ ] Develop contribuiting section
@@ -23,6 +23,10 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 - [ ] Refactor TemplateEngineSettings config parameter, which actually can be also a json or yaml string
 - [ ] Improve error messages
 - [ ] Implement a min heap for the HttpSession Management
+- [ ] Add support for HOCON configuration language
+- [ ] Add support for INI configuration language
+- [ ] Add support for .env configuration language
+- [ ] Implement EnvSource
 - [ ] Advertise library on r/python
 - [ ] Advertise library on hackernews
 - [ ] Advertise library on medium
