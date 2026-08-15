@@ -1,13 +1,11 @@
 import pytest
-from unittest.mock import create_autospec
 
 from templisafe.templater_factory import TemplaterFactory
 from templisafe.templater import Templater
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.renderer_settings import RendererSettings
-from templisafe.settings.template_engine_settings import TemplateEngineSettings, TemplateEngineKind
+from templisafe.settings.template_engine_settings import TemplateEngineSettings
 from templisafe.util import DiagnosticPolicy
-from templisafe.source.source import Source
 
 
 @pytest.fixture
@@ -22,8 +20,9 @@ def test_create_returns_templater_with_defaults(factory):
     templater = factory.create()
 
     assert isinstance(templater, Templater)
-    assert isinstance(templater._compiler_default_settings, CompilerSettings)
-    assert isinstance(templater._renderer_default_settings, RendererSettings)
+    assert isinstance(templater._default_handler._compiler_default_settings, CompilerSettings)
+    assert isinstance(templater._default_handler._renderer_default_settings, RendererSettings)
+    assert isinstance(templater._default_handler._template_engine_default_settings, TemplateEngineSettings)
     assert isinstance(templater._outcome_handler._policy, DiagnosticPolicy)
 
 def test_create_with_invalid_diagnostic_policy_raises(factory):
@@ -58,9 +57,9 @@ def test_create_loader_facade_returns_loader_with_expected_types(factory):
     assert hasattr(loader, "_schema_loader")
     assert hasattr(loader, "_variant_loader")
 
-def test_create_source_resolverreturns_resolver_with_expected_types(factory):
+def test_create_source_resolver_returns_resolver_with_expected_types(factory):
     templater = factory.create()
     resolver = templater._source_resolver
 
-    # Loader should have the correct loaders
-    assert hasattr(resolver, "_config_loader")
+    assert hasattr(resolver, "_source_manager")
+    assert hasattr(resolver, "_content_type_resolver")

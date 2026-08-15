@@ -18,14 +18,14 @@ The goal is to **prevent runtime errors**, enforce type safety and make query ge
 
 The example uses the following files:
 
-- [**`template.sql.j2`**](./template.sql.j2)
+- [**`template.sql.j2`**](./resources/template.sql.j2)
   The SQL query template, using Jinja-style placeholders for variables.
 
-- [**`schema.yaml`**](./schema.yaml)
+- [**`schema.yaml`**](./resources/schema.yaml)
   Defines the variables used in the template, including types and default values.
 
-- [**`variants1.yaml`**](./variants1.yaml)
+- [**`variants1.yaml`**](./resources/variants1.yaml)
   Contains two explicit parameterizations: `adults_only` and `minors_only`.
 
-- [**`variants2.yaml`**](./variants2.yaml)
+- [**`variants2.yaml`**](./resources/variants2.yaml)
   Contains a single parameterization `all_ages` that relies on defaults from the schema.

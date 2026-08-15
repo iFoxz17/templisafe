@@ -1,5 +1,32 @@
 # Documentation
 
+## Public Workflow
+
+The public API is centered on `TemplaterFactory().create()` and the resulting
+`Templater` instance:
+
+1. `compile(template, schema)` reads sources, parses the template and optional
+   schema, then returns a `Compilation`.
+2. `render(compiled, variants)` reads one or more variant sources, validates the
+   bindings and renders each parameterization.
+3. `validate(compiled, variants)` performs validation without rendering.
+4. `build(template, variants, schema)` runs compile and render as one workflow
+   and returns a `Build`.
+
+Sources are resolved through `SourceSettings` or concrete `Source` instances.
+Inline and local sources are the stable first-version path. HTTP and AWS source
+components are present as lower-level building blocks and have dedicated tests.
+
+## Package Map
+
+- `templisafe.source`: source abstractions and source settings.
+- `templisafe.executor`: synchronous source execution strategies.
+- `templisafe.parser`: config, schema, template and variant parsing.
+- `templisafe.engine`: template engine adapters, with Jinja as default.
+- `templisafe.template`: template model, compiler and renderer.
+- `templisafe.provider` and `templisafe.service`: lower-level composition helpers
+  used by the internal architecture.
+
 ## Core Abstractions
 
 **templisafe** introduces several key abstractions to manage templates, parameterizations, and rendering safely:

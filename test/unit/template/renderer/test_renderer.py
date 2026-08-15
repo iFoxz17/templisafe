@@ -95,6 +95,25 @@ def test_render_optional_values(engine, renderer_settings):
     assert "None" in rendered.rendered.parameterizations[0].rendered_str
 
 
+def test_render_missing_optional_null_default(engine, renderer_settings):
+    fields: dict[str, Any] = {
+        "x": (int, Field(..., json_schema_extra={"_index": 0})),
+        "y": (Optional[str], Field(default=None, json_schema_extra={"_index": 1})),
+    }
+    schema = Schema(model_cls=create_model("OptionalDefaultSchema", **fields))
+    compilation = CompilationSpec(
+        template=Template("{{ x }} {{ y }}", vars={"x", "y"}), schema=schema
+    )
+
+    renderer = Renderer(renderer_settings)
+    bindings = [Binding(0, "x", 42)]
+    vset = VariantSet([Variant("default", bindings)])
+    rendered = renderer.render(compilation, vset, engine)
+
+    assert rendered.outcome == Outcome.SUCCESS
+    assert rendered.rendered.parameterizations[0].rendered_str == "42 None"
+
+
 def test_render_nested_list_variable(engine, renderer_settings):
     fields: dict[str, Any] = {"matrix": (list[list[float]], Field(..., json_schema_extra={"_index": 0}))}
     schema = Schema(model_cls=create_model("NestedSchema", **fields))

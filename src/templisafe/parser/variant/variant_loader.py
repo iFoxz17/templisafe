@@ -4,6 +4,7 @@ from templisafe.template.template_model import VariantSet
 from templisafe.parser.variant.variant_parser import VariantParser
 from templisafe.parser.variant.variant_parser_manager import VariantParserManager
 from templisafe.settings.variant_parser_settings import VariantParserSettings
+from templisafe.util import DEFAULT_MANAGER_SETTINGS
 
 _VARIANTS_KEY_KEY: str = 'variants_key'
 _DEFAULT_VARIANTS_KEY_KEY: str = 'default_variants_name'
@@ -23,7 +24,9 @@ class VariantLoader:
 
     def __init__(self, default_settings: VariantParserSettings | None = None) -> None:
         self._default_settings: VariantParserSettings = default_settings or VariantParserSettings.from_yaml(VARIANT_PARSER_SETTINGS_YAML)
-        self._manager: VariantParserManager = VariantParserManager()
+        self._manager: VariantParserManager = VariantParserManager(
+            settings=DEFAULT_MANAGER_SETTINGS
+        )
 
     def _resolve_settings(self, parser_settings: VariantParserSettings | None = None) -> VariantParserSettings:
         return parser_settings or self._default_settings

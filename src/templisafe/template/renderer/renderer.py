@@ -154,7 +154,6 @@ class Renderer:
             # Fill in default values for missing fields
             for var_name in var_names - variant.names:
                 field = model_cls.model_fields[var_name]
-                assert field.default is not None
                 binding_value_map[var_name] = field.default
 
             # Render template

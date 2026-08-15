@@ -2,7 +2,7 @@
 
 **Safe, flexible and fully configurable templating for Python.**
 
-**`templisafe` is not just another template engine**. It is a high-level framework built **on top of existing template engines** to simplify and secure template management. Templisafe automatically generates schemas for template variables, validates parameterizations and renders templates safely and efficiently.  
+**`templisafe` is not just another template engine**. It is a high-level framework built **on top of existing template engines** to simplify and secure template management. Templisafe parses schemas for template variables, validates parameterizations and renders templates safely and efficiently.
 
 Designed to be flexible and agnostic to both template engines and configuration languages, it works seamlessly with cloud-based sources and embraces a **Template-As-Code (TaC)** approach—allowing you to manage templates systematically and safely.
 
@@ -83,10 +83,10 @@ templater: Templater = TemplaterFactory().create()
 
 # Build the template (compile the schema and render all variants)
 build: Build = templater.build(
-    template_source=template_source_settings,
-    variants_sources=[variants_source_settings],
-    schema_source=schema_source_settings
-    )
+    template=template_source_settings,
+    variants=[variants_source_settings],
+    schema=schema_source_settings,
+)
 
 # Access rendered output
 for name, param in build.rendering.rendered.mapping.items():
@@ -129,6 +129,19 @@ See the proposed [use cases](use_case) for more advanced examples.
 
 Access the [full documentation](doc) for more information.
 
+## First Working Version
+
+The first operative version focuses on the core public workflow:
+
+- Inline and local sources.
+- YAML, JSON, TOML and XML configuration parsing.
+- Jinja rendering by default.
+- Pydantic-backed schema validation.
+- Multiple variant files per build.
+- GitHub Actions test runs for `develop` and `main`.
+
+HTTP and AWS source components are present and tested, but the stable user-facing path is the template/schema/variant workflow shown above.
+
 ## Configuration
 
 All configurations are optional. You can override any aspect, including:
@@ -136,8 +149,8 @@ All configurations are optional. You can override any aspect, including:
 - Compiler settings
 - Renderer settings
 - Template engine settings
-- Loader settings for templates, schemas or variants
-- Source resolver settings
+- Parser settings for templates, schemas or variants
+- Source executor settings
 - Diagnostic policies
 
 Default configurations make it ready to use with minimal setup, while still providing full control when needed.

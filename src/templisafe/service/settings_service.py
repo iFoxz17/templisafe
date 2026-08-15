@@ -1,6 +1,3 @@
-from dataclasses import make_dataclass, field, fields
-from typing import Any, get_type_hints
-
 from templisafe.content.content import Content, ContentType
 from templisafe.parser.settings.settings_parser import Settings, SettingsParser
 from templisafe.provider.settings_parser_provider import SettingsParserProvider
@@ -31,29 +28,4 @@ class SettingsService:
             parser: SettingsParser = self._settings_parser_provider.provide(content_type) 
             settings_fields[name] = parser.parse(content.payload)
 
-        # Get type hints from the input bundle for any non-Content fields
-        type_hints: dict[str, Any] = get_type_hints(type(data_bundle))
-
-        # Dynamically create the SettingsBundle dataclass
-        fs: list[tuple[str, type, Any]] = []
-        for f in fields(data_bundle):
-            if f.name in settings_fields:
-                # Use a default parameter to capture the current value of settings_fields[f.name]
-                # This avoids the common “late binding” problem in Python loops, ensuring each
-                # field’s default_factory returns the correct Settings at dataclass instantiation.
-                fs.append((f.name, object, field(default_factory=lambda c=settings_fields[f.name]: c)))
-            else:
-                # Keep original type and value (pass-through)
-                field_type: type = type_hints.get(f.name, f.type)
-                fs.append((f.name, field_type, field(default=getattr(data_bundle, f.name))))
-
-        SettingsBundle: type[TaskBundle] = make_dataclass(
-            cls_name="SettingsBundle",
-            fields=fs,
-            bases=(type(data_bundle),),
-            frozen=True,
-            slots=True,
-            kw_only=True,
-        )
-
-        return SettingsBundle()
+        return data_bundle.model_copy(update=settings_fields)

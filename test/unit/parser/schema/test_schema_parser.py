@@ -67,6 +67,25 @@ def test_parse_optional_field(settings):
     nickname = model_fields["nickname"]
     nickname_metadata = getattr(nickname, "json_schema_extra")
     assert nickname_metadata['_index'] == 0
+
+
+def test_parse_optional_field_with_null_default_is_not_required(settings):
+    parser = SchemaParser(settings)
+    schema_config = {
+        "parameters": {
+            "nickname": {
+                "type": "optional[str]",
+                "default": None,
+            }
+        }
+    }
+
+    schema = parser.parse(schema_config)
+    model_cls = schema.model_cls
+    instance = model_cls()
+
+    assert getattr(instance, "nickname") is None
+    assert model_cls.model_fields["nickname"].is_required() is False
     
 
 def test_parse_list_field(settings):

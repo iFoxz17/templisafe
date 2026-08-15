@@ -11,7 +11,7 @@ class HttpSessionSettings(Settings, ABC):
     """Common configuration for the shared synchronous HTTP session pool."""
 
     max_slots: int | None = Field(
-        default=20,
+        default=None,
         description=(
             "Maximum number of session objects allowed in the pool. "
             "If None, the pool can grow without limit."
@@ -20,7 +20,7 @@ class HttpSessionSettings(Settings, ABC):
     )
 
     max_concurrency: int | None = Field(
-        default=100,
+        default=None,
         description=(
             "Maximum number of concurrent requests allowed globally across all sessions. "
             "If None, no global concurrency limit is enforced."
@@ -61,7 +61,7 @@ class HttpAsyncSessionSettings(HttpSessionSettings):
     """Configuration for the shared asynchronous HTTP session."""
 
     max_connections: int = Field(
-        default=100,
+        default=1000,
         description=(
             "Maximum total number of simultaneous open connections. "
             "Set to 0 to disable the limit (unbounded). "
@@ -70,7 +70,7 @@ class HttpAsyncSessionSettings(HttpSessionSettings):
     )
 
     max_connections_per_host: int = Field(
-        default=100,
+        default=1000,
         description=(
             "Maximum number of simultaneous open connections per host. "
             "Set to 0 to disable the limit (unbounded). "

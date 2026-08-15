@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from typing import ClassVar
+import asyncio
 from overrides import overrides
 from requests import Session, Response, RequestException
 from aiohttp import ClientSession, ClientTimeout, ClientError
@@ -32,17 +34,47 @@ class HttpSource(AsyncSource):
     """
 
     __slots__: tuple[str, ...] = ("_session_pool", "_sync_session", "_async_session")
+    _DEFAULT_POOLS: ClassVar[dict[tuple[object, object, int | None], HttpSessionPool]] = {}
 
     def __init__(
             self, 
             settings: HttpSourceSettings,
-            session_pool: HttpSessionPool
+            session_pool: HttpSessionPool | None = None
             ) -> None:
         super().__init__(settings)
 
-        self._session_pool: HttpSessionPool = session_pool
+        self._session_pool: HttpSessionPool = session_pool or self._get_default_pool(settings)
         self._sync_session: Session | None = None
         self._async_session: ClientSession | None = None
+
+    def _get_default_pool(self, settings: HttpSourceSettings) -> HttpSessionPool:
+        try:
+            loop_id: int | None = id(asyncio.get_running_loop())
+        except RuntimeError:
+            loop_id = None
+        key = (settings.sync_session_settings, settings.async_session_settings, loop_id)
+        if key not in self._DEFAULT_POOLS:
+            self._DEFAULT_POOLS[key] = self._create_default_pool(settings)
+        return self._DEFAULT_POOLS[key]
+
+    def _create_default_pool(self, settings: HttpSourceSettings) -> HttpSessionPool:
+        from .async_.http_async_session_manager import HttpAsyncSessionManager
+        from .http_source_factory import HttpSourceFactory
+        from .sync.http_sync_session_manager import HttpSyncSessionManager
+
+        factory = HttpSourceFactory()
+        sync_manager = HttpSyncSessionManager(settings.sync_session_settings)
+        async_manager = HttpAsyncSessionManager(settings.async_session_settings)
+        return HttpSessionPool(
+            sync_pool=factory._create_sync_pool(
+                sync_manager,
+                settings.sync_session_settings,
+            ),
+            async_pool=factory._create_async_pool(
+                async_manager,
+                settings.async_session_settings,
+            ),
+        )
 
     @property
     def settings(self) -> HttpSourceSettings:

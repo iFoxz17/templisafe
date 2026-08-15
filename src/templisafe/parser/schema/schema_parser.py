@@ -132,6 +132,7 @@ class Var(NamedTuple):
     index_: int
     name: str
     type_: type
+    has_default: bool
     default: object
     constraints: dict[str, object]
     metadata: dict[str, object]
@@ -158,6 +159,7 @@ class SchemaParser:
 
         if isinstance(schema, str):
             type_str = schema
+            has_default = False
             default = None
             constraints: dict[str, Any] = {}
             metadata: dict[str, Any] = {}
@@ -165,6 +167,7 @@ class SchemaParser:
             if type_key not in schema:
                 raise IllegalSchemaError(f"Variable '{name}' is missing '{type_key}' key")
             type_str = schema[type_key]
+            has_default = default_key in schema
             default = schema.get(default_key)
             constraints = schema.get(constraints_key, {})
             if not isinstance(constraints, dict):
@@ -193,6 +196,7 @@ class SchemaParser:
             index_=index,
             name=name,
             type_=type_,
+            has_default=has_default,
             default=default,
             constraints=constraints,
             metadata=metadata
@@ -219,8 +223,8 @@ class SchemaParser:
         """Validate the default of a `Var` by instanting a temporary Pydantic model."""
 
         default: Any = var.default
-        if default is None:
-            return  # skip required fields
+        if not var.has_default:
+            return
         
         # Prepare namespace with type annotation and Field instance
         namespace: dict[str, Any] = {
@@ -272,7 +276,7 @@ class SchemaParser:
             fields[var.name] = (
                 var.type_,
                 Field(
-                    var.default if var.default is not None else ...,
+                    var.default if var.has_default else ...,
                     **var.constraints,
                     **pydantic_metadata,
                     json_schema_extra=metadata

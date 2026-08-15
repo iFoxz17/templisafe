@@ -4,6 +4,7 @@ from templisafe.template.template_model import Schema
 from templisafe.parser.schema.schema_parser import SchemaParser
 from templisafe.parser.schema.schema_parser_manager import SchemaParserManager
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
+from templisafe.util import DEFAULT_MANAGER_SETTINGS
 
 _SCHEMA_KEY_KEY: str = 'schema_key'
 _TYPE_KEY_KEY: str = 'type_key'
@@ -40,7 +41,9 @@ class SchemaLoader:
 
     def __init__(self, default_settings: SchemaParserSettings | None = None) -> None:
         self._default_settings: SchemaParserSettings = default_settings or SchemaParserSettings.from_yaml(SCHEMA_PARSER_SETTINGS_YAML)
-        self._manager: SchemaParserManager = SchemaParserManager()
+        self._manager: SchemaParserManager = SchemaParserManager(
+            settings=DEFAULT_MANAGER_SETTINGS
+        )
 
     def _resolve_settings(self, parser_settings: SchemaParserSettings | None = None) -> SchemaParserSettings:
         return parser_settings or self._default_settings

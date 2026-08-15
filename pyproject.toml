@@ -7,14 +7,14 @@ build-backend = "setuptools.build_meta"
 name = "templisafe"
 version = "0.1.0"
 description = """
-    Templisafe is a flexible, engine and configuration agnostic library for safe templating. 
-    It supports any template engine (Jinja is used by default) and configuration format 
-    (YAML, JSON, TOML, XML, ...), automatically generating schemas for template variables 
+    Templisafe is a flexible, engine and configuration agnostic library for safe templating.
+    It supports any template engine (Jinja is used by default) and configuration format
+    (YAML, JSON, TOML, XML, ...), parsing schemas for template variables
     using Pydantic and validating parameterizations.
 
-    Templisafe handles multiple sources concurrently using threading (if enabled), while 
-    also supporting serial processing when needed. Its core idea is to enable Template-As-Code 
-    (TaC), providing an IaC-like approach to managing templates safely and systematically 
+    Templisafe handles multiple sources concurrently using threading (if enabled), while
+    also supporting serial processing when needed. Its core idea is to enable Template-As-Code
+    (TaC), providing an IaC-like approach to managing templates safely and systematically
     with a fully configurable and easy-to-use API.
 """
 

@@ -1,6 +1,3 @@
-from dataclasses import make_dataclass, field, fields
-from typing import Any, get_type_hints
-
 from templisafe.content.content import Content, ContentType
 from templisafe.parser.config.config_parser import Config, ConfigParser
 from templisafe.provider.config_parser_provider import ConfigParserProvider
@@ -32,29 +29,4 @@ class ConfigService:
             config: Config = parser.parse(content.payload)
             config_fields[name] = config
 
-        # Get type hints from the input bundle for any non-Content fields
-        type_hints: dict[str, Any] = get_type_hints(type(data_bundle))
-
-        # Dynamically create the ConfigBundle dataclass
-        fs: list[tuple[str, type, Any]] = []
-        for f in fields(data_bundle):
-            if f.name in config_fields:
-                # Use a default parameter to capture the current value of config_fields[f.name]
-                # This avoids the common “late binding” problem in Python loops, ensuring each
-                # field’s default_factory returns the correct Config at dataclass instantiation.
-                fs.append((f.name, object, field(default_factory=lambda c=config_fields[f.name]: c)))
-            else:
-                # Keep original type and value (pass-through)
-                field_type: type = type_hints.get(f.name, f.type)
-                fs.append((f.name, field_type, field(default=getattr(data_bundle, f.name))))
-
-        ConfigBundle: type[TaskBundle] = make_dataclass(
-            cls_name="ConfigBundle",
-            fields=fs,
-            bases=(type(data_bundle),),
-            frozen=True,
-            slots=True,
-            kw_only=True,
-        )
-
-        return ConfigBundle()
+        return data_bundle.model_copy(update=config_fields)
