@@ -1,0 +1,42 @@
+schema:
+  select_columns:
+    type: list
+    default:
+      - u.id
+      - u.name
+      - u.code
+      - u.age
+      - u.status
+      - m.is_updated
+      - m.threshold
+
+  user_join_key: str
+
+  metric_join_key: str
+
+  user_codes: 
+    type: list
+    default:
+      - 10
+      - 11
+      - 12
+    
+  user_age_lower:
+    type: int
+    default: 0
+
+  user_age_upper:
+    type: int
+    default: 1000000
+
+  user_status: str
+
+  metric_code:
+    type: str
+    default: "9999910"
+
+  metric_updated_flag:
+    type: bool
+    default: true
+
+  metric_threshold: float

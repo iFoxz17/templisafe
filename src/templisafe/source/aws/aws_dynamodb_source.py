@@ -1,12 +1,18 @@
-from typing import Any
-from overrides import overrides
 import json
-from botocore.exceptions import ClientError
+from importlib import import_module
+from typing import Any
 
+from overrides import overrides
+
+from templisafe.exceptions.source_error import AwsSourceError
+from templisafe.settings.source.aws.aws_dynamodb_source_settings import (
+    AwsDynamoDBSourceSettings,
+)
 from templisafe.settings.source.aws.aws_source_settings import AwsSourceSettings
 from templisafe.source.aws.aws_source import AwsSource
-from templisafe.settings.source.aws.aws_dynamodb_source_settings import AwsDynamoDBSourceSettings
-from templisafe.exceptions.source_error import AwsSourceError
+
+ClientError: type[Exception] = import_module("botocore.exceptions").ClientError
+
 
 class AwsDynamoDBSource(AwsSource):
     """Reads an item from DynamoDB lazily, only connecting on read()."""
@@ -55,6 +61,4 @@ class AwsDynamoDBSource(AwsSource):
             return json.dumps(result)
 
         except ClientError as e:
-            raise AwsSourceError(
-                f"Failed to read item {dict(settings.key)} from table {settings.table_name}"
-            ) from e
+            raise AwsSourceError(f"Failed to read item {dict(settings.key)} from table {settings.table_name}") from e

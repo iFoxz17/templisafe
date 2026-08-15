@@ -3,6 +3,7 @@ from typing import Any
 
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
 
+
 class TemplateEngine(ABC):
     """Abstract base class representing a template engine."""
 
@@ -10,7 +11,7 @@ class TemplateEngine(ABC):
 
     def __init__(self, settings: TemplateEngineSettings) -> None:
         self._settings = settings
-                
+
     @abstractmethod
     def extract_variables(self, template_str: str) -> set[str]:
         """Extract the variables from a template string."""

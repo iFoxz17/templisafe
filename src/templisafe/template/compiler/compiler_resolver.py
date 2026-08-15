@@ -1,6 +1,7 @@
+from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.template.compiler.compiler import Compiler
 from templisafe.template.compiler.compiler_manager import CompilerManager
-from templisafe.settings.compiler_settings import CompilerSettings
+
 
 class CompilerResolver:
     """Resolves `Compiler` instances."""
@@ -8,13 +9,13 @@ class CompilerResolver:
     __slots__: tuple[str, ...] = ("_default_settings", "_compiler_manager")
 
     def __init__(
-            self, 
-            default_settings: CompilerSettings,
-            compiler_manager: CompilerManager,
-            ) -> None:
+        self,
+        default_settings: CompilerSettings,
+        compiler_manager: CompilerManager,
+    ) -> None:
         self._default_settings: CompilerSettings = default_settings
         self._compiler_manager: CompilerManager = compiler_manager
-        
+
     def resolve(self, compiler: Compiler | CompilerSettings | None = None) -> Compiler:
         """
         Resolve a `Compiler` instance.
@@ -37,6 +38,6 @@ class CompilerResolver:
 
         if isinstance(compiler, Compiler):
             return compiler
-        
-        settings: CompilerSettings = compiler or self._default_settings 
+
+        settings: CompilerSettings = compiler or self._default_settings
         return self._compiler_manager.get_or_create(settings)

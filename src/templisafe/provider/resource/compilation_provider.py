@@ -1,5 +1,6 @@
-from templisafe.template.compiler.compiler import Compiler, Compilation
+from templisafe.template.compiler.compiler import Compilation, Compiler
 from templisafe.template.template_model import Schema, Template
+
 
 class CompilationProvider:
     """Provides `Compilation` instances by delegating compilation to a `Compiler`."""

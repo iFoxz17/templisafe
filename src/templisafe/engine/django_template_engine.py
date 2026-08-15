@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 from typing import Any
+
 from overrides import overrides
 
-from templisafe.settings.template_engine_settings import TemplateEngineSettings
 from templisafe.engine.template_engine import TemplateEngine
+from templisafe.settings.template_engine_settings import TemplateEngineSettings
+
 
 class DjangoTemplateEngine(TemplateEngine):
     """
@@ -11,30 +14,39 @@ class DjangoTemplateEngine(TemplateEngine):
     Lazy-imports Django at runtime. Raises ImportError if Django is not installed.
     """
 
-    __slots__: tuple[str, ...] = ("_Engine", "_env", "_VariableNode", "_NodeList", "_Node")
+    __slots__: tuple[str, ...] = (
+        "_Engine",
+        "_env",
+        "_VariableNode",
+        "_NodeList",
+        "_Node",
+    )
 
     def __init__(self, settings: TemplateEngineSettings) -> None:
         super().__init__(settings)
 
         try:
-            from django.template import Engine
-            from django.template.base import VariableNode, NodeList, Node
+            django_template: Any = __import__("django.template", fromlist=["Engine"])
+            django_base: Any = __import__("django.template.base", fromlist=["Node", "NodeList", "VariableNode"])
         except ImportError:
-            raise ImportError(
-                "Django is not installed. Please install Django to use this template engine."
-            )
+            raise ImportError("Django is not installed. Please install Django to use this template engine.")
+
+        Engine = django_template.Engine
+        Node = django_base.Node
+        NodeList = django_base.NodeList
+        VariableNode = django_base.VariableNode
 
         self._Engine = Engine
-        self._env: Engine = Engine(**settings.config)
+        self._env: Any = Engine(**settings.config)
         self._VariableNode = VariableNode
         self._NodeList = NodeList
         self._Node = Node
 
     @overrides
     def extract_variables(self, template_str: str) -> set[str]:
-        from django.template import Template
+        django_template: Any = __import__("django.template", fromlist=["Template"])
 
-        template = Template(template_str, engine=self._env)
+        template = django_template.Template(template_str, engine=self._env)
         variables: set[str] = set()
 
         def _walk_nodes(nodelist):
@@ -53,8 +65,8 @@ class DjangoTemplateEngine(TemplateEngine):
 
     @overrides
     def render(self, template_str: str, vars_map: dict[str, Any]) -> str:
-        from django.template import Template, Context
+        django_template: Any = __import__("django.template", fromlist=["Context", "Template"])
 
-        template = Template(template_str, engine=self._env)
-        context = Context(vars_map)
+        template = django_template.Template(template_str, engine=self._env)
+        context = django_template.Context(vars_map)
         return template.render(context)

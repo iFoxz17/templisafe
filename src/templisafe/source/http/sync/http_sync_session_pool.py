@@ -2,14 +2,17 @@ import logging
 from contextlib import contextmanager
 from threading import Lock, Semaphore
 from typing import Iterator
+
 from requests import Session
 
-from templisafe.diagnostic_handler import DiagnosticHandler
+from templisafe.core.diagnostic_handler import DiagnosticHandler
 from templisafe.exceptions.http_session_error import HttpSessionOverflowError
 from templisafe.source.http.sync.http_sync_session_manager import HttpSyncSessionManager
+
 from ..http_session_slot import HttpSessionSlot
 
 logger: logging.Logger = logging.getLogger(__name__)
+
 
 class HttpSyncSessionPool:
     """
@@ -22,18 +25,24 @@ class HttpSyncSessionPool:
     behaviour depends on the set diagnostic policy.
     """
 
-    __slots__: tuple[str, ...] = ("_manager", "_slots", "_max_connections", "_max_slots", "_lock")
+    __slots__: tuple[str, ...] = (
+        "_manager",
+        "_slots",
+        "_max_connections",
+        "_max_slots",
+        "_lock",
+    )
 
     def __init__(
-            self, 
-            manager: HttpSyncSessionManager, 
-            max_connections: int, 
-            max_slots: int | None = None
-            ) -> None:
+        self,
+        manager: HttpSyncSessionManager,
+        max_connections: int,
+        max_slots: int | None = None,
+    ) -> None:
         self._manager: HttpSyncSessionManager = manager
         self._max_connections: int = max_connections
         self._max_slots: int | None = max_slots
-        self._slots: list[HttpSessionSlot[Session]] = []     #TODO: implement using a min-heap
+        self._slots: list[HttpSessionSlot[Session]] = []  # TODO: implement using a min-heap
         self._lock: Lock = Lock()
 
     @property
@@ -86,14 +95,13 @@ class HttpSyncSessionPool:
 
                 # Fallback: reuse the least-used slot
                 min_slot = min(self._slots, key=lambda s: s.ref_count)
-                return min_slot.session  
+                return min_slot.session
 
             # Create a new session
             new_session: Session = self._manager.get_or_create()
             new_slot = HttpSessionSlot(new_session, ref_count=1)
             self._slots.append(new_slot)
             return new_session
-
 
     def release(self, session: Session) -> None:
         """
@@ -149,12 +157,12 @@ class HttpSyncSessionPoolThrottled(HttpSyncSessionPool):
     __slots__: tuple[str, ...] = ("_semaphore",)
 
     def __init__(
-            self, 
-            manager: HttpSyncSessionManager, 
-            max_connections: int, 
-            max_concurrency: int, 
-            max_slots: int | None = None
-            ) -> None:
+        self,
+        manager: HttpSyncSessionManager,
+        max_connections: int,
+        max_concurrency: int,
+        max_slots: int | None = None,
+    ) -> None:
         super().__init__(manager, max_connections, max_slots)
         self._semaphore: Semaphore = Semaphore(max_concurrency)
 

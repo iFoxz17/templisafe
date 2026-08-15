@@ -1,8 +1,10 @@
 from typing import Any
-from pydantic import Field
-from overrides import overrides
 
-from templisafe.settings.source.source_settings import SourceSettings, SourceKind
+from overrides import overrides
+from pydantic import Field
+
+from templisafe.settings.source.source_settings import SourceKind, SourceSettings
+
 
 class CustomSourceSettings(SourceSettings):
     """
@@ -16,5 +18,6 @@ class CustomSourceSettings(SourceSettings):
     @overrides
     def kind(self) -> SourceKind:
         return SourceKind.CUSTOM
+
 
 SourceSettings.register_source_kind(SourceKind.CUSTOM, CustomSourceSettings)

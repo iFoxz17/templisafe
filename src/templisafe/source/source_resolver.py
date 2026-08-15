@@ -3,6 +3,7 @@ from templisafe.source.content_type_resolver import ContentTypeResolver
 from templisafe.source.source import Source
 from templisafe.source.source_manager import SourceManager
 
+
 class SourceResolver:
     """Resolves `Source` instances."""
 
@@ -18,9 +19,7 @@ class SourceResolver:
 
     def _resolve_content_type(self, settings: SourceSettings) -> SourceSettings:
         if settings.content_type is None:
-            return settings.model_copy(
-                update={"content_type": self._content_type_resolver.resolve(settings)}
-            )
+            return settings.model_copy(update={"content_type": self._content_type_resolver.resolve(settings)})
         return settings
 
     def resolve(self, source: Source | SourceSettings) -> Source:

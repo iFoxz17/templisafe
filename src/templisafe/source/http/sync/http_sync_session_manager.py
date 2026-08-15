@@ -1,11 +1,14 @@
 from requests import Session
 from requests.adapters import HTTPAdapter
 
-from templisafe.settings.source.http.http_session_settings import HttpSyncSessionSettings
+from templisafe.settings.source.http.http_session_settings import (
+    HttpSyncSessionSettings,
+)
 
 ##############################################################################################
 # Factory
 ##############################################################################################
+
 
 class HttpSyncSessionFactory:
     """
@@ -35,15 +38,17 @@ class HttpSyncSessionFactory:
         session: Session = Session()
         adapter: HTTPAdapter = HTTPAdapter(
             pool_connections=settings.pool_connections,
-            pool_maxsize=settings.pool_maxsize
+            pool_maxsize=settings.pool_maxsize,
         )
         session.mount("http://", adapter)
         session.mount("https://", adapter)
         return session
 
+
 ##############################################################################################
 # Manager
 ##############################################################################################
+
 
 class HttpSyncSessionManager:
     """
@@ -56,9 +61,9 @@ class HttpSyncSessionManager:
     __slots__: tuple[str, ...] = ("_settings", "_factory", "_session")
 
     def __init__(
-        self, 
+        self,
         settings: HttpSyncSessionSettings,
-        factory: HttpSyncSessionFactory | None = None
+        factory: HttpSyncSessionFactory | None = None,
     ) -> None:
         self._settings: HttpSyncSessionSettings = settings
         self._factory: HttpSyncSessionFactory = factory or HttpSyncSessionFactory()

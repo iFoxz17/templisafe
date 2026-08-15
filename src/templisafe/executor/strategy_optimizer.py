@@ -1,21 +1,26 @@
 from typing import Iterable
+
 from templisafe.executor.source_executor import SourceRequest
 from templisafe.settings.source_executor_settings import SourceExecutorStrategy
+from templisafe.settings.source_strategy_optimizer_settings import (
+    SourceLatencyProfile,
+    StrategyOptimizerSettings,
+)
 from templisafe.source.source import Source
-from templisafe.settings.source_strategy_optimizer_settings import StrategyOptimizerSettings, SourceLatencyProfile
+
 
 class StrategyOptimizer:
     """Optimizes the execution strategy for a list of sources based on their latency profile."""
 
     __slots__: tuple[str, ...] = ("_settings", "_weight_map")
 
-    def __init__(self, settings: StrategyOptimizerSettings) -> None: 
+    def __init__(self, settings: StrategyOptimizerSettings) -> None:
         self._settings: StrategyOptimizerSettings = settings
         self._weight_map: dict[type, int] = self._build_weight_map()
 
     def _build_weight_map(self) -> dict[type, int]:
         """Precompute source type -> weight mapping for fast lookup."""
-        
+
         settings: StrategyOptimizerSettings = self._settings
         wmap: dict[type, int] = {}
         for source_type, profile in self._settings.source_latency_map.items():
@@ -47,11 +52,11 @@ class StrategyOptimizer:
         SourceExecutorStrategy
             The determined (sub)optimal strategy.
         """
-        
+
         total_weight: int = 0
         for s in sources:
             total_weight += self._source_weight(s)
             if total_weight >= self._settings.threshold:
                 return SourceExecutorStrategy.THREAD_POOL
-        
+
         return SourceExecutorStrategy.SEQUENTIAL

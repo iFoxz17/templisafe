@@ -1,8 +1,10 @@
-from pydantic import Field
 from overrides import overrides
+from pydantic import Field
 
-from templisafe.settings.source.source_settings import SourceSettings, SourceKind
-from .http_session_settings import HttpSyncSessionSettings, HttpAsyncSessionSettings
+from templisafe.settings.source.source_settings import SourceKind, SourceSettings
+
+from .http_session_settings import HttpAsyncSessionSettings, HttpSyncSessionSettings
+
 
 class HttpSourceSettings(SourceSettings):
     """
@@ -11,7 +13,7 @@ class HttpSourceSettings(SourceSettings):
     """
 
     url: str = Field(..., description="The URL to fetch content from")
-    
+
     timeout: float = Field(
         default=30,
         description=(
@@ -23,17 +25,18 @@ class HttpSourceSettings(SourceSettings):
 
     sync_session_settings: HttpSyncSessionSettings = Field(
         default_factory=HttpSyncSessionSettings,
-        description="The http session settings to use for the synchronous flow"
+        description="The http session settings to use for the synchronous flow",
     )
 
     async_session_settings: HttpAsyncSessionSettings = Field(
         default_factory=HttpAsyncSessionSettings,
-        description="The http session settings to use for the asynchronous flow"
+        description="The http session settings to use for the asynchronous flow",
     )
 
     @property
     @overrides
     def kind(self) -> SourceKind:
         return SourceKind.HTTP
+
 
 SourceSettings.register_source_kind(SourceKind.HTTP, HttpSourceSettings)

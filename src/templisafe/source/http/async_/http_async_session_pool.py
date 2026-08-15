@@ -1,15 +1,20 @@
 import logging
-from typing import AsyncGenerator
-from contextlib import asynccontextmanager
 from asyncio import Lock, Semaphore
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
 from aiohttp import ClientSession
 
-from templisafe.diagnostic_handler import DiagnosticHandler
+from templisafe.core.diagnostic_handler import DiagnosticHandler
 from templisafe.exceptions.http_session_error import HttpSessionOverflowError
-from templisafe.source.http.async_.http_async_session_manager import HttpAsyncSessionManager
+from templisafe.source.http.async_.http_async_session_manager import (
+    HttpAsyncSessionManager,
+)
+
 from ..http_session_slot import HttpSessionSlot
 
 logger = logging.getLogger(__name__)
+
 
 class HttpAsyncSessionPool:
     """
@@ -21,18 +26,24 @@ class HttpAsyncSessionPool:
     if all existing sessions are fully used.
     """
 
-    __slots__: tuple[str, ...] = ("_manager", "_slots", "_max_connections", "_max_slots", "_lock")
+    __slots__: tuple[str, ...] = (
+        "_manager",
+        "_slots",
+        "_max_connections",
+        "_max_slots",
+        "_lock",
+    )
 
     def __init__(
-            self, 
-            manager: HttpAsyncSessionManager, 
-            max_connections: int, 
-            max_slots: int | None = None
-            ) -> None:
+        self,
+        manager: HttpAsyncSessionManager,
+        max_connections: int,
+        max_slots: int | None = None,
+    ) -> None:
         self._manager: HttpAsyncSessionManager = manager
         self._max_connections: int = max_connections
         self._max_slots: int | None = max_slots
-        self._slots: list[HttpSessionSlot[ClientSession]] = []  #TODO: implement using a min-heap
+        self._slots: list[HttpSessionSlot[ClientSession]] = []  # TODO: implement using a min-heap
         self._lock: Lock = Lock()
 
     @property
@@ -62,16 +73,13 @@ class HttpAsyncSessionPool:
             If all sessions are full and the pool cannot create new slots.
         """
         async with self._lock:
-            for slot in self._slots: 
+            for slot in self._slots:
                 if slot.ref_count < self._max_connections:
                     slot.ref_count += 1
                     return slot.session
 
             diagnostic_handler: DiagnosticHandler = DiagnosticHandler.get_or_create()
-            diagnostic_handler.debug(
-                msg="All HTTP sessions are full, creating a new one",
-                logger=logger
-                )
+            diagnostic_handler.debug(msg="All HTTP sessions are full, creating a new one", logger=logger)
 
             if not self.has_capacity:
                 diagnostic_handler.warn(
@@ -82,14 +90,14 @@ class HttpAsyncSessionPool:
                     exception_cls=HttpSessionOverflowError,
                     exception_payload=self._max_slots,
                 )
-                
+
                 # Fallback: reuse the least-used slot
                 min_slot = min(self._slots, key=lambda s: s.ref_count)
-                return min_slot.session  
+                return min_slot.session
 
             new_session: ClientSession = await self._manager.get_or_create()
-            slot: HttpSessionSlot[ClientSession] = HttpSessionSlot(new_session, ref_count=1)
-            self._slots.append(slot)
+            new_slot: HttpSessionSlot[ClientSession] = HttpSessionSlot(new_session, ref_count=1)
+            self._slots.append(new_slot)
             return new_session
 
     async def release(self, session: ClientSession) -> None:
@@ -146,12 +154,12 @@ class HttpAsyncSessionPoolThrottled(HttpAsyncSessionPool):
     __slots__: tuple[str, ...] = ("_semaphore",)
 
     def __init__(
-            self, 
-            manager: HttpAsyncSessionManager, 
-            max_connections: int,
-            max_concurrency: int, 
-            max_slots: int | None = None
-            ) -> None:
+        self,
+        manager: HttpAsyncSessionManager,
+        max_connections: int,
+        max_concurrency: int,
+        max_slots: int | None = None,
+    ) -> None:
         super().__init__(manager, max_connections, max_slots)
         self._semaphore: Semaphore = Semaphore(max_concurrency)
 

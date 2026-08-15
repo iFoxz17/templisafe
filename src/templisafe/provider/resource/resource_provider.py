@@ -1,4 +1,9 @@
 from templisafe.engine.template_engine import TemplateEngine
+from templisafe.parser.config.config_parser import Config, ConfigParser
+from templisafe.parser.schema.schema_parser import Schema, SchemaParser
+from templisafe.parser.settings.settings_parser import Settings, SettingsParser
+from templisafe.parser.template.template_parser import Template, TemplateParser
+from templisafe.parser.variant.variant_parser import VariantParser, VariantSet
 from templisafe.provider.resource.compilation_provider import CompilationProvider
 from templisafe.provider.resource.config_provider import ConfigProvider
 from templisafe.provider.resource.rendering_provider import RenderingProvider
@@ -6,14 +11,8 @@ from templisafe.provider.resource.schema_provider import SchemaProvider
 from templisafe.provider.resource.settings_provider import SettingsProvider
 from templisafe.provider.resource.template_provider import TemplateProvider
 from templisafe.provider.resource.variant_provider import VariantProvider
-
-from templisafe.parser.config.config_parser import ConfigParser, Config
-from templisafe.parser.settings.settings_parser import Settings, SettingsParser
-from templisafe.parser.template.template_parser import Template, TemplateParser
-from templisafe.parser.schema.schema_parser import Schema, SchemaParser
-from templisafe.parser.variant.variant_parser import VariantSet, VariantParser
 from templisafe.template.compiler.compiler import Compilation, Compiler
-from templisafe.template.renderer.renderer import Rendering, Renderer
+from templisafe.template.renderer.renderer import Renderer, Rendering
 from templisafe.template.template_model import CompilationSpec
 
 
@@ -58,9 +57,7 @@ class ResourceProvider:
         """Delegates to the designated provider to return a `Settings` instance."""
         return self._settings_provider.provide(config, parser)
 
-    def provide_template(
-        self, template_str: str, engine, parser: TemplateParser
-    ) -> Template:
+    def provide_template(self, template_str: str, engine, parser: TemplateParser) -> Template:
         """Delegates to the designated provider to return a `Template` instance."""
         return self._template_provider.provide(template_str, engine, parser)
 
@@ -72,36 +69,20 @@ class ResourceProvider:
         """Delegates to the designated provider to return a `VariantSet` instance."""
         return self._variant_provider.provide(config, parser)
 
-    def provide_compilation(
-        self, template: Template, schema: Schema, compiler: Compiler
-    ) -> Compilation:
+    def provide_compilation(self, template: Template, schema: Schema, compiler: Compiler) -> Compilation:
         """Delegates to the designated provider to return a `Compilation` instance."""
         return self._compilation_provider.provide(template, schema, compiler)
 
-    def provide_validation(
-        self, 
-        compiled: CompilationSpec, 
-        variant_set: VariantSet, 
-        renderer: Renderer
-    ) -> Rendering:
+    def provide_validation(self, compiled: CompilationSpec, variant_set: VariantSet, renderer: Renderer) -> Rendering:
         """Delegates to the designated provider to return the validation of a `Rendering`  instance."""
-        return self._rendering_provider.provide_validation(
-            compiled, 
-            variant_set, 
-            renderer
-            )
+        return self._rendering_provider.provide_validation(compiled, variant_set, renderer)
 
     def provide_rendering(
-        self, 
-        compiled: CompilationSpec, 
-        variant_set: VariantSet, 
-        engine: TemplateEngine, 
-        renderer: Renderer
+        self,
+        compiled: CompilationSpec,
+        variant_set: VariantSet,
+        engine: TemplateEngine,
+        renderer: Renderer,
     ) -> Rendering:
         """Delegates to the designated provider to return a `Rendering` instance."""
-        return self._rendering_provider.provide_rendering(
-            compiled, 
-            variant_set, 
-            engine, 
-            renderer
-            )
+        return self._rendering_provider.provide_rendering(compiled, variant_set, engine, renderer)

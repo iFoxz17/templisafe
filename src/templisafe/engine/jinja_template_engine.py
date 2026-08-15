@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 from typing import Any
+
 from overrides import overrides
 
-from templisafe.settings.template_engine_settings import TemplateEngineSettings
 from templisafe.engine.template_engine import TemplateEngine
+from templisafe.settings.template_engine_settings import TemplateEngineSettings
+
 
 class JinjaTemplateEngine(TemplateEngine):
     """
@@ -17,8 +20,7 @@ class JinjaTemplateEngine(TemplateEngine):
         super().__init__(settings)
 
         try:
-            from jinja2 import Environment
-            from jinja2 import meta
+            from jinja2 import Environment, meta
         except ImportError:
             raise ImportError("Jinja2 is not installed. Please install Jinja2 to use this template engine.")
 

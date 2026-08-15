@@ -1,6 +1,7 @@
+from templisafe.content.content import ContentType
 from templisafe.parser.config.config_parser import ConfigParser
 from templisafe.parser.config.config_parser_manager import ConfigParserManager
-from templisafe.content.content import ContentType
+
 
 class ConfigParserResolver:
     """Resolves `ConfigParser` instances."""
@@ -8,14 +9,14 @@ class ConfigParserResolver:
     __slots__: tuple[str, ...] = ("_config_parser_manager",)
 
     def __init__(
-            self, 
-            config_parser_manager: ConfigParserManager,
-            ) -> None:
+        self,
+        config_parser_manager: ConfigParserManager,
+    ) -> None:
         self._config_parser_manager: ConfigParserManager = config_parser_manager
 
     def support(self, content_type: ContentType) -> bool:
         return self._config_parser_manager.support(content_type)
-        
+
     def resolve(self, content_type: ContentType) -> ConfigParser:
         """
         Resolve a `ConfigParser` instance for a given content type.

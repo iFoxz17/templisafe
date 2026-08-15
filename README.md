@@ -11,8 +11,8 @@ Designed to be flexible and agnostic to both template engines and configuration 
 ## Key Principles
 
 - **Template-As-Code (TaC):** Inspired by IaC principles, Templisafe lets you manage templates safely and systematically as code.
-- **Engine and Configuration Agnostic:** Works with any template engine (default is [Jinja](https://github.com/pallets/jinja)) and any configuration language (`YAML`, `JSON`, `TOML`, `XML`, ...).  
-- **Schema Generation with Pydantic:** Uses [pydantic](https://pydantic-docs.helpmanual.io/) to automatically generate schemas for template variables, ensuring type safety, constraints and validation.
+- **Engine and Configuration Agnostic:** Works with any template engine (default is [Jinja](https://github.com/pallets/jinja)) and any configuration language (`YAML`, `JSON`, `TOML`, `XML`, ...).
+- **Schema Parsing with Pydantic:** Uses [pydantic](https://pydantic-docs.helpmanual.io/) to parse schemas for template variables, ensuring type safety, constraints and validation.
 - **Flexible Source Handling:** Accepts inline, local and remote sources (`S3`, `Azure Blob`, `GCP Cloud Storage`, ...), abstracting all reading methods so the same API can handle any source type transparently.  
 - **Concurrent and Efficient:** Uses **threading** to handle multiple sources concurrently when enabled, while still supporting serial processing if preferred, minimizing latency when handling cloud sources.  
 - **Fully Configurable:** Every aspect of the library can be configured. Defaults are provided so you can start simple while keeping full flexibility for advanced use cases.  
@@ -138,7 +138,7 @@ The first operative version focuses on the core public workflow:
 - Jinja rendering by default.
 - Pydantic-backed schema validation.
 - Multiple variant files per build.
-- GitHub Actions test runs for `develop` and `main`.
+- GitHub Actions quality and test runs for `develop` and `main`.
 
 HTTP and AWS source components are present and tested, but the stable user-facing path is the template/schema/variant workflow shown above.
 
@@ -168,7 +168,7 @@ Please see the [contributing folder](contributing) for detailed guidelines on ho
 
 - Report issues or suggest new features  
 - Set up a development environment  
-- Run tests and check code quality  
+- Run tests and check code quality
 - Submit pull requests  
 
 We appreciate your help in making **templisafe** more robust, flexible and reliable!

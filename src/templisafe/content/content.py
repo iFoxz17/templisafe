@@ -1,5 +1,6 @@
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+
 
 class ContentType(Enum):
     TEXT = "text"
@@ -7,6 +8,7 @@ class ContentType(Enum):
     JSON = "json"
     TOML = "toml"
     XML = "xml"
+
 
 @dataclass(frozen=True, slots=True)
 class Content:

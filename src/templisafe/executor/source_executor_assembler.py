@@ -1,9 +1,19 @@
+from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
 from templisafe.executor.retrying_factory import RetryingFactory
-from templisafe.executor.source_executor_manager import SourceExecutorFactory, SourceExecutorManager
-from templisafe.settings.manager_settings import ManagerSettings
-from templisafe.settings.source_executor_settings import RetryConditionSettings, SourceExecutorSettings, SourceExecutorStrategy, StopSettings, TenacitySettings, WaitSettings
+from templisafe.executor.source_executor_manager import (
+    SourceExecutorFactory,
+    SourceExecutorManager,
+)
 from templisafe.executor.source_executor_resolver import SourceExecutorResolver
-from templisafe.util import DEFAULT_MANAGER_SETTINGS
+from templisafe.settings.manager_settings import ManagerSettings
+from templisafe.settings.source_executor_settings import (
+    RetryConditionSettings,
+    SourceExecutorSettings,
+    SourceExecutorStrategy,
+    StopSettings,
+    TenacitySettings,
+    WaitSettings,
+)
 
 _DEFAULT_EXECUTOR_SETTINGS: SourceExecutorSettings = SourceExecutorSettings(
     strategy=SourceExecutorStrategy.THREAD_POOL,
@@ -12,20 +22,21 @@ _DEFAULT_EXECUTOR_SETTINGS: SourceExecutorSettings = SourceExecutorSettings(
         stop=StopSettings(max_attempts=3, max_delay_seconds=10),
         wait=WaitSettings(exponential_base=2, multiplier_seconds=0.5, max_seconds=5),
         retry_conditions=RetryConditionSettings(retry_if_result_none=True),
-        reraise=True
-    )
+        reraise=True,
+    ),
 )
+
 
 class SourceExecutorAssembler:
     """Assembles a `SourceExecutorResolver` with all necessary components."""
 
-    __slots__ : tuple[str, ...] = ()
+    __slots__: tuple[str, ...] = ()
 
     def assemble(
-            self, 
-            manager_settings: ManagerSettings | None = None,
-            default_executor_settings: SourceExecutorSettings | None = None
-            ) -> SourceExecutorResolver:
+        self,
+        manager_settings: ManagerSettings | None = None,
+        default_executor_settings: SourceExecutorSettings | None = None,
+    ) -> SourceExecutorResolver:
         """
         Create and return a fully initialized `SourceExecutorResolver`.
 
@@ -45,14 +56,11 @@ class SourceExecutorAssembler:
         retrying_factory: RetryingFactory = RetryingFactory()
         factory: SourceExecutorFactory = SourceExecutorFactory(retrying_factory)
         manager: SourceExecutorManager = SourceExecutorManager(
-            settings=manager_settings or DEFAULT_MANAGER_SETTINGS,
-            factory=factory
+            settings=manager_settings or DEFAULT_MANAGER_SETTINGS, factory=factory
         )
         resolver: SourceExecutorResolver = SourceExecutorResolver(
             source_executor_manager=manager,
-            default_settings=(
-                default_executor_settings or _DEFAULT_EXECUTOR_SETTINGS
-            )
+            default_settings=(default_executor_settings or _DEFAULT_EXECUTOR_SETTINGS),
         )
 
         return resolver

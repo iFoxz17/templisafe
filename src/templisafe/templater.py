@@ -1,8 +1,9 @@
 from collections.abc import Iterable
-from typing import TypeVar
+from typing import Any, TypeAlias, TypeVar
 
 from templisafe.content.content import Content
-from templisafe.default_handler import DefaultHandler
+from templisafe.core.default_handler import DefaultHandler
+from templisafe.core.outcome_handler import OutcomeHandler
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_resolver import TemplateEngineResolver
 from templisafe.executor.source_executor import (
@@ -11,7 +12,6 @@ from templisafe.executor.source_executor import (
     SourceRequest,
 )
 from templisafe.executor.source_executor_resolver import SourceExecutorResolver
-from templisafe.outcome_handler import OutcomeHandler
 from templisafe.parser.config.config_parser import Config
 from templisafe.parser.config.config_parser_resolver import ConfigParserResolver
 from templisafe.parser.loader_facade import LoaderFacade
@@ -41,8 +41,7 @@ from templisafe.template.template_model import (
 )
 
 S = TypeVar("S", bound=Settings)
-SourceInput = Source | SourceSettings
-SettingInput = S | SourceInput | None
+SourceInput: TypeAlias = Source | SourceSettings
 
 
 class Templater:
@@ -101,18 +100,9 @@ class Templater:
         *,
         source_executor_settings: SourceExecutorSettings | None = None,
     ) -> dict[str, Content]:
-        resolved = {
-            name: self._resolve_source(source)
-            for name, source in sources.items()
-            if source is not None
-        }
-        requests = [
-            SourceRequest(id=name, source=source)
-            for name, source in resolved.items()
-        ]
-        executor: SourceExecutor = self._source_executor_resolver.resolve(
-            source_executor_settings
-        )
+        resolved = {name: self._resolve_source(source) for name, source in sources.items() if source is not None}
+        requests = [SourceRequest(id=name, source=source) for name, source in resolved.items()]
+        executor: SourceExecutor = self._source_executor_resolver.resolve(source_executor_settings)
 
         opened: list[Source] = []
         try:
@@ -148,25 +138,16 @@ class Templater:
     ) -> S:
         config = self._parse_config(content)
         if not isinstance(config, dict):
-            raise ValueError(
-                f"Expected {expected_type.__name__} configuration to be a mapping"
-            )
+            raise ValueError(f"Expected {expected_type.__name__} configuration to be a mapping")
 
-        settings: Settings = (
-            Settings.from_dict(config)
-            if "kind" in config
-            else expected_type.from_dict(config)
-        )
+        settings: Settings = Settings.from_dict(config) if "kind" in config else expected_type.from_dict(config)
         if not isinstance(settings, expected_type):
-            raise ValueError(
-                f"Expected settings of type {expected_type.__name__}, "
-                f"got {type(settings).__name__}"
-            )
+            raise ValueError(f"Expected settings of type {expected_type.__name__}, got {type(settings).__name__}")
         return settings
 
     def _resolve_settings(
         self,
-        value: SettingInput[S],
+        value: S | SourceInput | None,
         expected_type: type[S],
         *,
         source_executor_settings: SourceExecutorSettings | None = None,
@@ -182,8 +163,7 @@ class Templater:
             )
             return self._settings_from_content(content, expected_type)
         raise TypeError(
-            f"Expected {expected_type.__name__}, Source, SourceSettings or None; "
-            f"got {type(value).__name__}"
+            f"Expected {expected_type.__name__}, Source, SourceSettings or None; got {type(value).__name__}"
         )
 
     def _as_source_list(
@@ -233,8 +213,11 @@ class Templater:
     ) -> Schema | None:
         if content is None:
             return None
+        schema_config = self._parse_config(content)
+        if not isinstance(schema_config, dict):
+            raise ValueError("Expected schema configuration to be a mapping")
         return self._loader_facade.load_schema(
-            schema_config=self._parse_config(content),
+            schema_config=schema_config,
             parser_settings=parser_settings,
         )
 
@@ -243,10 +226,14 @@ class Templater:
         contents: list[Content],
         parser_settings: VariantParserSettings | None,
     ) -> VariantSet:
-        return self._loader_facade.load_variants(
-            variants_configs=[self._parse_config(content) for content in contents],
-            parser_settings=parser_settings,
-        )
+        variants_configs: list[dict[str, Any]] = []
+        for content in contents:
+            variant_config = self._parse_config(content)
+            if not isinstance(variant_config, dict):
+                raise ValueError("Expected variant configuration to be a mapping")
+            variants_configs.append(variant_config)
+
+        return self._loader_facade.load_variants(variants_configs=variants_configs, parser_settings=parser_settings)
 
     # ----------------------------
     # Compilation
@@ -257,11 +244,11 @@ class Templater:
         template: SourceInput,
         schema: SourceInput | None = None,
         *,
-        template_engine: TemplateEngine | TemplateEngineSettings | SourceInput | None = None,
-        source_executor_settings: SettingInput[SourceExecutorSettings] = None,
-        template_parser_settings: SettingInput[TemplateParserSettings] = None,
-        schema_parser_settings: SettingInput[SchemaParserSettings] = None,
-        compiler_settings: SettingInput[CompilerSettings] = None,
+        template_engine: (TemplateEngine | TemplateEngineSettings | SourceInput | None) = None,
+        source_executor_settings: SourceExecutorSettings | SourceInput | None = None,
+        template_parser_settings: TemplateParserSettings | SourceInput | None = None,
+        schema_parser_settings: SchemaParserSettings | SourceInput | None = None,
+        compiler_settings: CompilerSettings | SourceInput | None = None,
     ) -> Compilation:
         source_executor = self._resolve_settings(
             source_executor_settings,
@@ -294,9 +281,7 @@ class Templater:
             CompilerSettings,
             source_executor_settings=source_executor,
         )
-        compiler_settings_resolved = self._default_handler.compiler_settings_or_default(
-            compiler_settings_resolved
-        )
+        compiler_settings_resolved = self._default_handler.compiler_settings_or_default(compiler_settings_resolved)
 
         template_obj = self._load_template(contents["template"], engine, template_parser)
         schema_obj = self._load_schema(contents.get("schema"), schema_parser)
@@ -314,10 +299,10 @@ class Templater:
         compiled: CompilationSpec,
         variants: SourceInput | list[SourceInput],
         *,
-        template_engine: TemplateEngine | TemplateEngineSettings | SourceInput | None = None,
-        source_executor_settings: SettingInput[SourceExecutorSettings] = None,
-        variant_parser_settings: SettingInput[VariantParserSettings] = None,
-        renderer_settings: SettingInput[RendererSettings] = None,
+        template_engine: (TemplateEngine | TemplateEngineSettings | SourceInput | None) = None,
+        source_executor_settings: SourceExecutorSettings | SourceInput | None = None,
+        variant_parser_settings: VariantParserSettings | SourceInput | None = None,
+        renderer_settings: RendererSettings | SourceInput | None = None,
     ) -> Rendering:
         source_executor = self._resolve_settings(
             source_executor_settings,
@@ -343,9 +328,7 @@ class Templater:
             RendererSettings,
             source_executor_settings=source_executor,
         )
-        renderer_settings_resolved = self._default_handler.renderer_settings_or_default(
-            renderer_settings_resolved
-        )
+        renderer_settings_resolved = self._default_handler.renderer_settings_or_default(renderer_settings_resolved)
 
         variants_set = self._load_variants(
             [contents[f"variants.{i}"] for i in range(len(variant_sources))],
@@ -365,9 +348,9 @@ class Templater:
         compiled: CompilationSpec,
         variants: SourceInput | list[SourceInput],
         *,
-        source_executor_settings: SettingInput[SourceExecutorSettings] = None,
-        variant_parser_settings: SettingInput[VariantParserSettings] = None,
-        renderer_settings: SettingInput[RendererSettings] = None,
+        source_executor_settings: SourceExecutorSettings | SourceInput | None = None,
+        variant_parser_settings: VariantParserSettings | SourceInput | None = None,
+        renderer_settings: RendererSettings | SourceInput | None = None,
     ) -> Rendering:
         source_executor = self._resolve_settings(
             source_executor_settings,
@@ -388,9 +371,7 @@ class Templater:
             RendererSettings,
             source_executor_settings=source_executor,
         )
-        renderer_settings_resolved = self._default_handler.renderer_settings_or_default(
-            renderer_settings_resolved
-        )
+        renderer_settings_resolved = self._default_handler.renderer_settings_or_default(renderer_settings_resolved)
 
         variants_set = self._load_variants(
             [contents[f"variants.{i}"] for i in range(len(variant_sources))],
@@ -411,13 +392,13 @@ class Templater:
         variants: SourceInput | list[SourceInput],
         schema: SourceInput | None = None,
         *,
-        template_engine: TemplateEngine | TemplateEngineSettings | SourceInput | None = None,
-        source_executor_settings: SettingInput[SourceExecutorSettings] = None,
-        template_parser_settings: SettingInput[TemplateParserSettings] = None,
-        schema_parser_settings: SettingInput[SchemaParserSettings] = None,
-        variant_parser_settings: SettingInput[VariantParserSettings] = None,
-        compiler_settings: SettingInput[CompilerSettings] = None,
-        renderer_settings: SettingInput[RendererSettings] = None,
+        template_engine: (TemplateEngine | TemplateEngineSettings | SourceInput | None) = None,
+        source_executor_settings: SourceExecutorSettings | SourceInput | None = None,
+        template_parser_settings: TemplateParserSettings | SourceInput | None = None,
+        schema_parser_settings: SchemaParserSettings | SourceInput | None = None,
+        variant_parser_settings: VariantParserSettings | SourceInput | None = None,
+        compiler_settings: CompilerSettings | SourceInput | None = None,
+        renderer_settings: RendererSettings | SourceInput | None = None,
     ) -> Build:
         compilation = self.compile(
             template=template,

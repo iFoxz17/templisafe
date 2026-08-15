@@ -2,9 +2,10 @@ from templisafe.content.content import ContentType
 from templisafe.parser.config.config_parser import ConfigParser
 from templisafe.parser.config.config_parser_resolver import ConfigParserResolver
 
+
 class ConfigParserProvider:
     """Provides `ConfigParser` instances for a given `ContentType`."""
-    
+
     __slots__: tuple[str, ...] = ("_config_parser_resolver",)
 
     def __init__(self, config_parser_resolver: ConfigParserResolver) -> None:
@@ -29,4 +30,3 @@ class ConfigParserProvider:
         """
 
         return self._config_parser_resolver.resolve(content_type)
-        

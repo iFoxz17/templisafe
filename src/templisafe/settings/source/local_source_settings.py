@@ -1,7 +1,8 @@
 from overrides import overrides
 from pydantic import Field
 
-from templisafe.settings.source.source_settings import SourceSettings, SourceKind
+from templisafe.settings.source.source_settings import SourceKind, SourceSettings
+
 
 class LocalSourceSettings(SourceSettings):
     """
@@ -15,5 +16,6 @@ class LocalSourceSettings(SourceSettings):
     @overrides
     def kind(self) -> SourceKind:
         return SourceKind.LOCAL
+
 
 SourceSettings.register_source_kind(SourceKind.LOCAL, LocalSourceSettings)

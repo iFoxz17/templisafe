@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from types import TracebackType
+from typing import Literal
 
 from templisafe.content.content import ContentType
 from templisafe.exceptions.source_error import MissingContentTypeError
 from templisafe.settings.source.source_settings import SourceSettings
+
 
 class Source(ABC):
     """
@@ -69,7 +71,7 @@ class Source(ABC):
         exc_type: type[BaseException] | None,
         exc: BaseException | None,
         tb: TracebackType | None,
-    ) -> bool:
+    ) -> Literal[False]:
         self.close()
         return False
 
@@ -129,7 +131,7 @@ class AsyncSource(Source, ABC):
         exc_type: type[BaseException] | None,
         exc: BaseException | None,
         tb: TracebackType | None,
-    ) -> bool:
+    ) -> Literal[False]:
         await self.aclose()
         return False
 

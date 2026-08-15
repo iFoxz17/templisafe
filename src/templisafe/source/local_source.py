@@ -1,9 +1,11 @@
 from pathlib import Path
+
 from overrides import overrides
 
-from templisafe.source.source import Source
-from templisafe.settings.source.local_source_settings import LocalSourceSettings
 from templisafe.exceptions.source_error import LocalSourceError
+from templisafe.settings.source.local_source_settings import LocalSourceSettings
+from templisafe.source.source import Source
+
 
 class LocalSource(Source):
     """A source that reads content from a local filesystem file."""
@@ -17,7 +19,7 @@ class LocalSource(Source):
     def path(self) -> Path:
         assert isinstance(self._settings, LocalSourceSettings)
         return Path(self._settings.path)
-    
+
     @overrides
     def read(self) -> str:
         path: Path = self.path

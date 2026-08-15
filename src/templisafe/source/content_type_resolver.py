@@ -1,21 +1,26 @@
+from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
-from collections.abc import Mapping
 
-from templisafe.settings.source import *
-from templisafe.settings.source.aws.aws_ssm_parameter_source_settings import AwsSsmParameterSourceSettings
-from templisafe.exceptions.source_error import ContentTypeResolutionError
 from templisafe.content.content import ContentType
+from templisafe.exceptions.source_error import ContentTypeResolutionError
+from templisafe.settings.source import *
+from templisafe.settings.source.aws.aws_ssm_parameter_source_settings import (
+    AwsSsmParameterSourceSettings,
+)
 
-CONTENT_TYPE_MAP: Mapping[str, ContentType] = MappingProxyType({
-    ".j2": ContentType.TEXT,
-    ".jinja": ContentType.TEXT,
-    ".txt": ContentType.TEXT,
-    ".yaml": ContentType.YAML,
-    ".json": ContentType.JSON,
-    ".toml": ContentType.TOML,
-    ".xml": ContentType.XML,
-})
+CONTENT_TYPE_MAP: Mapping[str, ContentType] = MappingProxyType(
+    {
+        ".j2": ContentType.TEXT,
+        ".jinja": ContentType.TEXT,
+        ".txt": ContentType.TEXT,
+        ".yaml": ContentType.YAML,
+        ".json": ContentType.JSON,
+        ".toml": ContentType.TOML,
+        ".xml": ContentType.XML,
+    }
+)
+
 
 class ContentTypeResolver:
     """Resolves the `ContentType` of a source based on settings or extensions."""
@@ -82,7 +87,7 @@ class ContentTypeResolver:
         ContentTypeResolutionError
             If the content type cannot be determined from the settings.
         """
-        
+
         path: Path | str | None = self._extract_source_path(settings)
         if path is None:
             raise ContentTypeResolutionError(settings)
@@ -90,5 +95,5 @@ class ContentTypeResolver:
         ext: str = self._extract_extension(path)
         if ext not in self._content_type_map:
             raise ContentTypeResolutionError(settings)
-        
+
         return self._content_type_map[ext]

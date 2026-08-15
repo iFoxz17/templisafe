@@ -6,10 +6,13 @@ from tenacity import Retrying
 from templisafe.content.content import Content
 from templisafe.executor.source_executor import (
     SourceExecutor,
-    SourceExecutorRequest, SourceRequest,
-    SourceExecutorResult, SourceResult
+    SourceExecutorRequest,
+    SourceExecutorResult,
+    SourceRequest,
+    SourceResult,
 )
 from templisafe.settings.source_executor_settings import SourceExecutorSettings
+
 
 class ThreadPoolSourceExecutor(SourceExecutor):
     """Execute sources concurrently using a `ThreadPoolExecutor`."""
@@ -26,19 +29,15 @@ class ThreadPoolSourceExecutor(SourceExecutor):
 
         def worker(idx: int, req: SourceRequest) -> tuple[int, SourceResult]:
             content: Content = Content(
-                payload=self._retrying(lambda: req.source.read()), 
-                type_=req.source.content_type
+                payload=self._retrying(lambda: req.source.read()),
+                type_=req.source.content_type,
             )
             return idx, SourceResult(id=req.id, content=content)
 
         with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
-            futures: list[Future] = [
-                executor.submit(worker, idx, req) 
-                for idx, req 
-                in enumerate(request.requests)
-            ]
+            futures: list[Future] = [executor.submit(worker, idx, req) for idx, req in enumerate(request.requests)]
             for future in as_completed(futures):
-                idx, content = future.result() 
+                idx, content = future.result()
                 results[idx] = content
 
         return SourceExecutorResult(results=results)

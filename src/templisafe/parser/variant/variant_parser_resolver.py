@@ -2,19 +2,20 @@ from templisafe.parser.variant.variant_parser import VariantParser
 from templisafe.parser.variant.variant_parser_manager import VariantParserManager
 from templisafe.settings.variant_parser_settings import VariantParserSettings
 
+
 class VariantParserResolver:
     """Resolves `VariantParser` instances."""
 
     __slots__: tuple[str, ...] = ("_default_settings", "_variant_parser_manager")
 
     def __init__(
-            self, 
-            default_settings: VariantParserSettings,
-            variant_parser_manager: VariantParserManager,
-            ) -> None:
+        self,
+        default_settings: VariantParserSettings,
+        variant_parser_manager: VariantParserManager,
+    ) -> None:
         self._default_settings: VariantParserSettings = default_settings
         self._variant_parser_manager: VariantParserManager = variant_parser_manager
-        
+
     def resolve(self, variant_parser: VariantParser | VariantParserSettings | None = None) -> VariantParser:
         """
         Resolve a `VariantParser` instance.
@@ -37,6 +38,6 @@ class VariantParserResolver:
 
         if isinstance(variant_parser, VariantParser):
             return variant_parser
-        
-        settings: VariantParserSettings = variant_parser or self._default_settings 
+
+        settings: VariantParserSettings = variant_parser or self._default_settings
         return self._variant_parser_manager.get_or_create(settings)

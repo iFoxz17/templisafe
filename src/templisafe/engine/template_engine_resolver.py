@@ -2,19 +2,20 @@ from templisafe.engine.template_engine import TemplateEngine
 from templisafe.engine.template_engine_manager import TemplateEngineManager
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
 
+
 class TemplateEngineResolver:
     """Resolves `TemplateEngine` instances."""
 
     __slots__: tuple[str, ...] = ("_default_settings", "_template_engine_manager")
 
     def __init__(
-            self, 
-            default_settings: TemplateEngineSettings,
-            template_engine_manager: TemplateEngineManager,
-            ) -> None:
+        self,
+        default_settings: TemplateEngineSettings,
+        template_engine_manager: TemplateEngineManager,
+    ) -> None:
         self._default_settings: TemplateEngineSettings = default_settings
         self._template_engine_manager: TemplateEngineManager = template_engine_manager
-        
+
     def resolve(self, template_engine: TemplateEngine | TemplateEngineSettings | None = None) -> TemplateEngine:
         """
         Resolve a `TemplateEngine` instance.
@@ -37,6 +38,6 @@ class TemplateEngineResolver:
 
         if isinstance(template_engine, TemplateEngine):
             return template_engine
-        
-        settings: TemplateEngineSettings = template_engine or self._default_settings 
+
+        settings: TemplateEngineSettings = template_engine or self._default_settings
         return self._template_engine_manager.get_or_create(settings)

@@ -1,33 +1,30 @@
-from typing import Any, TypeVar, cast
-from pydantic import ValidationError, Field
 from enum import Enum
+from typing import Any, TypeVar, cast
+
 from overrides import overrides
+from pydantic import Field, ValidationError
 
 from templisafe.parser.config.config_parser import Config
 from templisafe.settings.settings import Settings, SettingsKind
 
 T = TypeVar("T", bound="TemplateEngineSettings")
 
+
 class TemplateEngineKind(str, Enum):
     JINJA = "jinja"
     DJANGO = "django"
     CUSTOM = "custom"
 
+
 class TemplateEngineSettings(Settings):
     """Settings class for defining template engines."""
 
-    engine_kind: TemplateEngineKind = Field(
-        TemplateEngineKind.JINJA, 
-        description="The template engine kind"
-        )
-    config: dict[str, Any] = Field(
-        default={}, 
-        description="The configurations of the engine"
-        )
+    engine_kind: TemplateEngineKind = Field(TemplateEngineKind.JINJA, description="The template engine kind")
+    config: dict[str, Any] = Field(default={}, description="The configurations of the engine")
 
     @classmethod
     def _prepare_kwargs(cls: type[T], kwargs: dict[str, Any]) -> dict[str, Any]:
-        
+
         engine_kind: Any = kwargs.pop("engine_kind", None)
         if isinstance(engine_kind, str):
             try:
@@ -88,5 +85,6 @@ class TemplateEngineSettings(Settings):
             return cast(T, cls.model_validate(kwargs))
         except ValidationError as e:
             raise ValueError(f"Invalid fields for {cls.__name__}: {e}") from e
+
 
 Settings.register_kind(SettingsKind.TEMPLATE_ENGINE_SETTINGS, TemplateEngineSettings)

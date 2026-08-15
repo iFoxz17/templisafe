@@ -1,6 +1,8 @@
 class RenderingError(Exception):
     """Base class for rendering-related exceptions."""
+
     pass
+
 
 class RenderingFailureError(RenderingError):
     """Raised when template rendering fails."""
@@ -11,9 +13,7 @@ class RenderingFailureError(RenderingError):
         self.rendering = rendering
 
         # Base message
-        message_lines = [
-            f"Template rendering failed with outcome {rendering.outcome.name}: {rendering.message}"
-        ]
+        message_lines = [f"Template rendering failed with outcome {rendering.outcome.name}: {rendering.message}"]
 
         # Append diagnostics if any
         if rendering.diagnostics:

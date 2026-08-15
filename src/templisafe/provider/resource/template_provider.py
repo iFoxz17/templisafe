@@ -1,6 +1,7 @@
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.parser.template.template_parser import Template, TemplateParser
 
+
 class TemplateProvider:
     """Provides `Template` instances from raw template strings."""
 

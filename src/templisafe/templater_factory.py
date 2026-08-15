@@ -1,7 +1,8 @@
-from templisafe.default_handler import DefaultHandler
+from templisafe.core.default_handler import DefaultHandler
+from templisafe.core.outcome_handler import OutcomeHandler
+from templisafe.core.util import DiagnosticPolicy
 from templisafe.engine.template_engine_assembler import TemplateEngineAssembler
 from templisafe.executor.source_executor_assembler import SourceExecutorAssembler
-from templisafe.outcome_handler import OutcomeHandler
 from templisafe.parser.config.config_parser_assembler import ConfigParserAssembler
 from templisafe.parser.loader_facade import LoaderFacade
 from templisafe.parser.schema.schema_loader import SchemaLoader
@@ -20,7 +21,6 @@ from templisafe.source.source_assembler import SourceAssembler
 from templisafe.template.compiler.compiler_assembler import CompilerAssembler
 from templisafe.template.renderer.renderer_assembler import RendererAssembler
 from templisafe.templater import Templater
-from templisafe.util import DiagnosticPolicy
 
 
 class TemplaterFactory:
@@ -43,9 +43,7 @@ class TemplaterFactory:
         try:
             return DiagnosticPolicy(diagnostic_policy)
         except ValueError as e:
-            raise ValueError(
-                f"Invalid diagnostic policy provided: {diagnostic_policy}"
-            ) from e
+            raise ValueError(f"Invalid diagnostic policy provided: {diagnostic_policy}") from e
 
     def create(
         self,
@@ -90,20 +88,14 @@ class TemplaterFactory:
                 default_template_engine_settings=template_engine_settings
             ),
             loader_facade=loader_facade,
-            compiler_resolver=CompilerAssembler().assemble(
-                default_compiler_settings=compiler_settings
-            ),
-            renderer_resolver=RendererAssembler().assemble(
-                default_renderer_settings=renderer_settings
-            ),
+            compiler_resolver=CompilerAssembler().assemble(default_compiler_settings=compiler_settings),
+            renderer_resolver=RendererAssembler().assemble(default_renderer_settings=renderer_settings),
             default_handler=DefaultHandler(
                 template_engine_default_settings=template_engine_settings,
                 compiler_default_settings=compiler_settings,
                 renderer_default_settings=renderer_settings,
             ),
-            outcome_handler=OutcomeHandler(
-                policy=self._normalize_policy(diagnostic_policy)
-            ),
+            outcome_handler=OutcomeHandler(policy=self._normalize_policy(diagnostic_policy)),
         )
 
 

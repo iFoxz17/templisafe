@@ -1,8 +1,8 @@
+from templisafe.core.task import TaskBundle
 from templisafe.provider.source_provider import SourceProvider
 from templisafe.service.field_selector import FieldSelector
 from templisafe.settings.source.source_settings import SourceSettings
 from templisafe.source.source import Source
-from templisafe.task import TaskBundle
 
 
 class SourceService:
@@ -20,11 +20,7 @@ class SourceService:
         and return the bundle with those fields resolved to `Source` instances.
         """
         source_fields: dict[str, Source | SourceSettings] = self._field_selector.select_by_type(
-            obj=task_bundle,
-            types=(Source, SourceSettings)
+            obj=task_bundle, types=(Source, SourceSettings)
         )
-        resolved = {
-            name: self._source_provider.provide(value)
-            for name, value in source_fields.items()
-        }
+        resolved = {name: self._source_provider.provide(value) for name, value in source_fields.items()}
         return task_bundle.model_copy(update=resolved)

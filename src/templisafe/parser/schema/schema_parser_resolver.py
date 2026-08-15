@@ -2,19 +2,20 @@ from templisafe.parser.schema.schema_parser import SchemaParser
 from templisafe.parser.schema.schema_parser_manager import SchemaParserManager
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
 
+
 class SchemaParserResolver:
     """Resolves `SchemaParser` instances."""
 
     __slots__: tuple[str, ...] = ("_default_settings", "_schema_parser_manager")
 
     def __init__(
-            self, 
-            default_settings: SchemaParserSettings,
-            schema_parser_manager: SchemaParserManager,
-            ) -> None:
+        self,
+        default_settings: SchemaParserSettings,
+        schema_parser_manager: SchemaParserManager,
+    ) -> None:
         self._default_settings: SchemaParserSettings = default_settings
         self._schema_parser_manager: SchemaParserManager = schema_parser_manager
-        
+
     def resolve(self, schema_parser: SchemaParser | SchemaParserSettings | None = None) -> SchemaParser:
         """
         Resolve a `SchemaParser` instance.
@@ -37,6 +38,6 @@ class SchemaParserResolver:
 
         if isinstance(schema_parser, SchemaParser):
             return schema_parser
-        
-        settings: SchemaParserSettings = schema_parser or self._default_settings 
+
+        settings: SchemaParserSettings = schema_parser or self._default_settings
         return self._schema_parser_manager.get_or_create(settings)

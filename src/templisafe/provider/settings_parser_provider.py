@@ -2,9 +2,10 @@ from templisafe.parser.settings.settings_parser import SettingsParser
 from templisafe.parser.settings.settings_parser_resolver import SettingsParserResolver
 from templisafe.settings.settings import SettingsKind
 
+
 class SettingsParserProvider:
     """Provides `SettingsParser` instances for a given `SettingsKind`."""
-    
+
     __slots__: tuple[str, ...] = ("_settings_parser_resolver",)
 
     def __init__(self, settings_parser_resolver: SettingsParserResolver) -> None:

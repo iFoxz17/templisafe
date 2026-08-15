@@ -1,6 +1,8 @@
 from dataclasses import fields, is_dataclass
 from typing import Any
+
 from pydantic import BaseModel
+
 
 class FieldSelector:
     """Utility class to select fields from a dataclass instance based on their types."""
@@ -10,11 +12,7 @@ class FieldSelector:
     def __init__(self) -> None:
         pass
 
-    def select_by_type(
-        self,
-        obj: Any,
-        types: tuple[type, ...] | type
-    ) -> dict[str, Any]:
+    def select_by_type(self, obj: Any, types: tuple[type, ...] | type) -> dict[str, Any]:
         """
         Select fields of a dataclass instance whose values match the specified type(s).
 
@@ -39,17 +37,9 @@ class FieldSelector:
         """
 
         if isinstance(obj, BaseModel):
-            return {
-                name: getattr(obj, name)
-                for name in obj.model_fields
-                if isinstance(getattr(obj, name), types)
-            }
+            return {name: getattr(obj, name) for name in obj.model_fields if isinstance(getattr(obj, name), types)}
 
         if not is_dataclass(obj):
             raise TypeError(f"Expected a dataclass or Pydantic model instance, got {type(obj)}")
 
-        return {
-            f.name: getattr(obj, f.name)
-            for f in fields(obj)
-            if isinstance(getattr(obj, f.name), types)
-        }
+        return {f.name: getattr(obj, f.name) for f in fields(obj) if isinstance(getattr(obj, f.name), types)}

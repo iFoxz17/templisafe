@@ -2,6 +2,7 @@ from templisafe.engine.template_engine import TemplateEngine
 from templisafe.template.renderer.renderer import Renderer, Rendering
 from templisafe.template.template_model import CompilationSpec, VariantSet
 
+
 class RenderingProvider:
     """Provides `Rendering` instances by delegating to a `Renderer`."""
 

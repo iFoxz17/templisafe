@@ -1,17 +1,23 @@
+from importlib import import_module
 from typing import Any
-from overrides import overrides
-from botocore.exceptions import ClientError
 
-from templisafe.settings.source.aws.aws_s3_bucket_source_settings import AwsS3BucketSourceSettings
-from templisafe.source.aws.aws_source import AwsSource
+from overrides import overrides
+
 from templisafe.exceptions.source_error import AwsSourceError
+from templisafe.settings.source.aws.aws_s3_bucket_source_settings import (
+    AwsS3BucketSourceSettings,
+)
+from templisafe.source.aws.aws_source import AwsSource
+
+ClientError: type[Exception] = import_module("botocore.exceptions").ClientError
+
 
 class AwsS3BucketSource(AwsSource):
     """Reads content from an S3 bucket lazily, only connecting on read()."""
 
     def __init__(self, settings: AwsS3BucketSourceSettings) -> None:
         super().__init__(settings)
-        
+
     @property
     def bucket(self) -> str:
         assert isinstance(self.settings, AwsS3BucketSourceSettings)
@@ -30,11 +36,8 @@ class AwsS3BucketSource(AwsSource):
             body: Any = resp.get("Body")
             if body is None:
                 raise AwsSourceError(
-                    f"Failed to read AWS S3 bucket object (bucket={self.bucket}, key={self.key}): "
-                    "response body is None"
-                    )
+                    f"Failed to read AWS S3 bucket object (bucket={self.bucket}, key={self.key}): response body is None"
+                )
             return body.read().decode("utf-8")
         except ClientError as e:
-            raise AwsSourceError(
-                    f"Failed to read AWS S3 bucket object (bucket={self.bucket}, key={self.key})"
-                    ) from e
+            raise AwsSourceError(f"Failed to read AWS S3 bucket object (bucket={self.bucket}, key={self.key})") from e

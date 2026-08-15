@@ -1,11 +1,17 @@
+from importlib import import_module
 from typing import Any
-from overrides import overrides
-from botocore.exceptions import ClientError
 
-from templisafe.settings.source.source_settings import SourceSettings
-from templisafe.settings.source.aws.aws_secrets_manager_source_settings import AwsSecretsManagerSourceSettings
-from templisafe.source.aws.aws_source import AwsSource
+from overrides import overrides
+
 from templisafe.exceptions.source_error import AwsSourceError
+from templisafe.settings.source.aws.aws_secrets_manager_source_settings import (
+    AwsSecretsManagerSourceSettings,
+)
+from templisafe.settings.source.source_settings import SourceSettings
+from templisafe.source.aws.aws_source import AwsSource
+
+ClientError: type[Exception] = import_module("botocore.exceptions").ClientError
+
 
 class AwsSecretsManagerSource(AwsSource):
     """Reads a secret from AWS Secrets Manager lazily, only connecting on read()."""
@@ -42,9 +48,7 @@ class AwsSecretsManagerSource(AwsSource):
             if "SecretBinary" in resp:
                 return resp["SecretBinary"].decode("utf-8")
 
-            raise AwsSourceError(
-                    f"Failed to read AWS secrets manager object: secret {self.secret_id} has no value"
-                    )
+            raise AwsSourceError(f"Failed to read AWS secrets manager object: secret {self.secret_id} has no value")
 
         except ClientError as e:
-            raise AwsSourceError(f"Failed to read AWS secrets manager object") from e
+            raise AwsSourceError("Failed to read AWS secrets manager object") from e

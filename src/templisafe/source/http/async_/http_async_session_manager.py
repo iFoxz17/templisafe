@@ -1,9 +1,13 @@
 from aiohttp import ClientSession, TCPConnector
-from templisafe.settings.source.http.http_session_settings import HttpAsyncSessionSettings
+
+from templisafe.settings.source.http.http_session_settings import (
+    HttpAsyncSessionSettings,
+)
 
 ##############################################################################################
 # Factory
 ##############################################################################################
+
 
 class HttpAsyncSessionFactory:
     """
@@ -38,9 +42,11 @@ class HttpAsyncSessionFactory:
         )
         return ClientSession(connector=connector)
 
+
 ##############################################################################################
 # Manager
 ##############################################################################################
+
 
 class HttpAsyncSessionManager:
     """
@@ -55,7 +61,7 @@ class HttpAsyncSessionManager:
     def __init__(
         self,
         settings: HttpAsyncSessionSettings,
-        factory: HttpAsyncSessionFactory | None = None
+        factory: HttpAsyncSessionFactory | None = None,
     ) -> None:
         """
         Initialize the async session manager.

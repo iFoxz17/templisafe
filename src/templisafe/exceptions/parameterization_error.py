@@ -1,6 +1,6 @@
 class ParameterizationError(Exception):
     """Base class for parameterization-related exceptions."""
-    
+
     __slots__: tuple[str, ...] = ("param_name",)
 
     def __init__(self, param_name: str, message: str) -> None:
@@ -13,7 +13,7 @@ class ParameterizationError(Exception):
 
 class MissingParameterizationError(ParameterizationError):
     """Raised when a required parameterization is missing."""
-    
+
     __slots__: tuple[str, ...] = ()
 
     def __init__(self, param_name: str) -> None:

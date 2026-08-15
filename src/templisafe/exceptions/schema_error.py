@@ -1,12 +1,15 @@
 from typing import Any
 
+
 class SchemaError(Exception):
     """Base class for schema-related errors."""
+
     pass
+
 
 class IllegalSchemaError(SchemaError):
     """Raised when a schema definition is illegal."""
-    
+
     __slots__: tuple[str, ...] = ("msg",)
 
     def __init__(self, msg: str) -> None:
@@ -19,7 +22,7 @@ class IllegalSchemaError(SchemaError):
 
 class IllegalType(SchemaError):
     """Raised when trying to use a type not allowed."""
-    
+
     __slots__: tuple[str, ...] = ("type_", "allowed_types", "aliases")
 
     def __init__(self, type_: str, allowed_types: set[str], aliases: list[str] | None = None) -> None:
@@ -33,13 +36,10 @@ class IllegalType(SchemaError):
         self.allowed_types = allowed_types
         self.aliases = aliases or []
 
-        message = (
-            f"Illegal type '{type_}' encountered. "
-            f"Allowed types: {', '.join(allowed_types)}"
-        )
+        message = f"Illegal type '{type_}' encountered. Allowed types: {', '.join(allowed_types)}"
         if self.aliases:
             message += f". Aliases: {', '.join(self.aliases)}"
-        
+
         super().__init__(message)
 
     def __repr__(self) -> str:
@@ -50,9 +50,10 @@ class IllegalType(SchemaError):
             f"aliases={self.aliases!r})"
         )
 
+
 class IllegalVar(SchemaError):
     """Raised for an illegal variable in a schema."""
-    
+
     __slots__: tuple[str, ...] = ("var_index", "var_name", "var_type")
 
     def __init__(self, var_index: int, var_name: str, var_type: str, msg: str) -> None:
@@ -70,15 +71,12 @@ class IllegalVar(SchemaError):
 
 class IllegalVarType(IllegalVar):
     """Raised when a variable has a type not in the allowed types."""
-    
+
     __slots__: tuple[str, ...] = ("allowed_types",)
 
     def __init__(self, var_index: int, var_name: str, var_type: str, allowed_types: list[str]) -> None:
         self.allowed_types = allowed_types
-        msg = (
-            f"Illegal type for variable '{var_name}' at index {var_index}: {var_type}. "
-            f"Allowed types: {allowed_types}"
-        )
+        msg = f"Illegal type for variable '{var_name}' at index {var_index}: {var_type}. Allowed types: {allowed_types}"
         super().__init__(var_index, var_name, var_type, msg)
 
     def __repr__(self) -> str:
@@ -86,10 +84,11 @@ class IllegalVarType(IllegalVar):
             f"{self.__class__.__name__}(var_index={self.var_index}, var_name={self.var_name!r}, "
             f"var_type={self.var_type!r}, allowed_types={self.allowed_types!r})"
         )
-    
+
+
 class IllegalVarDefault(IllegalVar):
     """Raised when a variable has a default not of the type indicated."""
-    
+
     __slots__: tuple[str, ...] = ("var_default",)
 
     def __init__(self, var_index: int, var_name: str, var_type: type, var_default: Any) -> None:
@@ -105,4 +104,3 @@ class IllegalVarDefault(IllegalVar):
             f"{self.__class__.__name__}(var_index={self.var_index}, var_name={self.var_name!r}, "
             f"var_type={self.var_type!r}, default={self.var_default!r})"
         )
-

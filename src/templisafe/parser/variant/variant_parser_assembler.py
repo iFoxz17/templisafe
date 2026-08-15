@@ -1,19 +1,23 @@
-from templisafe.parser.variant.variant_parser_manager import VariantParserFactory, VariantParserManager
+from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
+from templisafe.parser.variant.variant_parser_manager import (
+    VariantParserFactory,
+    VariantParserManager,
+)
 from templisafe.parser.variant.variant_parser_resolver import VariantParserResolver
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.variant_parser_settings import VariantParserSettings
-from templisafe.util import DEFAULT_MANAGER_SETTINGS
+
 
 class VariantParserAssembler:
     """Assembles a `VariantParserResolver` with all necessary components."""
 
-    __slots__ : tuple[str, ...] = ()
+    __slots__: tuple[str, ...] = ()
 
     def assemble(
-            self, 
-            manager_settings: ManagerSettings | None = None,
-            default_variant_parser_settings: VariantParserSettings | None = None
-            ) -> VariantParserResolver:
+        self,
+        manager_settings: ManagerSettings | None = None,
+        default_variant_parser_settings: VariantParserSettings | None = None,
+    ) -> VariantParserResolver:
         """
         Create and return a fully initialized `VariantParserResolver`.
 
@@ -32,14 +36,11 @@ class VariantParserAssembler:
 
         factory: VariantParserFactory = VariantParserFactory()
         manager: VariantParserManager = VariantParserManager(
-            settings=manager_settings or DEFAULT_MANAGER_SETTINGS,
-            factory=factory
+            settings=manager_settings or DEFAULT_MANAGER_SETTINGS, factory=factory
         )
         resolver: VariantParserResolver = VariantParserResolver(
             variant_parser_manager=manager,
-            default_settings=(
-                default_variant_parser_settings or VariantParserSettings.create()
-            )
+            default_settings=(default_variant_parser_settings or VariantParserSettings.create()),
         )
 
         return resolver

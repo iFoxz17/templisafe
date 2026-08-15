@@ -10,7 +10,6 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 - [ ] Parse the schema and the variants using a pydantic model
 - [ ] Manage Unions types in schema and variants 
 - [ ] Implement async sources and SourceExecutorLine concept (dividing sources in three lines)  
-- [ ] Add release automation to create tags on the release branch
 - [ ] Add a test for Templater concurrency
 - [ ] Develop IaC use case
 - [ ] Develop email use case to show concurrency in handling thousands of sources
@@ -18,7 +17,8 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 - [ ] Document pydantic fields (In particular of Settings)
 
 ## Medium Priority
-- [ ] Add CI quality gates (formatting, linting, type checks and coverage)
+- [ ] Add TestPyPI staging publishing before production PyPI releases
+- [ ] Add CI coverage reporting
 - [ ] Refactor TemplateEngineSettings config parameter, which actually can be also a json or yaml string
 - [ ] Improve error messages
 - [ ] Implement a min heap for the HttpSession Management

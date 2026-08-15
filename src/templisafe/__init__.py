@@ -1,32 +1,39 @@
+from templisafe.content.content import ContentType
+from templisafe.core.util import DiagnosticPolicy
+from templisafe.settings import *
+from templisafe.template.template_model import *
 from templisafe.templater import Templater
 from templisafe.templater_factory import TemplaterFactory
-
-from templisafe.template.template_model import *
-from templisafe.settings import *
-from templisafe.content.content import ContentType
-from templisafe.util import DiagnosticPolicy
 
 __all__ = [
     "Templater",
     "TemplaterFactory",
-    
     "Template",
     "Schema",
-    "Binding", "Variant", "VariantSet", "Parameterization",
-    "CompilationSpec", "Compilation",
-    "RenderingSpec", "Rendering",
+    "Binding",
+    "Variant",
+    "VariantSet",
+    "Parameterization",
+    "CompilationSpec",
+    "Compilation",
+    "RenderingSpec",
+    "Rendering",
     "Build",
     "Outcome",
     "Diagnostic",
-
-    "Settings", "SettingsKind",
+    "Settings",
+    "SettingsKind",
     "CompilerSettings",
     "RendererSettings",
-    "SourceKind", "SourceSettings", "InlineSourceSettings", "LocalSourceSettings",
-    "TemplateEngineKind", "TemplateEngineSettings",
+    "SourceKind",
+    "SourceSettings",
+    "InlineSourceSettings",
+    "LocalSourceSettings",
+    "TemplateEngineKind",
+    "TemplateEngineSettings",
     "TemplateParserSettings",
     "SchemaParserSettings",
     "VariantParserSettings",
-
-    "ContentType", "DiagnosticPolicy"
+    "ContentType",
+    "DiagnosticPolicy",
 ]

@@ -38,12 +38,14 @@ class SettingsParser:
         config_validated: dict[str, Any] = self._validate_config(config)
         return Settings.from_dict(config_validated)
 
+
 class SourceSettingsParser(SettingsParser):
     """Parser for `SourceSettings` objects."""
 
     def parse(self, config: Config) -> Settings:
         config_validated: dict[str, Any] = self._validate_config(config)
         return SourceSettings.from_dict(config_validated)
+
 
 __all__ = [
     "Config",

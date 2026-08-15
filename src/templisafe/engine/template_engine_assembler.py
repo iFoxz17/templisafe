@@ -1,23 +1,28 @@
-from templisafe.engine.template_engine_manager import TemplateEngineFactory, TemplateEngineManager
+from templisafe.engine.template_engine_manager import (
+    TemplateEngineFactory,
+    TemplateEngineManager,
+)
+from templisafe.engine.template_engine_resolver import TemplateEngineResolver
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
-from templisafe.engine.template_engine_resolver import TemplateEngineResolver
-#from templisafe.util import DEFAULT_MANAGER_SETTINGS
 
-DEFAULT_MANAGER_SETTINGS_YAML: str = '''
+# from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
+
+DEFAULT_MANAGER_SETTINGS_YAML: str = """
 cache: false
-'''
+"""
+
 
 class TemplateEngineAssembler:
     """Assembles a `TemplateEngineResolver` with all necessary components."""
 
-    __slots__ : tuple[str, ...] = ()
+    __slots__: tuple[str, ...] = ()
 
     def assemble(
-            self, 
-            manager_settings: ManagerSettings | None = None,
-            default_template_engine_settings: TemplateEngineSettings | None = None
-            ) -> TemplateEngineResolver:
+        self,
+        manager_settings: ManagerSettings | None = None,
+        default_template_engine_settings: TemplateEngineSettings | None = None,
+    ) -> TemplateEngineResolver:
         """
         Create and return a fully initialized `TemplateEngineResolver`.
 
@@ -37,14 +42,11 @@ class TemplateEngineAssembler:
         factory: TemplateEngineFactory = TemplateEngineFactory()
         manager: TemplateEngineManager = TemplateEngineManager(
             settings=manager_settings or ManagerSettings.from_yaml(DEFAULT_MANAGER_SETTINGS_YAML),
-            factory=factory
+            factory=factory,
         )
         resolver: TemplateEngineResolver = TemplateEngineResolver(
             template_engine_manager=manager,
-            default_settings=(
-                default_template_engine_settings or 
-                TemplateEngineSettings.create()
-            )
+            default_settings=(default_template_engine_settings or TemplateEngineSettings.create()),
         )
 
         return resolver

@@ -1,6 +1,7 @@
 from templisafe.parser.config.config_parser import Config
 from templisafe.parser.schema.schema_parser import Schema, SchemaParser
 
+
 class SchemaProvider:
     """Provides `Schema` instances by delegating parsing to a `SchemaParser`."""
 

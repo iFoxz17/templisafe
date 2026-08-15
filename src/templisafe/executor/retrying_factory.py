@@ -1,7 +1,6 @@
-from typing import Any, Callable
 import logging
-from tenacity.stop import stop_base
-from tenacity.wait import wait_base
+from typing import Any, Callable
+
 from tenacity import (
     RetryCallState,
     Retrying,
@@ -10,27 +9,29 @@ from tenacity import (
     retry_if_exception_type,
     retry_if_result,
     retry_never,
-    stop_after_attempt, 
+    stop_after_attempt,
     stop_after_delay,
-    stop_any, 
-    stop_never, 
-    wait_fixed, 
+    stop_any,
+    stop_never,
+    wait_chain,
     wait_exponential,
-    wait_none, 
-    wait_random, 
-    wait_chain
+    wait_fixed,
+    wait_none,
+    wait_random,
 )
+from tenacity.stop import stop_base
+from tenacity.wait import wait_base
 
 from templisafe.settings.source_executor_settings import (
-    StopSettings, 
+    RetryConditionSettings,
+    StopSettings,
+    TenacitySettings,
     WaitSettings,
-    RetryConditionSettings,   
-    TenacitySettings
 )
-
 
 logger = logging.getLogger("templisafe.retry")
 logger.setLevel(logging.INFO)
+
 
 def log_retry_attempt(retry_state: RetryCallState) -> None:
     if retry_state.outcome is None:
@@ -40,7 +41,7 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
     idle_for: float = retry_state.idle_for
     retry_msg: str = f" Retrying in {idle_for} s" if idle_for else ""
     exc: BaseException | None = retry_state.outcome.exception()
-    
+
     msg: str
     log_fun: Callable
     if exc is not None:
@@ -48,7 +49,7 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
             "Attempt #%d failed for function '%s' with exception: %s." + retry_msg,
             retry_state.attempt_number,
             func_name,
-            exc
+            exc,
         )
     else:
         result = retry_state.outcome.result()
@@ -56,8 +57,9 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
             "Attempt #%d for function '%s' returned result triggering retry: %s." + retry_msg,
             retry_state.attempt_number,
             func_name,
-            result
+            result,
         )
+
 
 class RetryingFactory:
     """
@@ -65,10 +67,10 @@ class RetryingFactory:
 
     For each part of the policy (stop, wait, retry), the factory instantiates the
     corresponding Tenacity strategy only if at least one of the relevant fields
-    is not `None`. Any other field of the specific policy strategy left as `None` 
-    is filled with Tenacity library defaults. 
-    
-    When more than one strategy applies to a given part of the policy, the factory merges 
+    is not `None`. Any other field of the specific policy strategy left as `None`
+    is filled with Tenacity library defaults.
+
+    When more than one strategy applies to a given part of the policy, the factory merges
     them into a composite strategy that respects all configured behaviors.
     """
 
@@ -90,7 +92,7 @@ class RetryingFactory:
             return stop_never
 
         return stop_any(*stops)
-    
+
     def _build_wait(self, wait_policy: WaitSettings) -> wait_base:
         waits: list[wait_base] = []
         if wait_policy.fixed_seconds is not None:
@@ -100,7 +102,12 @@ class RetryingFactory:
             k: v
             for k, v in zip(
                 ("multiplier", "exp_base", "min", "max"),
-                (wait_policy.multiplier_seconds, wait_policy.exponential_base, wait_policy.min_seconds, wait_policy.max_seconds)
+                (
+                    wait_policy.multiplier_seconds,
+                    wait_policy.exponential_base,
+                    wait_policy.min_seconds,
+                    wait_policy.max_seconds,
+                ),
             )
             if v is not None
         }
@@ -112,20 +119,20 @@ class RetryingFactory:
 
         if not waits:
             return wait_none()
-    
+
         return wait_chain(*waits)
-    
+
     def _build_retry_condition(self, retry_policy: RetryConditionSettings) -> retry_base:
         retries: list[retry_base] = []
 
         retries.append(retry_if_exception_type(Exception))
-        
+
         if retry_policy.retry_if_result_none:
-            retries.append(retry_if_result( lambda result: not isinstance(result, str)))
+            retries.append(retry_if_result(lambda result: not isinstance(result, str)))
 
         if not retries:
             return retry_never
-        
+
         return retry_any(*retries)
 
     def create(self, policy: TenacitySettings) -> Retrying:
@@ -143,11 +150,11 @@ class RetryingFactory:
             A Tenacity `Retrying` object ready to execute functions with the
             specified resilience policy.
         """
-        
+
         return Retrying(
             stop=self._build_stop(policy.stop),
             wait=self._build_wait(policy.wait),
             retry=self._build_retry_condition(policy.retry_conditions),
             reraise=policy.reraise,
-            before_sleep=log_retry_attempt
+            before_sleep=log_retry_attempt,
         )

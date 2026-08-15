@@ -1,5 +1,6 @@
 from templisafe.parser.config.config_parser import Config, ConfigParser
 
+
 class ConfigProvider:
     """Provides `Config` instances by delegating parsing to a `ConfigParser`."""
 

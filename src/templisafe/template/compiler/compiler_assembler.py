@@ -1,19 +1,23 @@
-from templisafe.template.compiler.compiler_manager import CompilerFactory, CompilerManager
-from templisafe.settings.manager_settings import ManagerSettings
+from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
 from templisafe.settings.compiler_settings import CompilerSettings
+from templisafe.settings.manager_settings import ManagerSettings
+from templisafe.template.compiler.compiler_manager import (
+    CompilerFactory,
+    CompilerManager,
+)
 from templisafe.template.compiler.compiler_resolver import CompilerResolver
-from templisafe.util import DEFAULT_MANAGER_SETTINGS
+
 
 class CompilerAssembler:
     """Assembles a `CompilerResolver` with all necessary components."""
 
-    __slots__ : tuple[str, ...] = ()
+    __slots__: tuple[str, ...] = ()
 
     def assemble(
-            self, 
-            manager_settings: ManagerSettings | None = None,
-            default_compiler_settings: CompilerSettings | None = None
-            ) -> CompilerResolver:
+        self,
+        manager_settings: ManagerSettings | None = None,
+        default_compiler_settings: CompilerSettings | None = None,
+    ) -> CompilerResolver:
         """
         Create and return a fully initialized `CompilerResolver`.
 
@@ -32,14 +36,11 @@ class CompilerAssembler:
 
         factory: CompilerFactory = CompilerFactory()
         manager: CompilerManager = CompilerManager(
-            settings=manager_settings or DEFAULT_MANAGER_SETTINGS,
-            factory=factory
+            settings=manager_settings or DEFAULT_MANAGER_SETTINGS, factory=factory
         )
         resolver: CompilerResolver = CompilerResolver(
             compiler_manager=manager,
-            default_settings=(
-                default_compiler_settings or CompilerSettings.create()
-            )
+            default_settings=(default_compiler_settings or CompilerSettings.create()),
         )
 
         return resolver

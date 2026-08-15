@@ -1,0 +1,35 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff check
+        entry: ruff check src test
+        language: python
+        additional_dependencies:
+          - ruff>=0.16.3
+        pass_filenames: false
+
+      - id: ruff-format-check
+        name: Ruff format check
+        entry: ruff format --check src test
+        language: python
+        additional_dependencies:
+          - ruff>=0.16.3
+        pass_filenames: false
+
+      - id: mypy
+        name: mypy
+        entry: mypy src
+        language: python
+        additional_dependencies:
+          - mypy>=1.19.1
+          - PyYAML>=6.0.3
+          - Jinja2>=3.1.6
+          - pydantic>=2.12.5
+          - overrides>=7.7.0
+          - requests>=2.32.5
+          - aiohttp>=3.13.3
+          - tenacity>=9.1.2
+          - types-PyYAML>=6.0.12.20260815
+          - types-requests>=2.33.0.20260712
+        pass_filenames: false

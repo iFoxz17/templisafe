@@ -1,5 +1,6 @@
 from templisafe.parser.config.config_parser import Config
-from templisafe.parser.variant.variant_parser import VariantSet, VariantParser
+from templisafe.parser.variant.variant_parser import VariantParser, VariantSet
+
 
 class VariantProvider:
     """Provides `Variant` instances by delegating parsing to a `VariantParser`."""

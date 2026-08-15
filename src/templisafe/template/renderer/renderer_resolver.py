@@ -1,6 +1,7 @@
+from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.template.renderer.renderer import Renderer
 from templisafe.template.renderer.renderer_manager import RendererManager
-from templisafe.settings.renderer_settings import RendererSettings
+
 
 class RendererResolver:
     """Resolves `Renderer` instances."""
@@ -8,13 +9,13 @@ class RendererResolver:
     __slots__: tuple[str, ...] = ("_default_settings", "_renderer_manager")
 
     def __init__(
-            self, 
-            default_settings: RendererSettings,
-            renderer_manager: RendererManager,
-            ) -> None:
+        self,
+        default_settings: RendererSettings,
+        renderer_manager: RendererManager,
+    ) -> None:
         self._default_settings: RendererSettings = default_settings
         self._renderer_manager: RendererManager = renderer_manager
-        
+
     def resolve(self, renderer: Renderer | RendererSettings | None = None) -> Renderer:
         """
         Resolve a `Renderer` instance.
@@ -37,6 +38,6 @@ class RendererResolver:
 
         if isinstance(renderer, Renderer):
             return renderer
-        
-        settings: RendererSettings = renderer or self._default_settings 
+
+        settings: RendererSettings = renderer or self._default_settings
         return self._renderer_manager.get_or_create(settings)

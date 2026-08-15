@@ -4,11 +4,13 @@ Loaders for structured configuration formats (YAML, JSON, TOML, XML).
 
 from abc import ABC, abstractmethod
 from typing import Any
+
 from overrides import overrides
 
 from templisafe.exceptions.config_error import ConfigError
 
 Config = dict[str, Any] | list[Any]
+
 
 class ConfigParser(ABC):
     """Abstract base class for configuration parsers."""
@@ -36,7 +38,7 @@ class ConfigParser(ABC):
             If configuration parsing fails or the result is invalid.
         """
         pass
-    
+
     def _finalize_import(self, config: Any, err_msg: str) -> Config:
         if not isinstance(config, (dict, list)):
             raise ConfigError(err_msg)
@@ -53,14 +55,12 @@ class YamlParser(ConfigParser):
         try:
             config: Any = yaml.safe_load(payload)
         except yaml.YAMLError as e:
-            raise ConfigError(
-                f"Failed to parse YAML configuration: {e}"
-            ) from e
+            raise ConfigError(f"Failed to parse YAML configuration: {e}") from e
 
         return self._finalize_import(
             config,
-            f"YAML configuration must be a list or a mapping, got {type(config).__name__}"
-            )
+            f"YAML configuration must be a list or a mapping, got {type(config).__name__}",
+        )
 
 
 class JsonParser(ConfigParser):
@@ -73,15 +73,12 @@ class JsonParser(ConfigParser):
         try:
             config: Any = json.loads(payload)
         except json.JSONDecodeError as e:
-            raise ConfigError(
-                "Failed to parse JSON configuration "
-                f"(line {e.lineno}, column {e.colno}): {e.msg}"
-            ) from e
+            raise ConfigError(f"Failed to parse JSON configuration (line {e.lineno}, column {e.colno}): {e.msg}") from e
 
         return self._finalize_import(
             config,
-            f"JSON configuration must be a list or an object, got {type(config).__name__}"
-            )
+            f"JSON configuration must be a list or an object, got {type(config).__name__}",
+        )
 
 
 class TomlParser(ConfigParser):
@@ -90,27 +87,20 @@ class TomlParser(ConfigParser):
     @overrides
     def parse(self, payload: str) -> Config:
         try:
-            import tomllib                      # Python 3.11+
+            toml_module: Any = __import__("tomllib")
         except ModuleNotFoundError:
             try:
-                import tomli as tomllib         # type: ignore[import-not-found]
+                toml_module = __import__("tomli")
             except ModuleNotFoundError as e:
-                raise ConfigError(
-                    "TOML support requires Python >= 3.11 or the 'tomli' package installed"
-                ) from e
+                raise ConfigError("TOML support requires Python >= 3.11 or the 'tomli' package installed") from e
 
         try:
-            config: Any = tomllib.loads(payload)
+            config: Any = toml_module.loads(payload)
         except Exception as e:
-            raise ConfigError(
-                f"Failed to parse TOML configuration: {e}"
-            ) from e
-        
-        return self._finalize_import(
-            config,
-            f"TOML configuration must be a table, got {type(config).__name__}"
-            )
-    
+            raise ConfigError(f"Failed to parse TOML configuration: {e}") from e
+
+        return self._finalize_import(config, f"TOML configuration must be a table, got {type(config).__name__}")
+
 
 class XmlParser(ConfigParser):
     """XML configuration parser."""
@@ -120,9 +110,7 @@ class XmlParser(ConfigParser):
         try:
             import xml.etree.ElementTree as ET
         except ModuleNotFoundError as e:
-            raise ConfigError(
-                "XML support requires the standard library 'xml.etree.ElementTree'"
-            ) from e
+            raise ConfigError("XML support requires the standard library 'xml.etree.ElementTree'") from e
 
         try:
             root = ET.fromstring(payload)
@@ -151,7 +139,7 @@ class XmlParser(ConfigParser):
 
         return self._finalize_import(
             config,
-            f"XML configuration must have a valid root element, got {type(config).__name__}"
+            f"XML configuration must have a valid root element, got {type(config).__name__}",
         )
 
 

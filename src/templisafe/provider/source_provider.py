@@ -4,12 +4,17 @@ from templisafe.source.content_type_resolver import ContentTypeResolver
 from templisafe.source.source import Source
 from templisafe.source.source_resolver import SourceResolver
 
+
 class SourceProvider:
     """Provides `Source` instances from either `Source` objects or `SourceSettings` configurations."""
-    
+
     __slots__: tuple[str, ...] = ("_source_resolver", "_content_type_resolver")
 
-    def __init__(self, source_resolver: SourceResolver, content_type_resolver: ContentTypeResolver) -> None:
+    def __init__(
+        self,
+        source_resolver: SourceResolver,
+        content_type_resolver: ContentTypeResolver,
+    ) -> None:
         self._source_resolver: SourceResolver = source_resolver
         self._content_type_resolver: ContentTypeResolver = content_type_resolver
 
@@ -32,6 +37,5 @@ class SourceProvider:
             if not source.has_content_type:
                 content_type: ContentType = self._content_type_resolver.resolve(source)
                 source = source.model_copy(update={"content_type": content_type})
-        
+
         return self._source_resolver.resolve(source)
-        

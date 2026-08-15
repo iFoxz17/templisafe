@@ -1,6 +1,7 @@
 from templisafe.parser.config.config_parser import Config
 from templisafe.parser.settings.settings_parser import Settings, SettingsParser
 
+
 class SettingsProvider:
     """Provides `Settings` instances by delegating parsing to a `SettingsParser`."""
 
