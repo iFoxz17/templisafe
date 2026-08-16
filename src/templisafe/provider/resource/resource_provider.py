@@ -69,7 +69,7 @@ class ResourceProvider:
         """Delegates to the designated provider to return a `VariantSet` instance."""
         return self._variant_provider.provide(config, parser)
 
-    def provide_compilation(self, template: Template, schema: Schema, compiler: Compiler) -> Compilation:
+    def provide_compilation(self, template: Template, schema: Schema | None, compiler: Compiler) -> Compilation:
         """Delegates to the designated provider to return a `Compilation` instance."""
         return self._compilation_provider.provide(template, schema, compiler)
 

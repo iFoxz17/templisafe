@@ -1,8 +1,6 @@
 import pytest
 from tenacity import Retrying
 
-from templisafe.exceptions.source_executor_error import UnsupportedExecutorStrategy
-from templisafe.executor.retrying_factory import RetryingFactory
 from templisafe.executor.sequential_source_executor import SequentialSourceExecutor
 from templisafe.executor.source_executor_manager import (
     SourceExecutorFactory,
@@ -13,7 +11,6 @@ from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.source_executor_settings import (
     SourceExecutorSettings,
     SourceExecutorStrategy,
-    TenacitySettings,
 )
 
 # -----------------------------

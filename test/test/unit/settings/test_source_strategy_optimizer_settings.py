@@ -1,11 +1,8 @@
-from enum import Enum, auto
 from types import MappingProxyType
 
 import pytest
 
-from templisafe.executor.source_executor import SourceRequest
 from templisafe.settings.source_strategy_optimizer_settings import (
-    _SOURCE_LATENCY_MAP,
     SourceLatencyProfile,
     StrategyOptimizerSettings,
 )

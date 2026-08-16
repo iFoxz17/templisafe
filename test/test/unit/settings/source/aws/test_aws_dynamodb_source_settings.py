@@ -2,7 +2,6 @@ import json
 
 import pytest
 
-from templisafe.exceptions.settings_error import SettingsError
 from templisafe.settings.source.aws.aws_dynamodb_source_settings import (
     AwsDynamoDBSourceSettings,
 )

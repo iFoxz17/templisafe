@@ -1,6 +1,3 @@
-from typing import Any
-
-
 class HttpSessionError(Exception):
     """Base class for HTTP session-related exceptions."""
 

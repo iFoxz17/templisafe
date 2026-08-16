@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from templisafe.parser.config.config_parser import Config

@@ -1,5 +1,3 @@
-import pytest
-
 from templisafe.parser.schema.schema_parser_assembler import (
     DEFAULT_MANAGER_SETTINGS,
     SchemaParserAssembler,

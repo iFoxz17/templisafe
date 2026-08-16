@@ -1,8 +1,5 @@
 import json
 
-import pytest
-
-from templisafe.exceptions.settings_error import SettingsError
 from templisafe.settings.source.custom_source_settings import CustomSourceSettings
 from templisafe.settings.source.source_settings import SourceKind, SourceSettings
 

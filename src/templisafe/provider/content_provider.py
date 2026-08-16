@@ -112,7 +112,16 @@ class ContentProvider:
 
         executor: SourceExecutor = self._source_executor_resolver.resolve(source_executor)
 
-        request: SourceExecutorRequest = self._create_request(source_group)
-        result: SourceExecutorResult = executor.execute(request)
-        data_group: ContentGroup = self._create_content_group(result)
-        return data_group
+        opened: list[Source] = []
+        try:
+            for source in source_group.sources.values():
+                source.open()
+                opened.append(source)
+
+            request: SourceExecutorRequest = self._create_request(source_group)
+            result: SourceExecutorResult = executor.execute(request)
+            data_group: ContentGroup = self._create_content_group(result)
+            return data_group
+        finally:
+            for source in reversed(opened):
+                source.close()

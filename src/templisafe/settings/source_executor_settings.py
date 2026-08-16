@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
 from templisafe.settings.settings import Settings, SettingsKind
 

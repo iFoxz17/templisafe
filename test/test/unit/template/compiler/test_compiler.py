@@ -1,8 +1,9 @@
-from typing import Any
+from typing import Annotated, Any
 
 import pytest
 from pydantic import Field, create_model
 
+from templisafe.core.metadata import Metadata, MetaValue
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.template.compiler.compiler import Compiler
 from templisafe.template.template_model import Compilation, Outcome, Schema, Template
@@ -15,6 +16,10 @@ from templisafe.template.template_model import Compilation, Outcome, Schema, Tem
 @pytest.fixture
 def compiler_settings() -> CompilerSettings:
     return CompilerSettings(index_key="_index")
+
+
+def indexed(annotation: Any, index: int) -> Any:
+    return Annotated[annotation, Metadata({"_index": MetaValue(index)})]
 
 
 # ========================
@@ -113,9 +118,9 @@ def test_compile_with_unused_variables_generates_warnings(
     compiler_settings: CompilerSettings,
 ):
     fields: dict[str, Any] = {
-        "x": (int, Field(..., json_schema_extra={"_index": 0})),
-        "y": (str, Field(..., json_schema_extra={"_index": 1})),
-        "z": (float, Field(..., json_schema_extra={"_index": 2})),
+        "x": (indexed(int, 0), Field(...)),
+        "y": (indexed(str, 1), Field(...)),
+        "z": (indexed(float, 2), Field(...)),
     }
     model_cls = create_model("TestSchema", **fields)
     schema = Schema(model_cls=model_cls)
@@ -136,7 +141,7 @@ def test_compile_with_unused_variables_generates_warnings(
 def test_compile_with_undeclared_variables_generates_error(
     compiler_settings: CompilerSettings,
 ):
-    fields: dict[str, Any] = {"x": (int, Field(..., json_schema_extra={"_index": 0}))}
+    fields: dict[str, Any] = {"x": (indexed(int, 0), Field(...))}
     model_cls = create_model("TestSchema", **fields)
     schema = Schema(model_cls=model_cls)
     template = Template(template_str="SELECT {{ x }}, {{ y }} FROM Table", vars=set(["x", "y"]))
@@ -155,8 +160,8 @@ def test_compile_with_undeclared_variables_generates_error(
 
 def test_compile_with_unused_and_undeclared_mixed(compiler_settings: CompilerSettings):
     fields: dict[str, Any] = {
-        "x": (int, Field(..., json_schema_extra={"_index": 0})),
-        "z": (str, Field(..., json_schema_extra={"_index": 1})),
+        "x": (indexed(int, 0), Field(...)),
+        "z": (indexed(str, 1), Field(...)),
     }
     model_cls = create_model("TestSchema", **fields)
     schema = Schema(model_cls=model_cls)

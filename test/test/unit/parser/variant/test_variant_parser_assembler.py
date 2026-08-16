@@ -1,5 +1,3 @@
-import pytest
-
 from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
 from templisafe.parser.variant.variant_parser_assembler import VariantParserAssembler
 from templisafe.parser.variant.variant_parser_manager import VariantParserManager

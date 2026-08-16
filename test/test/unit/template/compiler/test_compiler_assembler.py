@@ -1,5 +1,3 @@
-import pytest
-
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.template.compiler.compiler_assembler import (

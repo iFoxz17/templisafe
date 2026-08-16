@@ -4,7 +4,7 @@ import pytest
 from pydantic import BaseModel
 
 from templisafe.engine.template_engine import TemplateEngine
-from templisafe.parser.config.config_parser import Config, ConfigParser
+from templisafe.parser.config.config_parser import ConfigParser
 from templisafe.parser.schema.schema_parser import Schema, SchemaParser
 from templisafe.parser.settings.settings_parser import Settings, SettingsParser
 from templisafe.parser.template.template_parser import Template, TemplateParser

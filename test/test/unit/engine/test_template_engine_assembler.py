@@ -1,5 +1,3 @@
-import pytest
-
 from templisafe.engine.template_engine_assembler import (
     DEFAULT_MANAGER_SETTINGS_YAML,
     TemplateEngineAssembler,

@@ -1,7 +1,4 @@
-import pytest
-
 from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
-from templisafe.executor.retrying_factory import RetryingFactory
 from templisafe.executor.source_executor_assembler import (
     _DEFAULT_EXECUTOR_SETTINGS,
     SourceExecutorAssembler,

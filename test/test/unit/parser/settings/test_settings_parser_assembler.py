@@ -1,5 +1,3 @@
-import pytest
-
 from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
 from templisafe.parser.settings.settings_parser_assembler import SettingsParserAssembler
 from templisafe.parser.settings.settings_parser_resolver import SettingsParserResolver

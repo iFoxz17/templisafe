@@ -3,7 +3,7 @@ from typing import Any, TypeVar
 
 from pydantic import Field, model_validator
 
-from templisafe.core.util import dict_to_frozenset
+from templisafe.core.collections import dict_to_frozenset
 from templisafe.settings.settings import Settings, SettingsKind
 
 T = TypeVar("T", bound="SchemaParserSettings")

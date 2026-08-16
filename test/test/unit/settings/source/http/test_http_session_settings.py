@@ -1,7 +1,7 @@
 import pytest
 
 from templisafe.exceptions.settings_error import SettingsError
-from templisafe.settings.settings import Settings, SettingsKind
+from templisafe.settings.settings import Settings
 from templisafe.settings.source.http.http_async_session_settings import (
     HttpAsyncSessionSettings,
     HttpSyncSessionSettings,

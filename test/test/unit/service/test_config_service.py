@@ -5,11 +5,12 @@ from unittest.mock import Mock
 import pytest
 
 from templisafe.content.content import Content, ContentType
-from templisafe.core.task import TaskBundle, TaskType
+from templisafe.core.field_selector import FieldSelector
 from templisafe.parser.config.config_parser import ConfigParser
 from templisafe.provider.config_parser_provider import ConfigParserProvider
+from templisafe.provider.resource.resource_provider import ResourceProvider
 from templisafe.service.config_service import ConfigService
-from templisafe.service.field_selector import FieldSelector
+from templisafe.task.task import TaskBundle, TaskType
 
 
 class DummyDataBundle(TaskBundle):
@@ -60,13 +61,22 @@ def mock_config_parser_provider(mock_parser: Mock) -> Mock:
 
 
 @pytest.fixture
+def mock_resource_provider(mock_parser: Mock) -> Mock:
+    provider = Mock(spec=ResourceProvider)
+    provider.provide_config.side_effect = lambda payload, parser: parser.parse(payload)
+    return provider
+
+
+@pytest.fixture
 def config_service(
     mock_config_parser_provider: Mock,
     mock_field_selector: Mock,
+    mock_resource_provider: Mock,
 ) -> ConfigService:
     return ConfigService(
         config_parser_provider=mock_config_parser_provider,
         field_selector=mock_field_selector,
+        resource_provider=mock_resource_provider,
     )
 
 
@@ -86,6 +96,7 @@ def test_config_service_calls_provider_correctly(
     config_service: ConfigService,
     dummy_data_bundle: DummyDataBundle,
     mock_config_parser_provider: Mock,
+    mock_resource_provider: Mock,
 ):
     _ = config_service.process(dummy_data_bundle)
 
@@ -93,3 +104,4 @@ def test_config_service_calls_provider_correctly(
     content_types = {dummy_data_bundle.content1.type_, dummy_data_bundle.content2.type_}
     called_types = {call.args[0] for call in calls}
     assert called_types == content_types
+    assert mock_resource_provider.provide_config.call_count == 2

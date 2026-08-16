@@ -9,7 +9,9 @@ version = "0.1.0"
 description = "Safe, flexible and fully configurable templating for Python."
 
 readme = "README.md"
-authors = [{name = "Mattia Volpato"}]
+authors = [
+    { name = "Mattia Volpato", email = "volpato.mattia.2001@gmail.com" }
+]
 license = "MIT"
 requires-python = ">=3.11"
 
@@ -58,10 +60,11 @@ packages = {find = {where = ["src"]}}
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+extend-exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "E501", "F", "I"]
-ignore = ["E402", "F401", "F403", "F405", "F541", "F841", "F842"]
+ignore = ["E402", "F403", "F405", "F541", "F841", "F842"]
 
 [tool.ruff.format]
 line-ending = "auto"

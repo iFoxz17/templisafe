@@ -3,7 +3,6 @@ import json
 import pytest
 import yaml
 
-from templisafe.exceptions.settings_error import SettingsError
 from templisafe.settings.schema_parser_settings import SchemaParserSettings, Settings
 
 # ---------------------------------------------------------------------------

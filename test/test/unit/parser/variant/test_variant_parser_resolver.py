@@ -6,7 +6,6 @@ from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
 from templisafe.parser.variant.variant_parser import VariantParser
 from templisafe.parser.variant.variant_parser_manager import VariantParserManager
 from templisafe.parser.variant.variant_parser_resolver import VariantParserResolver
-from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.variant_parser_settings import VariantParserSettings
 
 # -----------------------------

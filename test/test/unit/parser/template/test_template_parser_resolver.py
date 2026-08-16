@@ -1,5 +1,3 @@
-import pytest
-
 from templisafe.parser.template.template_parser import TemplateParser
 from templisafe.parser.template.template_parser_resolver import TemplateParserResolver
 from templisafe.settings.template_parser_settings import TemplateParserSettings

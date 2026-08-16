@@ -636,6 +636,108 @@ def test_input_is_a_list_of_non_dicts(settings):
         parser.parse(config)
 
 
+def test_empty_variants_mapping_creates_empty_default_variant(settings):
+    parser = VariantParser(settings)
+    yaml_cfg = safe_load(
+        """
+variants: {}
+"""
+    )
+
+    vset = parser.parse(yaml_cfg)
+
+    assert vset.names == {"default_1"}
+    variant = vset.variants[0]
+    assert variant.name == "default_1"
+    assert variant.bindings == []
+    assert variant.names == set()
+
+
+def test_variants_context_must_be_mapping_or_list(settings):
+    parser = VariantParser(settings)
+    yaml_cfg = safe_load(
+        """
+variants: 42
+"""
+    )
+
+    with pytest.raises(IllegalVariantError):
+        parser.parse(yaml_cfg)
+
+
+@pytest.mark.parametrize(
+    "yaml_str",
+    [
+        """
+variants:
+  name: missing_bindings
+""",
+        """
+variants:
+  bindings:
+    param1: 1
+""",
+        """
+variants:
+  name: ""
+  bindings:
+    param1: 1
+""",
+    ],
+)
+def test_explicit_variant_requires_valid_name_and_bindings(settings, yaml_str):
+    parser = VariantParser(settings)
+    yaml_cfg = safe_load(yaml_str)
+
+    with pytest.raises(IllegalVariantError):
+        parser.parse(yaml_cfg)
+
+
+def test_explicit_variant_list_items_must_be_mappings(settings):
+    parser = VariantParser(settings)
+    yaml_cfg = safe_load(
+        """
+variants:
+  - name: valid
+    bindings:
+      param1: 1
+  - not-a-variant-mapping
+"""
+    )
+
+    with pytest.raises(IllegalVariantError):
+        parser.parse(yaml_cfg)
+
+
+def test_custom_variant_parser_keys_are_normalized():
+    settings = VariantParserSettings(
+        variants_key="cases",
+        default_variants_name="case",
+        variant_name_key="id",
+        bindings_key="values",
+    )
+    parser = VariantParser(settings)
+    yaml_cfg = safe_load(
+        """
+cases:
+  - id: custom
+    values:
+      name: Ada
+      score: 42
+"""
+    )
+
+    vset = parser.parse(yaml_cfg)
+
+    assert vset.names == {"custom"}
+    variant = vset.variants[0]
+    assert variant.name == "custom"
+    name = variant.get("name")
+    score = variant.get("score")
+    assert name is not None and name.value == "Ada" and name.index == 0
+    assert score is not None and score.value == 42 and score.index == 1
+
+
 # -----------------------------
 # Duplicate variant names
 # -----------------------------

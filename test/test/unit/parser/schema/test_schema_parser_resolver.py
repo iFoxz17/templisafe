@@ -3,11 +3,9 @@ from typing import Any
 import pytest
 
 from templisafe.core.util import DEFAULT_MANAGER_SETTINGS
-from templisafe.parser.schema.schema_loader import SCHEMA_PARSER_SETTINGS_YAML
 from templisafe.parser.schema.schema_parser import SchemaParser
 from templisafe.parser.schema.schema_parser_manager import SchemaParserManager
 from templisafe.parser.schema.schema_parser_resolver import SchemaParserResolver
-from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
 
 # -----------------------------

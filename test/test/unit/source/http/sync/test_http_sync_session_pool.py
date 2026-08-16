@@ -5,11 +5,10 @@ from unittest.mock import Mock
 import pytest
 from requests import Session
 
-from templisafe.core.diagnostic_handler import DiagnosticHandler
 from templisafe.core.util import DiagnosticPolicy
 from templisafe.exceptions.http_session_error import HttpSessionOverflowError
+from templisafe.handler.diagnostic_handler import DiagnosticHandler
 from templisafe.source.http.sync.http_sync_session_pool import (
-    HttpSessionSlot,
     HttpSyncSessionPool,
     HttpSyncSessionPoolThrottled,
 )

@@ -13,7 +13,7 @@ class CompilationProvider:
     def provide(
         self,
         template: Template,
-        schema: Schema,
+        schema: Schema | None,
         compiler: Compiler,
     ) -> Compilation:
         """

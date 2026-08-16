@@ -2,6 +2,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from templisafe.core.metadata import metadata_value
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.template.template_model import (
     Compilation,
@@ -23,8 +24,7 @@ class Compiler:
 
     def _extract_index(self, model_type: type[BaseModel], var_name: str) -> int | None:
         field = model_type.model_fields[var_name]
-        json_dict = field.json_schema_extra
-        index_value = json_dict.get(self._settings.index_key) if isinstance(json_dict, dict) else None
+        index_value = metadata_value(field.metadata, self._settings.index_key)
         index: int | None = index_value if isinstance(index_value, int) else None
         return index
 

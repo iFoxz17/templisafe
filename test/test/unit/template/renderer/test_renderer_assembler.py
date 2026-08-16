@@ -1,5 +1,3 @@
-import pytest
-
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.template.renderer.renderer_assembler import (

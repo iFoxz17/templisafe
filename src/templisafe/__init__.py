@@ -1,5 +1,6 @@
 from templisafe.content.content import ContentType
 from templisafe.core.util import DiagnosticPolicy
+from templisafe.input import SchemaInput, TemplateInput, VariantInput, VariantSetInput
 from templisafe.settings import *
 from templisafe.template.template_model import *
 from templisafe.templater import Templater
@@ -8,6 +9,10 @@ from templisafe.templater_factory import TemplaterFactory
 __all__ = [
     "Templater",
     "TemplaterFactory",
+    "TemplateInput",
+    "SchemaInput",
+    "VariantInput",
+    "VariantSetInput",
     "Template",
     "Schema",
     "Binding",

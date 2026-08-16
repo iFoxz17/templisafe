@@ -5,8 +5,8 @@ from typing import AsyncGenerator
 
 from aiohttp import ClientSession
 
-from templisafe.core.diagnostic_handler import DiagnosticHandler
 from templisafe.exceptions.http_session_error import HttpSessionOverflowError
+from templisafe.handler.diagnostic_handler import DiagnosticHandler
 from templisafe.source.http.async_.http_async_session_manager import (
     HttpAsyncSessionManager,
 )

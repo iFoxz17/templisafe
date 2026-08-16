@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from tenacity import (
     RetryCallState,
@@ -42,8 +42,6 @@ def log_retry_attempt(retry_state: RetryCallState) -> None:
     retry_msg: str = f" Retrying in {idle_for} s" if idle_for else ""
     exc: BaseException | None = retry_state.outcome.exception()
 
-    msg: str
-    log_fun: Callable
     if exc is not None:
         logger.warning(
             "Attempt #%d failed for function '%s' with exception: %s." + retry_msg,

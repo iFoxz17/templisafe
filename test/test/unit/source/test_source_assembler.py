@@ -1,5 +1,3 @@
-import pytest
-
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.source.content_type_resolver import ContentTypeResolver
 from templisafe.source.source_assembler import DEFAULT_MANAGER_SETTINGS, SourceAssembler

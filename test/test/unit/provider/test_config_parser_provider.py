@@ -1,7 +1,5 @@
 from unittest.mock import Mock
 
-import pytest
-
 from templisafe.content.content import ContentType
 from templisafe.parser.config.config_parser import ConfigParser
 from templisafe.parser.config.config_parser_resolver import ConfigParserResolver

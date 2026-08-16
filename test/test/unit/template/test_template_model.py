@@ -115,10 +115,14 @@ def test_variant_operations():
     assert v.names == {"a", "b"}
     assert len(v.bindings) == 2
     assert v["a"].value == 1
-    del v["a"]
-    assert "a" not in v
+    with pytest.raises(TypeError):
+        del v["a"]
+    assert "a" in v
     with pytest.raises(MissingBindingError):
         _ = v["c"]
+    mapping_copy = v.mapping
+    mapping_copy["a"] = Binding(0, "a", 999)
+    assert v["a"].value == 1
 
 
 def test_variant_set_collection():
@@ -127,6 +131,7 @@ def test_variant_set_collection():
     vset = VariantSet([v1, v2])
     assert vset.names == {"v1", "v2"}
     assert len(vset.variants) == 2
+    assert isinstance(vset.variants, tuple)
 
 
 # ========================

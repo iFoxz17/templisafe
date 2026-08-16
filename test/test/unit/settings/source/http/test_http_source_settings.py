@@ -1,7 +1,5 @@
 import pytest
-from pydantic import ValidationError
 
-from templisafe.exceptions.settings_error import SettingsError
 from templisafe.settings.source.http.http_async_session_settings import (
     HttpAsyncSessionSettings,
     HttpSyncSessionSettings,

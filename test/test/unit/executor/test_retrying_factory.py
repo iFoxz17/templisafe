@@ -1,4 +1,4 @@
-from time import monotonic, sleep
+from time import monotonic
 from typing import Any
 
 import pytest

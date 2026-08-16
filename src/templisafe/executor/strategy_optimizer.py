@@ -1,6 +1,5 @@
 from typing import Iterable
 
-from templisafe.executor.source_executor import SourceRequest
 from templisafe.settings.source_executor_settings import SourceExecutorStrategy
 from templisafe.settings.source_strategy_optimizer_settings import (
     SourceLatencyProfile,

@@ -1,7 +1,7 @@
-import copy
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any, Iterable, Iterator
+from types import MappingProxyType
+from typing import Any, Iterable, Iterator, Mapping
 
 from pydantic import BaseModel
 
@@ -95,11 +95,15 @@ class Variant:
     """Represents a set of bindings for a template."""
 
     name: str
-    _binding_by_name: dict[str, Binding]
+    _binding_by_name: Mapping[str, Binding]
 
     def __init__(self, name: str, bindings: Iterable[Binding] | None = None) -> None:
         object.__setattr__(self, "name", name)
-        object.__setattr__(self, "_binding_by_name", {b.name: b for b in bindings} if bindings else {})
+        object.__setattr__(
+            self,
+            "_binding_by_name",
+            MappingProxyType({b.name: b for b in bindings} if bindings else {}),
+        )
 
     @property
     def names(self) -> set[str]:
@@ -114,16 +118,11 @@ class Variant:
     @property
     def mapping(self) -> dict[str, Binding]:
         """Return a mapping of the bindings by their name."""
-        return copy.deepcopy(self._binding_by_name)
+        return dict(self._binding_by_name)
 
     def get(self, binding_name: str, default: Binding | None = None) -> Binding | None:
         """Return a binding by name or default if not found."""
         return self._binding_by_name.get(binding_name, default)
-
-    def __delitem__(self, binding_name: str) -> None:
-        if binding_name not in self._binding_by_name:
-            raise MissingBindingError(binding_name)
-        del self._binding_by_name[binding_name]
 
     def __getitem__(self, binding_name: str) -> Binding:
         if binding_name not in self._binding_by_name:
@@ -141,7 +140,10 @@ class Variant:
 class VariantSet:
     """Holds multiple template variants for different parameterizations."""
 
-    variants: list[Variant]
+    variants: tuple[Variant, ...]
+
+    def __init__(self, variants: Iterable[Variant] | None = None) -> None:
+        object.__setattr__(self, "variants", tuple(variants or ()))
 
     @property
     def names(self) -> set[str]:
@@ -160,13 +162,13 @@ class Parameterization:
 class RenderingSpec:
     """Represents a rendered template with its parameterizations."""
 
-    _param_by_name: dict[str, Parameterization]
+    _param_by_name: Mapping[str, Parameterization]
 
     def __init__(self, params: Iterable[Parameterization] | None = None) -> None:
         object.__setattr__(
             self,
             "_param_by_name",
-            {p.variant.name: p for p in params} if params else {},
+            MappingProxyType({p.variant.name: p for p in params} if params else {}),
         )
 
     @property
@@ -182,16 +184,11 @@ class RenderingSpec:
     @property
     def mapping(self) -> dict[str, Parameterization]:
         """Return a mapping of the parameterizations by their name."""
-        return copy.deepcopy(self._param_by_name)
+        return dict(self._param_by_name)
 
     def get(self, binding_name: str, default: Parameterization | None = None) -> Parameterization | None:
         """Return a parameterization by name or default if not found."""
         return self._param_by_name.get(binding_name, default)
-
-    def __delitem__(self, binding_name: str) -> None:
-        if binding_name not in self._param_by_name:
-            raise MissingParameterizationError(binding_name)
-        del self._param_by_name[binding_name]
 
     def __getitem__(self, binding_name: str) -> Parameterization:
         if binding_name not in self._param_by_name:

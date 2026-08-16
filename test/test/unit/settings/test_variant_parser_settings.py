@@ -1,9 +1,7 @@
 import json
 
 import pytest
-import yaml
 
-from templisafe.content.content import ContentType
 from templisafe.exceptions.settings_error import SettingsError
 from templisafe.settings.settings import Settings
 from templisafe.settings.variant_parser_settings import VariantParserSettings

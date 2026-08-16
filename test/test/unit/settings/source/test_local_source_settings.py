@@ -1,6 +1,3 @@
-import pytest
-
-from templisafe.exceptions.settings_error import SettingsError
 from templisafe.settings.source.local_source_settings import LocalSourceSettings
 from templisafe.settings.source.source_settings import SourceKind, SourceSettings
 

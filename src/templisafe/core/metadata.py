@@ -1,11 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, ItemsView, Iterator, KeysView, Mapping, ValuesView
-
-# ============================================================
-# MetaValue
-# ============================================================
+from typing import Any, ItemsView, Iterable, Iterator, KeysView, Mapping, ValuesView
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,11 +16,6 @@ class MetaValue:
     @property
     def type(self) -> type:
         return type(self.value)
-
-
-# ============================================================
-# Metadata container
-# ============================================================
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,9 +33,6 @@ class Metadata(Mapping[str, MetaValue]):
         object.__setattr__(self, "_entries", entries.copy() if entries else {})
         object.__setattr__(self, "read_only", read_only)
 
-    # ----------------------
-    # Mapping interface
-    # ----------------------
     def __getitem__(self, key: str) -> MetaValue:
         return self._entries[key]
 
@@ -66,13 +54,20 @@ class Metadata(Mapping[str, MetaValue]):
     def get(self, key: str, default: Any = None) -> MetaValue | Any:
         return self._entries.get(key, default)
 
-    # ----------------------
-    # Dict-like assignment
-    # ----------------------
     def __setitem__(self, key: str, value: MetaValue) -> None:
         if self.read_only:
             raise TypeError(f"Cannot assign to read-only Metadata (attempted key '{key}')")
         self._entries[key] = value
 
 
-__all__ = ["Metadata", "MetaValue"]
+def metadata_value(metadata: Iterable[Any], key: str) -> Any:
+    """Return a raw metadata value from an iterable of annotated metadata objects."""
+    for item in metadata:
+        if isinstance(item, Metadata):
+            value = item.get(key)
+            if isinstance(value, MetaValue):
+                return value.value
+    return None
+
+
+__all__ = ["Metadata", "MetaValue", "metadata_value"]

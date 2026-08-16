@@ -4,12 +4,12 @@ from unittest.mock import Mock
 import pytest
 
 from templisafe.content.content import Content, ContentType
-from templisafe.core.task import TaskBundle, TaskType
+from templisafe.core.field_selector import FieldSelector
 from templisafe.service.data_service import DataService
-from templisafe.service.field_selector import FieldSelector
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 from templisafe.source.inline_source import InlineSource
 from templisafe.source.source import Source
+from templisafe.task.task import TaskBundle, TaskType
 
 
 class DummyTaskBundle(TaskBundle):

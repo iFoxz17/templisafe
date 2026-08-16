@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import date, datetime
 from types import MappingProxyType
-from typing import Any, Iterable, NamedTuple
+from typing import Annotated, Any, ClassVar, Iterable
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model
 
+from templisafe.core.metadata import Metadata, MetaValue
 from templisafe.exceptions.schema_error import (
     IllegalSchemaError,
     IllegalType,
@@ -14,13 +18,16 @@ from templisafe.parser.config.config_parser import Config
 from templisafe.settings.schema_parser_settings import SchemaParserSettings
 from templisafe.template.template_model import Schema
 
+PYDANTIC_METADATA_KEYS: frozenset[str] = frozenset({"title", "description", "example", "examples", "alias"})
+_NO_DEFAULT: object = object()
+
 
 class TypeParser:
     """Parses type strings into Python/Pydantic types, including composite type as nested lists, dicts and optionals."""
 
     __slots__: tuple[str, ...] = ("_allowed", "_aliases")
 
-    _BASE_TYPE_MAP: MappingProxyType[str, Any] = MappingProxyType(
+    _BASE_TYPE_MAP: ClassVar[MappingProxyType[str, Any]] = MappingProxyType(
         {
             "bool": bool,
             "int": int,
@@ -38,11 +45,8 @@ class TypeParser:
         self._allowed: set[str] = set(allowed)
         self._aliases: dict[str, str] = aliases or {}
 
-    # ----------------------------
-    # Private helpers
-    # ----------------------------
-
-    def _is_list(self, type_name: str) -> bool:
+    @staticmethod
+    def _is_list(type_name: str) -> bool:
         return type_name.startswith("list[") and type_name.endswith("]")
 
     def _parse_list(self, type_name: str) -> Any:
@@ -50,7 +54,8 @@ class TypeParser:
         inner_type: Any = self.parse(inner_type_name)
         return list.__class_getitem__(inner_type)
 
-    def _is_optional(self, type_name: str) -> bool:
+    @staticmethod
+    def _is_optional(type_name: str) -> bool:
         return type_name.startswith("optional[") and type_name.endswith("]")
 
     def _parse_optional(self, type_name: str) -> Any:
@@ -58,17 +63,39 @@ class TypeParser:
         inner_type: Any = self.parse(inner_type_name)
         return inner_type | None
 
-    def _is_dict(self, type_name: str) -> bool:
+    @staticmethod
+    def _is_dict(type_name: str) -> bool:
         return type_name.startswith("dict[") and type_name.endswith("]")
+
+    @staticmethod
+    def _split_dict_args(type_name: str, inner_content: str) -> tuple[str, str]:
+        depth = 0
+        for index, char in enumerate(inner_content):
+            if char == "[":
+                depth += 1
+            elif char == "]":
+                depth -= 1
+            elif char == "," and depth == 0:
+                return inner_content[:index].strip(), inner_content[index + 1 :].strip()
+        raise ValueError(type_name)
 
     def _parse_dict(self, type_name: str) -> Any:
         inner_content: str = type_name[5:-1].strip()
-        if "," not in inner_content:
+        try:
+            key_type_name, value_type_name = self._split_dict_args(type_name, inner_content)
+        except ValueError as e:
             raise IllegalType(type_name, self._allowed, aliases=list(self._aliases.keys()))
-        key_type_name, value_type_name = map(str.strip, inner_content.split(",", 1))
+        if not key_type_name or not value_type_name:
+            raise IllegalType(type_name, self._allowed, aliases=list(self._aliases.keys()))
         key_type: Any = self.parse(key_type_name)
         value_type: Any = self.parse(value_type_name)
         return dict.__class_getitem__((key_type, value_type))
+
+    def _normalize(self, type_name: str) -> str:
+        type_name = type_name.strip()
+        main_type_name = type_name[: type_name.find("[")].strip() if "[" in type_name else type_name
+        sub_typing_name = type_name[type_name.find("[") :].strip() if "[" in type_name else ""
+        return self._aliases.get(main_type_name, main_type_name) + sub_typing_name
 
     def parse(self, type_name: str) -> Any:
         """
@@ -96,30 +123,11 @@ class TypeParser:
             If the `type_name` is not in the allowed base types or contains an unknown alias.
         """
 
-        type_name = type_name.strip()
-        main_type_name: str
-        sub_typing_name: str
-
-        if "[" in type_name:
-            sub_typing_index: int = type_name.find("[")
-            main_type_name = type_name[:sub_typing_index].strip()
-            sub_typing_name = type_name[sub_typing_index:].strip()
-        else:
-            main_type_name = type_name
-            sub_typing_name = ""
-
-        # Resolve aliases
-        if main_type_name in self._aliases:
-            main_type_name = self._aliases[main_type_name]
-
-        # Reconstruct type_name for further parsing
-        type_name = main_type_name + sub_typing_name
-
-        # Base type
+        type_name = self._normalize(type_name)
+        main_type_name = type_name[: type_name.find("[")].strip() if "[" in type_name else type_name
         if main_type_name not in self._allowed:
             raise IllegalType(type_name, self._allowed, aliases=list(self._aliases.keys()))
 
-        # Dispatch to specific handlers
         if self._is_list(type_name):
             return self._parse_list(type_name)
         if self._is_optional(type_name):
@@ -130,16 +138,47 @@ class TypeParser:
         return self._BASE_TYPE_MAP[type_name]
 
 
-class Var(NamedTuple):
+@dataclass(frozen=True, slots=True)
+class RawVar:
+    """Represents a raw variable definition after configuration-key normalization."""
+
+    type_str: str
+    default: Any
+    constraints: dict[str, Any]
+    metadata: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class Var:
     """Represents a variable defined in the schema of the template."""
 
     index_: int
     name: str
     type_: Any
-    has_default: bool
-    default: object
-    constraints: dict[str, object]
-    metadata: dict[str, object]
+    default: Any
+    constraints: dict[str, Any]
+    field_metadata: dict[str, Any]
+    pydantic_metadata: dict[str, Any]
+    metadata: Metadata
+
+    @property
+    def has_default(self) -> bool:
+        return self.default is not _NO_DEFAULT
+
+    @property
+    def field_default(self) -> Any:
+        return self.default if self.has_default else ...
+
+    @property
+    def annotation(self) -> Any:
+        return Annotated[self.type_, self.metadata]
+
+    def field(self) -> Any:
+        field_kwargs: dict[str, Any] = {
+            **self.constraints,
+            **self.pydantic_metadata,
+        }
+        return Field(self.field_default, **field_kwargs)
 
 
 class SchemaParser:
@@ -152,38 +191,53 @@ class SchemaParser:
         aliases: dict[str, str] = {alias: t for t, al in settings.type_aliases for alias in al}
         self._type_parser = TypeParser(settings.allowed_types, aliases)
 
-    def _parse_var(self, index: int, name: str, schema: Any) -> Var:
-        """Parse a single variable data and metadata into a `Var`."""
-
-        settings: SchemaParserSettings = self._settings
-        type_key: str = settings.type_key
-        default_key: str = settings.default_key
-        constraints_key: str = settings.constraints_key
-        metadata_key: str = settings.metadata_key
-
+    def _parse_raw_var(self, name: str, schema: Any) -> RawVar:
+        """Parse one raw variable definition into primitive pieces."""
         if isinstance(schema, str):
-            type_str = schema
-            has_default = False
-            default = None
-            constraints: dict[str, Any] = {}
-            metadata: dict[str, Any] = {}
-        elif isinstance(schema, dict):
-            if type_key not in schema:
-                raise IllegalSchemaError(f"Variable '{name}' is missing '{type_key}' key")
-            type_str = schema[type_key]
-            has_default = default_key in schema
-            default = schema.get(default_key)
-            constraints = schema.get(constraints_key, {})
-            if not isinstance(constraints, dict):
-                raise IllegalSchemaError(f"Variable '{name}' has invalid constraints: {constraints}")
-            metadata = schema.get(metadata_key, {})
-            if not isinstance(metadata, dict):
-                raise IllegalSchemaError(f"Variable '{name}' has invalid metadata: {metadata}")
-        else:
+            return RawVar(type_str=schema, default=_NO_DEFAULT, constraints={}, metadata={})
+
+        if not isinstance(schema, dict):
             raise IllegalSchemaError(f"Variable '{name}' has invalid schema: {schema}")
 
+        return self._parse_raw_var_mapping(name, schema)
+
+    def _parse_raw_var_mapping(self, name: str, schema: dict[str, Any]) -> RawVar:
+        """Parse the verbose mapping form for a variable definition."""
+        settings = self._settings
+        if settings.type_key not in schema:
+            raise IllegalSchemaError(f"Variable '{name}' is missing '{settings.type_key}' key")
+
+        type_str = self._parse_raw_var_type(name, schema)
+        default = schema[settings.default_key] if settings.default_key in schema else _NO_DEFAULT
+        constraints = self._parse_raw_var_constraints(name, schema)
+        metadata = self._parse_raw_var_metadata(name, schema)
+
+        return RawVar(type_str=type_str, default=default, constraints=constraints, metadata=metadata)
+
+    def _parse_raw_var_type(self, name: str, schema: dict[str, Any]) -> str:
+        """Extract and validate the configured type string for a variable."""
+        type_str = schema[self._settings.type_key]
+        if not isinstance(type_str, str):
+            raise IllegalSchemaError(f"Variable '{name}' has invalid type: {type_str}")
+        return type_str
+
+    def _parse_raw_var_constraints(self, name: str, schema: dict[str, Any]) -> dict[str, Any]:
+        """Extract and validate field constraints for a variable."""
+        constraints = schema.get(self._settings.constraints_key, {})
+        if not isinstance(constraints, dict):
+            raise IllegalSchemaError(f"Variable '{name}' has invalid constraints: {constraints}")
+        return constraints
+
+    def _parse_raw_var_metadata(self, name: str, schema: dict[str, Any]) -> dict[str, Any]:
+        """Extract and validate user metadata for a variable."""
+        metadata = schema.get(self._settings.metadata_key, {})
+        if not isinstance(metadata, dict):
+            raise IllegalSchemaError(f"Variable '{name}' has invalid metadata: {metadata}")
+        return metadata
+
+    def _parse_type(self, index: int, name: str, type_str: str) -> Any:
         try:
-            type_: Any = self._type_parser.parse(type_str)
+            return self._type_parser.parse(type_str)
         except IllegalType as e:
             raise IllegalVarType(
                 index,
@@ -192,45 +246,65 @@ class SchemaParser:
                 list(self._type_parser._allowed | set(self._type_parser._aliases.keys())),
             ) from e
 
-        return Var(
-            index_=index,
-            name=name,
-            type_=type_,
-            has_default=has_default,
-            default=default,
-            constraints=constraints,
-            metadata=metadata,
-        )
-
-    def _add_internal_metadata(self, metadata: dict[str, Any], var: Var) -> None:
-        """Inject internal metadata fields required by the parser."""
-
-        index_key: str = self._settings.index_key
-        if index_key in metadata:
-            raise IllegalSchemaError(f"Variable '{var.name}' metadata contains reserved keyword '{index_key}'")
-        metadata[index_key] = var.index_
+    def _validate_metadata(self, name: str, metadata: dict[str, Any]) -> None:
+        """Reject user metadata that would override parser-owned entries."""
+        if self._settings.index_key in metadata:
+            raise IllegalSchemaError(
+                f"Variable '{name}' metadata contains reserved keyword '{self._settings.index_key}'"
+            )
 
     def _extract_pydantic_metadata(self, metadata: dict[str, Any]) -> dict[str, Any]:
         """Extract fields from the metadata dictionary that are recognized by Pydantic."""
 
-        return {k: metadata.pop(k) for k in ["title", "description", "example", "examples", "alias"] if k in metadata}
+        return {key: value for key, value in metadata.items() if key in PYDANTIC_METADATA_KEYS}
+
+    def _create_field_metadata(self, index: int, metadata: dict[str, Any]) -> dict[str, Any]:
+        """Return metadata stored in Pydantic's json schema extra map."""
+        return {
+            **{key: value for key, value in metadata.items() if key not in PYDANTIC_METADATA_KEYS},
+            self._settings.index_key: index,
+        }
+
+    def _create_annotation_metadata(self, field_metadata: dict[str, Any]) -> Metadata:
+        """Return rich metadata attached to the generated model field annotation."""
+        return Metadata(
+            {
+                key: MetaValue(value=value, description="Schema parser field metadata")
+                for key, value in field_metadata.items()
+            }
+        )
+
+    def _parse_var(self, index: int, name: str, schema: Any) -> Var:
+        """Parse a single variable definition into a `Var`."""
+        raw_var = self._parse_raw_var(name, schema)
+        type_ = self._parse_type(index, name, raw_var.type_str)
+        self._validate_metadata(name, raw_var.metadata)
+        field_metadata = self._create_field_metadata(index, raw_var.metadata)
+
+        return Var(
+            index_=index,
+            name=name,
+            type_=type_,
+            default=raw_var.default,
+            constraints=raw_var.constraints,
+            field_metadata=field_metadata,
+            pydantic_metadata=self._extract_pydantic_metadata(raw_var.metadata),
+            metadata=self._create_annotation_metadata(field_metadata),
+        )
 
     def _validate_default(self, var: Var) -> None:
-        """Validate the default of a `Var` by instanting a temporary Pydantic model."""
+        """Validate the default of a `Var` by instantiating a temporary Pydantic model."""
 
-        default: Any = var.default
         if not var.has_default:
             return
 
-        # Prepare namespace with type annotation and Field instance
-        namespace: dict[str, Any] = {
-            "__annotations__": {var.name: var.type_},  # type hint
-            "model_config": {"validate_default": True},  # abilitate default values validation
-            var.name: Field(default),  # default value
-        }
-        TempModel: type[BaseModel] = type("TempModel", (BaseModel,), namespace)
+        field_definitions: dict[str, Any] = {var.name: (var.type_, Field(var.default))}
+        TempModel = create_model(
+            "TempModel",
+            __config__=ConfigDict(validate_default=True),
+            **field_definitions,
+        )
 
-        # Instantiating TempModel will validate the default value
         try:
             TempModel()
         except ValidationError as e:
@@ -259,38 +333,16 @@ class SchemaParser:
             if not isinstance(v_name, str):
                 raise IllegalSchemaError(f"Variable name at index {i} is not a string: '{v_name}'")
 
-            # v_name cannot be duplicated since it is the key of a dict
             var: Var = self._parse_var(i, v_name, v_schema)
             self._validate_default(var=var)
-
-            # Extract metadata
-            metadata: dict[str, Any] = var.metadata
-            self._add_internal_metadata(metadata, var)
-            pydantic_metadata: dict[str, Any] = self._extract_pydantic_metadata(metadata)
-
-            # Create field with default validation
-            field_default: Any = var.default if var.has_default else ...
-            field_kwargs: dict[str, Any] = {
-                **var.constraints,
-                **pydantic_metadata,
-                "json_schema_extra": metadata,
-            }
-            fields[var.name] = (
-                var.type_,
-                Field(field_default, **field_kwargs),
-            )
+            fields[var.name] = (var.annotation, var.field())
 
         model_name: str = settings.model_name
-
-        # Create the Pydantic model with default validation enabled
-        ModelSchema: type[BaseModel] = type(
+        ModelSchema = create_model(
             model_name,
-            (BaseModel,),
-            {
-                "__annotations__": {name: t for name, (t, _) in fields.items()},
-                **{name: f for name, (_, f) in fields.items()},
-                "model_config": {"validate_default": True},  # Pydantic v2 default type validation
-            },
+            __base__=BaseModel,
+            __config__=ConfigDict(validate_default=True),
+            **fields,
         )
 
         return Schema(model_cls=ModelSchema)

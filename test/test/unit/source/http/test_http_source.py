@@ -1,4 +1,3 @@
-import time
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -105,8 +104,6 @@ def test_read_raises_http_source_error(monkeypatch, http_source: HttpSource):
 # -------------------------
 # Asynchronous flow
 # -------------------------
-
-import asyncio
 
 
 @pytest.mark.asyncio

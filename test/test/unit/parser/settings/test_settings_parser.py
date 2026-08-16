@@ -3,15 +3,12 @@ from typing import Any
 import pytest
 
 from templisafe.exceptions.settings_error import SettingsConfigError
-from templisafe.parser.config.config_parser import Config
 from templisafe.parser.settings.settings_parser import (
     SettingsParser,
     SourceSettingsParser,
 )
 from templisafe.settings.compiler_settings import CompilerSettings
-from templisafe.settings.settings import Settings, SettingsError
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
-from templisafe.settings.source.source_settings import SourceSettings
 
 # -----------------------------
 # Fixtures

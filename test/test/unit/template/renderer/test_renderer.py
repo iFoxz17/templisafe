@@ -1,8 +1,9 @@
-from typing import Any, Optional
+from typing import Annotated, Any, Optional
 
 import pytest
 from pydantic import Field, create_model
 
+from templisafe.core.metadata import Metadata, MetaValue
 from templisafe.engine.jinja_template_engine import JinjaTemplateEngine
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.settings.template_engine_settings import TemplateEngineSettings
@@ -33,12 +34,16 @@ def engine() -> JinjaTemplateEngine:
     return JinjaTemplateEngine(settings)
 
 
+def indexed(annotation: Any, index: int) -> Any:
+    return Annotated[annotation, Metadata({"_index": MetaValue(index)})]
+
+
 @pytest.fixture
 def schema_model():
     fields: dict[str, Any] = {
-        "a": (int, Field(default=1, json_schema_extra={"_index": 0})),
-        "b": (str, Field(default="default", json_schema_extra={"_index": 1})),
-        "c": (float, Field(..., json_schema_extra={"_index": 2})),
+        "a": (indexed(int, 0), Field(default=1)),
+        "b": (indexed(str, 1), Field(default="default")),
+        "c": (indexed(float, 2), Field(...)),
     }
     return Schema(model_cls=create_model("TestSchema", **fields))
 
@@ -83,8 +88,8 @@ def test_render_missing_binding_with_default(engine, compilation, renderer_setti
 
 def test_render_optional_values(engine, renderer_settings):
     fields: dict[str, Any] = {
-        "x": (int | None, Field(default=None, json_schema_extra={"_index": 0})),
-        "y": (Optional[str], Field(default=None, json_schema_extra={"_index": 1})),
+        "x": (indexed(int | None, 0), Field(default=None)),
+        "y": (indexed(Optional[str], 1), Field(default=None)),
     }
     schema = Schema(model_cls=create_model("OptionalSchema", **fields))
     compilation = CompilationSpec(template=Template("{{ x }} {{ y }}", vars={"x", "y"}), schema=schema)
@@ -101,8 +106,8 @@ def test_render_optional_values(engine, renderer_settings):
 
 def test_render_missing_optional_null_default(engine, renderer_settings):
     fields: dict[str, Any] = {
-        "x": (int, Field(..., json_schema_extra={"_index": 0})),
-        "y": (Optional[str], Field(default=None, json_schema_extra={"_index": 1})),
+        "x": (indexed(int, 0), Field(...)),
+        "y": (indexed(Optional[str], 1), Field(default=None)),
     }
     schema = Schema(model_cls=create_model("OptionalDefaultSchema", **fields))
     compilation = CompilationSpec(template=Template("{{ x }} {{ y }}", vars={"x", "y"}), schema=schema)
@@ -117,7 +122,7 @@ def test_render_missing_optional_null_default(engine, renderer_settings):
 
 
 def test_render_nested_list_variable(engine, renderer_settings):
-    fields: dict[str, Any] = {"matrix": (list[list[float]], Field(..., json_schema_extra={"_index": 0}))}
+    fields: dict[str, Any] = {"matrix": (indexed(list[list[float]], 0), Field(...))}
     schema = Schema(model_cls=create_model("NestedSchema", **fields))
     compilation = CompilationSpec(template=Template("{{ matrix }}", vars={"matrix"}), schema=schema)
 
@@ -133,8 +138,8 @@ def test_render_nested_list_variable(engine, renderer_settings):
 def test_render_complex_object_variable(engine, renderer_settings):
     fields: dict[str, Any] = {
         "complex": (
-            dict[str, list[dict[str, list[float]]]],
-            Field(..., json_schema_extra={"_index": 0}),
+            indexed(dict[str, list[dict[str, list[float]]]], 0),
+            Field(...),
         )
     }
     schema = Schema(model_cls=create_model("NestedSchema", **fields))

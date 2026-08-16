@@ -4,7 +4,6 @@ from types import MappingProxyType
 import pytest
 
 from templisafe.content.content import ContentType
-from templisafe.executor.source_executor import SourceRequest
 from templisafe.executor.strategy_optimizer import StrategyOptimizer
 from templisafe.settings.source.custom_source_settings import CustomSourceSettings
 from templisafe.settings.source.http.http_source_settings import HttpSourceSettings

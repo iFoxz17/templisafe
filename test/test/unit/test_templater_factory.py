@@ -1,9 +1,8 @@
 import pytest
 
 from templisafe.core.util import DiagnosticPolicy
-from templisafe.settings.compiler_settings import CompilerSettings
-from templisafe.settings.renderer_settings import RendererSettings
-from templisafe.settings.template_engine_settings import TemplateEngineSettings
+from templisafe.service.service_orchestrator import ServiceOrchestrator
+from templisafe.task.task_validator import TaskValidator
 from templisafe.templater import Templater
 from templisafe.templater_factory import TemplaterFactory
 
@@ -20,12 +19,8 @@ def test_create_returns_templater_with_defaults(factory):
     templater = factory.create()
 
     assert isinstance(templater, Templater)
-    assert isinstance(templater._default_handler._compiler_default_settings, CompilerSettings)
-    assert isinstance(templater._default_handler._renderer_default_settings, RendererSettings)
-    assert isinstance(
-        templater._default_handler._template_engine_default_settings,
-        TemplateEngineSettings,
-    )
+    assert isinstance(templater._task_validator, TaskValidator)
+    assert isinstance(templater._service_orchestrator, ServiceOrchestrator)
     assert isinstance(templater._outcome_handler._policy, DiagnosticPolicy)
 
 
@@ -55,19 +50,21 @@ def test_create_accepts_diagnostic_policy_enum(factory):
     assert templater._outcome_handler._policy == DiagnosticPolicy.STRICT
 
 
-def test_create_loader_facade_returns_loader_with_expected_types(factory):
+def test_create_orchestrator_returns_pipeline_with_expected_services(factory):
     templater = factory.create()
-    loader = templater._loader_facade
+    orchestrator = templater._service_orchestrator
 
-    # Loader should have the correct loaders
-    assert hasattr(loader, "_template_loader")
-    assert hasattr(loader, "_schema_loader")
-    assert hasattr(loader, "_variant_loader")
+    assert hasattr(orchestrator, "_source_service")
+    assert hasattr(orchestrator, "_data_service")
+    assert hasattr(orchestrator, "_config_service")
+    assert hasattr(orchestrator, "_settings_service")
+    assert hasattr(orchestrator, "_component_service")
+    assert hasattr(orchestrator, "_resource_service")
 
 
-def test_create_source_resolver_returns_resolver_with_expected_types(factory):
+def test_create_source_service_returns_provider_with_expected_types(factory):
     templater = factory.create()
-    resolver = templater._source_resolver
+    source_service = templater._service_orchestrator._source_service
 
-    assert hasattr(resolver, "_source_manager")
-    assert hasattr(resolver, "_content_type_resolver")
+    assert hasattr(source_service, "_source_provider")
+    assert hasattr(source_service, "_field_selector")
