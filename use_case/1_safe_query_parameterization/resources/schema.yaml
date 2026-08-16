@@ -1,42 +1,32 @@
 schema:
-  select_columns:
-    type: list
+  columns:
+    type: list[str]
     default:
-      - u.id
-      - u.name
-      - u.code
-      - u.age
-      - u.status
-      - m.is_updated
-      - m.threshold
+      - order_id
+      - customer_id
+      - status
+      - total_amount
+      - created_at
+    metadata:
+      description: Columns to project in the generated report query
+      title: SELECT columns
 
-  user_join_key: str
-
-  metric_join_key: str
-
-  user_codes: 
-    type: list
-    default:
-      - 10
-      - 11
-      - 12
-    
-  user_age_lower:
-    type: int
-    default: 0
-
-  user_age_upper:
-    type: int
-    default: 1000000
-
-  user_status: str
-
-  metric_code:
+  status:
     type: str
-    default: "9999910"
+    default: PAID
+    constraints:
+      max_length: 20
 
-  metric_updated_flag:
-    type: bool
-    default: true
+  min_total:
+    type: float
+    default: 0.0
+    constraints:
+      ge: 0
 
-  metric_threshold: float
+  start_date: str
+
+  end_date: str
+
+  customer_ids:
+    type: list[int]
+    default: []

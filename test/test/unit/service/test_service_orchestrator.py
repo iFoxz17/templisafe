@@ -5,8 +5,8 @@ from templisafe.service.service_orchestrator import ServiceOrchestrator
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
 from templisafe.settings.source_executor_settings import SourceExecutorSettings, SourceExecutorStrategy
 from templisafe.source.inline_source import InlineSource
-from templisafe.task.task import CompilationBundle, Task
-from templisafe.template.template_model import Compilation, Outcome
+from templisafe.task.task import BuildBundle, CompilationBundle, Task
+from templisafe.template.template_model import Build, Compilation, Diagnostic, Outcome, VariantSet
 
 
 def test_service_orchestrator_runs_single_task_pipeline_in_order() -> None:
@@ -97,3 +97,43 @@ def test_service_orchestrator_bootstraps_source_executor_settings_before_main_da
     assert result is expected
     assert data_service.process.call_args_list[0].args[0].template == ""
     assert component_service.process.call_args.args[0].source_executor_settings == executor_settings
+
+
+def test_service_orchestrator_build_short_circuits_when_compilation_fails() -> None:
+    diagnostic = Diagnostic(
+        level=Outcome.ERROR,
+        message="Undeclared variable: 'missing'",
+        name="missing",
+    )
+    failed_compilation = Compilation(
+        outcome=Outcome.ERROR,
+        message="Query compilation failed",
+        diagnostics=(diagnostic,),
+    )
+
+    def stage() -> Mock:
+        service = Mock()
+        service.process.side_effect = lambda value: value
+        return service
+
+    resource_service = Mock()
+    resource_service.process.return_value = failed_compilation
+
+    orchestrator = ServiceOrchestrator(
+        source_service=stage(),
+        data_service=stage(),
+        config_service=stage(),
+        settings_service=stage(),
+        component_service=stage(),
+        resource_service=resource_service,
+    )
+
+    result = orchestrator.process(Task(bundle=BuildBundle(template="Hello {{ missing }}", variants=VariantSet())))
+
+    assert isinstance(result, Build)
+    assert result.outcome == Outcome.ERROR
+    assert result.compilation is failed_compilation
+    assert result.rendering.outcome == Outcome.ERROR
+    assert result.rendering.message == "Rendering skipped because compilation failed"
+    assert result.rendering.diagnostics == (diagnostic,)
+    assert resource_service.process.call_count == 1

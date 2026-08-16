@@ -2,6 +2,7 @@ import pytest
 
 from templisafe import Build, Compilation, ContentType, Outcome, Rendering, SourceSettings, TemplaterFactory
 from templisafe.core.util import DiagnosticPolicy
+from templisafe.exceptions.compilation_error import CompilationFailureError
 from templisafe.exceptions.rendering_error import RenderingFailureError
 
 
@@ -148,6 +149,81 @@ schema:
     assert diagnostic.name == "unused"
     assert diagnostic.index == 1
     assert "Unused variable" in diagnostic.message
+
+
+def test_compile_with_ignore_policy_string_returns_error_diagnostics() -> None:
+    templater = TemplaterFactory().create(diagnostic_policy="ignore")
+
+    compilation = templater.compile(
+        template=inline_source("Hello {{ declared }} from {{ undeclared }}", ContentType.TEXT),
+        schema=inline_source(
+            """
+schema:
+  declared: str
+""",
+            ContentType.YAML,
+        ),
+    )
+
+    assert compilation.outcome == Outcome.ERROR
+    assert len(compilation.diagnostics) == 1
+    assert compilation.diagnostics[0].name == "undeclared"
+    assert "Undeclared variable" in compilation.diagnostics[0].message
+    with pytest.raises(CompilationFailureError):
+        _ = compilation.compiled
+
+
+def test_build_with_ignore_policy_string_returns_failed_build_when_compilation_fails() -> None:
+    templater = TemplaterFactory().create(diagnostic_policy="ignore")
+
+    build = templater.build(
+        template=inline_source("Hello {{ declared }} from {{ undeclared }}", ContentType.TEXT),
+        schema=inline_source(
+            """
+schema:
+  declared: str
+""",
+            ContentType.YAML,
+        ),
+        variants=inline_source(
+            """
+variants:
+  declared: Ada
+""",
+            ContentType.YAML,
+        ),
+    )
+
+    assert build.outcome == Outcome.ERROR
+    assert build.compilation.outcome == Outcome.ERROR
+    assert build.rendering.outcome == Outcome.ERROR
+    assert build.rendering.message == "Rendering skipped because compilation failed"
+    assert build.rendering.diagnostics == build.compilation.diagnostics
+    with pytest.raises(RenderingFailureError):
+        _ = build.rendering.rendered
+
+
+def test_build_with_log_policy_raises_when_compilation_fails() -> None:
+    templater = TemplaterFactory().create(diagnostic_policy="log")
+
+    with pytest.raises(CompilationFailureError):
+        templater.build(
+            template=inline_source("Hello {{ declared }} from {{ undeclared }}", ContentType.TEXT),
+            schema=inline_source(
+                """
+schema:
+  declared: str
+""",
+                ContentType.YAML,
+            ),
+            variants=inline_source(
+                """
+variants:
+  declared: Ada
+""",
+                ContentType.YAML,
+            ),
+        )
 
 
 def test_render_with_extra_binding_returns_warning_and_output() -> None:

@@ -6,7 +6,7 @@ from templisafe.service.settings_service import SettingsService
 from templisafe.service.source_service import SourceService
 from templisafe.source.source import Source
 from templisafe.task.task import BuildBundle, CompilationBundle, RenderingBundle, Task, TaskBundle, TaskType
-from templisafe.template.template_model import Build, Compilation, Rendering
+from templisafe.template.template_model import Build, Compilation, Outcome, Rendering
 
 
 class ServiceOrchestrator:
@@ -82,6 +82,15 @@ class ServiceOrchestrator:
         )
         if not isinstance(compilation, Compilation):
             raise TypeError("Build compilation subtask did not return Compilation")
+        if compilation.outcome is Outcome.ERROR:
+            return Build(
+                compilation=compilation,
+                rendering=Rendering(
+                    outcome=Outcome.ERROR,
+                    message="Rendering skipped because compilation failed",
+                    diagnostics=compilation.diagnostics,
+                ),
+            )
 
         rendering = self._run_single(
             RenderingBundle(

@@ -66,6 +66,24 @@ def test_render_multiple(engine: JinjaTemplateEngine):
     assert result == "Bob has 5 messages."
 
 
+def test_render_uses_loader_from_settings(tmp_path):
+    """Test rendering a template that imports a macro through the configured Jinja loader."""
+    from jinja2 import FileSystemLoader
+
+    macro_file = tmp_path / "greetings.j2"
+    macro_file.write_text("{% macro hello(name) %}Hello {{ name }}!{% endmacro %}", encoding="utf-8")
+    settings = TemplateEngineSettings.create(
+        engine_kind="jinja",
+        config={"loader": FileSystemLoader(str(tmp_path))},
+    )
+    engine = JinjaTemplateEngine(settings)
+
+    assert engine.extract_variables('{% import "greetings.j2" as greetings %}{{ greetings.hello(name) }}') == {"name"}
+    assert engine.render('{% import "greetings.j2" as greetings %}{{ greetings.hello(name) }}', {"name": "Alice"}) == (
+        "Hello Alice!"
+    )
+
+
 def test_lazy_import_error(monkeypatch):
     """Test that ImportError is raised if Jinja2 is missing."""
     import builtins

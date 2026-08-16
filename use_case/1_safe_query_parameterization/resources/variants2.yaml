@@ -1,19 +1,13 @@
 variants:
-  all_ages:                           # variant name
-    select_columns:
-      - u.id
-      - u.name
-      - u.age
-      - m.value
+  all_paid_orders:
+    columns:
+      - order_id
+      - customer_id
+      - total_amount
+      - created_at
 
-    user_join_key: id
-    metric_join_key: user_id
-    # user_codes -> defaulted
-      
-    # user_age_lower -> defaulted
-    # user_age_upper -> defaulted
-    user_status: ACTIVE
-
-    # metric_code -> defaulted
-    metric_updated_flag: true
-    metric_threshold: 54.12
+    # status -> defaulted
+    # min_total -> defaulted
+    start_date: "2024-01-01"
+    end_date: "2024-02-01"
+    # customer_ids -> defaulted

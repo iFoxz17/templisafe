@@ -6,14 +6,11 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 ---
 
 ## High Priority
-- [ ] Save generated schema metadata (as index_key) using Annotated as done with Task
-- [ ] Parse the schema and the variants using a pydantic model
-- [ ] Manage Unions types in schema and variants 
-- [ ] Implement async sources and SourceExecutorLine concept (dividing sources in three lines)  
-- [ ] Add a test for Templater concurrency
-- [ ] Develop IaC use case
-- [ ] Develop email use case to show concurrency in handling thousands of sources
+- [ ] Develop architectural, consumer and developer documentations
 - [ ] Release the library on pip
+- [ ] Add a test for Templater concurrency
+- [ ] Develop LLM templating use case
+- [ ] Develop email template use case
 - [ ] Document pydantic fields (In particular of Settings)
 
 ## Medium Priority
@@ -21,11 +18,8 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 - [ ] Add CI coverage reporting
 - [ ] Refactor TemplateEngineSettings config parameter, which actually can be also a json or yaml string
 - [ ] Improve error messages
+- [ ] Implement async sources and SourceExecutorLine concept (dividing sources in three lines)  
 - [ ] Implement a min heap for the HttpSession Management
-- [ ] Add support for HOCON configuration language
-- [ ] Add support for INI configuration language
-- [ ] Add support for .env configuration language
-- [ ] Implement EnvSource
 
 ## Low Priority
 - [ ] Add schema inference during the rendering when no schema is specified
