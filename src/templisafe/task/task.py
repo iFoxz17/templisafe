@@ -99,7 +99,7 @@ class CompilationBundle(TaskBundle):
     ]
 
     schema_: Annotated[
-        SourceSettings | Source | Config | SchemaInput | Schema | type[BaseModel] | None,
+        SourceSettings | Source | Config | SchemaInput | Schema | None,
         Field(default=None),
         CategoryMetadata(FieldCategory.RESOURCE),
     ] = None
@@ -179,7 +179,7 @@ class BuildBundle(TaskBundle):
     ]
 
     schema_: Annotated[
-        SourceSettings | Source | Config | SchemaInput | Schema | type[BaseModel] | None,
+        SourceSettings | Source | Config | SchemaInput | Schema | None,
         Field(default=None),
         CategoryMetadata(FieldCategory.RESOURCE),
     ] = None

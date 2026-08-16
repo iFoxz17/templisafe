@@ -16,11 +16,6 @@ from templisafe.settings.schema_parser_settings import SchemaParserSettings
 @pytest.fixture
 def settings() -> SchemaParserSettings:
     return SchemaParserSettings(
-        schema_key="parameters",
-        type_key="type",
-        default_key="default",
-        constraints_key="constraints",
-        metadata_key="metadata",
         index_key="_index",
         model_name="TestModel",
         allowed_types=(
@@ -52,7 +47,7 @@ def field_metadata(model_cls: type[BaseModel], field_name: str) -> Metadata:
 
 def test_parse_simple_schema(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"age": {"type": "int", "default": 30}, "name": "str"}}
+    schema_config = {"schema": {"age": {"type": "int", "default": 30}, "name": "str"}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     assert issubclass(model_cls, BaseModel)
@@ -69,7 +64,7 @@ def test_parse_simple_schema(settings):
 
 def test_parse_optional_field(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"nickname": {"type": "optional[str]"}}}
+    schema_config = {"schema": {"nickname": {"type": "optional[str]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     instance = model_cls(nickname=None)
@@ -81,7 +76,7 @@ def test_parse_optional_field(settings):
 def test_parse_optional_field_with_null_default_is_not_required(settings):
     parser = SchemaParser(settings)
     schema_config = {
-        "parameters": {
+        "schema": {
             "nickname": {
                 "type": "optional[str]",
                 "default": None,
@@ -99,7 +94,7 @@ def test_parse_optional_field_with_null_default_is_not_required(settings):
 
 def test_parse_list_field(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"scores": {"type": "list[int]"}}}
+    schema_config = {"schema": {"scores": {"type": "list[int]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     instance = model_cls(scores=[10, 20, 30])
@@ -110,7 +105,7 @@ def test_parse_list_field(settings):
 
 def test_parse_date_field(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"birth_date": {"type": "date"}}}
+    schema_config = {"schema": {"birth_date": {"type": "date"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
 
@@ -125,7 +120,7 @@ def test_parse_date_field(settings):
 
 def test_parse_datetime_field(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"event_time": {"type": "datetime"}}}
+    schema_config = {"schema": {"event_time": {"type": "datetime"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
 
@@ -140,7 +135,7 @@ def test_parse_datetime_field(settings):
 
 def test_parse_nested_list_optional(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"matrix": {"type": "list[list[optional[str]]]"}}}
+    schema_config = {"schema": {"matrix": {"type": "list[list[optional[str]]]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     instance = model_cls(matrix=[["a", None], ["b", "c"]])
@@ -152,7 +147,7 @@ def test_parse_nested_list_optional(settings):
 
 def test_parse_nested_dict(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"nested": {"type": "dict[str, list[dict[str, float]]]"}}}
+    schema_config = {"schema": {"nested": {"type": "dict[str, list[dict[str, float]]]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     nested: dict = {"top": [{"field1": 1}, {"field2": 2.1}, {"field3": 3.2}]}
@@ -162,7 +157,7 @@ def test_parse_nested_dict(settings):
 
 def test_parse_nested_object(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"nested": {"type": "object"}}}
+    schema_config = {"schema": {"nested": {"type": "object"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     nested: dict = {"top": [{"field1": "value1"}, {"field2": 2.1}, {"field3": True}]}
@@ -173,7 +168,7 @@ def test_parse_nested_object(settings):
 def test_parse_with_alias(settings):
     parser = SchemaParser(settings)
     schema_config = {
-        "parameters": {
+        "schema": {
             "quantity": "integer",
             "nickname": "string",
             "threshold": "real",
@@ -215,7 +210,7 @@ def test_parse_with_alias(settings):
 def test_parse_with_constraints_and_metadata(settings):
     parser = SchemaParser(settings)
     schema_config = {
-        "parameters": {
+        "schema": {
             "score": {
                 "type": "int",
                 "constraints": {"gt": 0, "lt": 101},
@@ -258,7 +253,7 @@ def test_parse_with_constraints_and_metadata(settings):
 def test_parse_with_alias_metadata(settings):
     parser = SchemaParser(settings)
     schema_config = {
-        "parameters": {
+        "schema": {
             "user_name": {
                 "type": "str",
                 "metadata": {
@@ -284,7 +279,7 @@ def test_parse_with_alias_metadata(settings):
 
 def test_schema_definition_must_be_a_dict(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": ["age", "name"]}
+    schema_config = {"schema": ["age", "name"]}
 
     with pytest.raises(IllegalSchemaError):
         parser.parse(schema_config)
@@ -292,7 +287,7 @@ def test_schema_definition_must_be_a_dict(settings):
 
 def test_variable_mapping_requires_type_key(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"age": {"default": 30}}}
+    schema_config = {"schema": {"age": {"default": 30}}}
 
     with pytest.raises(IllegalSchemaError):
         parser.parse(schema_config)
@@ -300,7 +295,7 @@ def test_variable_mapping_requires_type_key(settings):
 
 def test_constraints_must_be_a_dict(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"age": {"type": "int", "constraints": ["gt", 0]}}}
+    schema_config = {"schema": {"age": {"type": "int", "constraints": ["gt", 0]}}}
 
     with pytest.raises(IllegalSchemaError):
         parser.parse(schema_config)
@@ -308,7 +303,7 @@ def test_constraints_must_be_a_dict(settings):
 
 def test_dict_type_requires_key_and_value_types(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"mapping": {"type": "dict[str]"}}}
+    schema_config = {"schema": {"mapping": {"type": "dict[str]"}}}
 
     with pytest.raises(IllegalVarType):
         parser.parse(schema_config)
@@ -316,7 +311,7 @@ def test_dict_type_requires_key_and_value_types(settings):
 
 def test_invalid_optional_subtyping_raises(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"value": {"type": "optional[int]"}}}
+    schema_config = {"schema": {"value": {"type": "optional[int]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     with pytest.raises(ValidationError):
@@ -325,12 +320,12 @@ def test_invalid_optional_subtyping_raises(settings):
 
 def test_invalid_list_subtyping_raises(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"value": {"type": "list[object]"}}}
+    schema_config = {"schema": {"value": {"type": "list[object]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     _ = model_cls(value=[1, 2.2, True, "a"])
 
-    schema_config = {"parameters": {"value": {"type": "list[float]"}}}
+    schema_config = {"schema": {"value": {"type": "list[float]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     with pytest.raises(ValidationError):
@@ -339,18 +334,18 @@ def test_invalid_list_subtyping_raises(settings):
 
 def test_invalid_dict_subtyping_raises(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"value": {"type": "dict[object, object]"}}}
+    schema_config = {"schema": {"value": {"type": "dict[object, object]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     _ = model_cls(value={"a": [{"b": 1}, {2: [1, "a", True], 3: False}, "a", 4], "h": 2.3})
 
-    schema_config = {"parameters": {"value": {"type": "dict[str, object]"}}}
+    schema_config = {"schema": {"value": {"type": "dict[str, object]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     with pytest.raises(ValidationError):
         _ = model_cls(value={1: "test"})
 
-    schema_config = {"parameters": {"value": {"type": "dict[object, str]"}}}
+    schema_config = {"schema": {"value": {"type": "dict[object, str]"}}}
     schema = parser.parse(schema_config)
     model_cls = schema.model_cls
     with pytest.raises(ValidationError):
@@ -359,14 +354,14 @@ def test_invalid_dict_subtyping_raises(settings):
 
 def test_invalid_type_raises(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"value": {"type": "unknown_type"}}}
+    schema_config = {"schema": {"value": {"type": "unknown_type"}}}
     with pytest.raises(IllegalVarType):
         parser.parse(schema_config)
 
 
 def test_wrong_default_type_raises(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"quantity": {"type": "integer", "default": 1.3}}}
+    schema_config = {"schema": {"quantity": {"type": "integer", "default": 1.3}}}
     with pytest.raises(IllegalVarDefault):
         parser.parse(schema_config)
 
@@ -387,6 +382,6 @@ def test_missing_schema_key_raises(settings):
 
 def test_invalid_metadata_raises(settings):
     parser = SchemaParser(settings)
-    schema_config = {"parameters": {"score": {"type": "int", "metadata": {"_index": 77}}}}
+    schema_config = {"schema": {"score": {"type": "int", "metadata": {"_index": 77}}}}
     with pytest.raises(IllegalSchemaError):
         parser.parse(schema_config)

@@ -12,10 +12,7 @@ from templisafe.template.template_model import Binding, VariantSet
 @pytest.fixture
 def settings() -> VariantParserSettings:
     return VariantParserSettings(
-        variants_key="variants",
         default_variants_name="default",
-        variant_name_key="name",
-        bindings_key="bindings",
     )
 
 
@@ -707,35 +704,6 @@ variants:
 
     with pytest.raises(IllegalVariantError):
         parser.parse(yaml_cfg)
-
-
-def test_custom_variant_parser_keys_are_normalized():
-    settings = VariantParserSettings(
-        variants_key="cases",
-        default_variants_name="case",
-        variant_name_key="id",
-        bindings_key="values",
-    )
-    parser = VariantParser(settings)
-    yaml_cfg = safe_load(
-        """
-cases:
-  - id: custom
-    values:
-      name: Ada
-      score: 42
-"""
-    )
-
-    vset = parser.parse(yaml_cfg)
-
-    assert vset.names == {"custom"}
-    variant = vset.variants[0]
-    assert variant.name == "custom"
-    name = variant.get("name")
-    score = variant.get("score")
-    assert name is not None and name.value == "Ada" and name.index == 0
-    assert score is not None and score.value == 42 and score.index == 1
 
 
 # -----------------------------

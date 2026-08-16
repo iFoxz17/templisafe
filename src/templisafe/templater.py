@@ -1,7 +1,5 @@
 from typing import TypeAlias
 
-from pydantic import BaseModel
-
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.handler.outcome_handler import OutcomeHandler
 from templisafe.input import SchemaInput, TemplateInput, VariantInput, VariantSetInput
@@ -28,7 +26,7 @@ from templisafe.template.template_model import (
 SourceLike: TypeAlias = Source | SourceSettings
 ConfigLike: TypeAlias = SourceLike | Config
 TemplateLike: TypeAlias = SourceLike | str | TemplateInput
-SchemaLike: TypeAlias = ConfigLike | SchemaInput | type[BaseModel]
+SchemaLike: TypeAlias = ConfigLike | SchemaInput
 VariantsLike: TypeAlias = (
     ConfigLike | VariantInput | VariantSetInput | list[ConfigLike | VariantInput | VariantSetInput]
 )

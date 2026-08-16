@@ -1,7 +1,5 @@
 from typing import cast
 
-from pydantic import BaseModel
-
 from templisafe.content.content import Content
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.exceptions.variant_error import IllegalVariantError
@@ -91,21 +89,17 @@ class ResourceService:
 
     def _provide_schema(
         self,
-        schema_input: Config | Content | SchemaInput | Schema | type[BaseModel] | None,
+        schema_input: Config | Content | SchemaInput | Schema | None,
         parser: SchemaParser,
     ) -> Schema | None:
         if schema_input is None or isinstance(schema_input, Schema):
             return schema_input
-        if isinstance(schema_input, type) and issubclass(schema_input, BaseModel):
-            return Schema(model_cls=schema_input)
         if isinstance(schema_input, SchemaInput):
             return self._resource_provider.provide_schema(schema_input.to_config(), parser)
         if isinstance(schema_input, Content):
             raise TypeError("Schema content must be parsed before ResourceService")
         if not isinstance(schema_input, dict):
-            raise TypeError(
-                "Schema input must resolve to a configuration mapping, SchemaInput, Schema or BaseModel type"
-            )
+            raise TypeError("Schema input must resolve to a configuration mapping, SchemaInput or Schema")
         return self._resource_provider.provide_schema(schema_input, parser)
 
     def _create_variant(self, variant_input: VariantInput) -> Variant:

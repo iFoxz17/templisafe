@@ -33,8 +33,7 @@ def custom_variant_settings(
     default_variant_settings: VariantParserSettings,
 ) -> VariantParserSettings:
     """Return custom VariantParserSettings."""
-    # Create a modified copy, e.g., change the top-level key
-    return default_variant_settings.model_copy(update={"variants_key": "custom_variants"})
+    return default_variant_settings.model_copy(update={"default_variants_name": "case"})
 
 
 # -----------------------------

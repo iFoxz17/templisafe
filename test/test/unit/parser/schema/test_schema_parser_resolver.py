@@ -13,11 +13,6 @@ from templisafe.settings.schema_parser_settings import SchemaParserSettings
 # -----------------------------
 
 SCHEMA_PARSER_SETTINGS_DICT: dict[str, Any] = {
-    "schema_key": "schema",
-    "type_key": "type",
-    "default_key": "default",
-    "constraints_key": "constraints",
-    "metadata_key": "metadata",
     "index_key": "index",
     "model_name": "MyModel",
     "allowed_types": ["int", "str"],

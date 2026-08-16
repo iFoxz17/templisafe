@@ -26,7 +26,7 @@ class VariantParser:
         return Variant(name=model.name, bindings=bindings)
 
     def _parse_document(self, config: dict[str, Any], default_name: str) -> tuple[VariantInput, ...]:
-        variant_set_input = VariantSetInput.from_config(config, self._settings)
+        variant_set_input = VariantSetInput.from_config(config)
         return variant_set_input.normalize(default_name)
 
     def parse(self, variant_configs: Config) -> VariantSet:

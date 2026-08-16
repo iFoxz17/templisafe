@@ -24,11 +24,6 @@ def schema_parser_manager(request) -> SchemaParserManager:
 # -----------------------------
 
 SCHEMA_PARSER_SETTINGS_YAML: str = f"""
-schema_key: schema
-type_key: type
-default_key: default
-constraints_key: constraints
-metadata_key: metadata
 index_key: _index
 model_name: ModelSchema
 allowed_types: [bool, int, float, str, optional, list, dict, date, datetime, object]
@@ -50,7 +45,7 @@ def default_schema_settings() -> SchemaParserSettings:
 def custom_schema_settings(
     default_schema_settings: SchemaParserSettings,
 ) -> SchemaParserSettings:
-    return default_schema_settings.model_copy(update={"schema_key": "custom_schema"})
+    return default_schema_settings.model_copy(update={"model_name": "CustomSchema"})
 
 
 # -----------------------------

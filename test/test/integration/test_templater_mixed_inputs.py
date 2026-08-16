@@ -1,16 +1,22 @@
+import pytest
+
 from templisafe import (
     Build,
     ContentType,
     Parameterization,
     Rendering,
     RenderingSpec,
+    SchemaInput,
     SourceSettings,
     TemplateInput,
     Templater,
     TemplaterFactory,
+    VariableInput,
     VariantInput,
+    VariantSetInput,
 )
 from templisafe.core.util import DiagnosticPolicy
+from templisafe.exceptions.variant_error import IllegalVariantError
 
 TEMPLATE_YAML_STR: str = """
 Hello {{ community }}!
@@ -190,28 +196,28 @@ schema:
     assert build.rendering.rendered["toml"].rendered_str == "Linus scored 87"
 
 
-def test_build_accepts_settings_from_sources_and_custom_parser_keys() -> None:
+def test_build_accepts_settings_from_sources_with_canonical_schema_and_variant_keys() -> None:
     templater = TemplaterFactory().create(diagnostic_policy=DiagnosticPolicy.IGNORE)
 
     build = templater.build(
         template=inline_source("{{ name }}={{ score }}:{{ label }}", ContentType.TEXT),
         schema=inline_source(
             """
-variables:
+schema:
   name: str
   score:
-    kind: int
+    type: int
   label:
-    kind: optional[str]
-    fallback: stable
+    type: optional[str]
+    default: stable
 """,
             ContentType.YAML,
         ),
         variants=inline_source(
             """
-cases:
-  - id: custom_keys
-    values:
+variants:
+  - name: sourced_settings
+    bindings:
       name: Ada
       score: 42
 """,
@@ -227,9 +233,6 @@ n_threads: 1
         ),
         schema_parser_settings=inline_source(
             """
-schema_key: variables
-type_key: kind
-default_key: fallback
 index_key: position
 allowed_types:
   - int
@@ -240,9 +243,7 @@ allowed_types:
         ),
         variant_parser_settings=inline_source(
             """
-variants_key: cases
-variant_name_key: id
-bindings_key: values
+default_variants_name: case
 """,
             ContentType.YAML,
         ),
@@ -251,8 +252,8 @@ bindings_key: values
     )
 
     assert build.outcome == 0
-    assert build.rendering.rendered.names == {"custom_keys"}
-    assert build.rendering.rendered["custom_keys"].rendered_str == "Ada=42:stable"
+    assert build.rendering.rendered.names == {"sourced_settings"}
+    assert build.rendering.rendered["sourced_settings"].rendered_str == "Ada=42:stable"
 
 
 def test_build_accepts_mixed_dynamic_and_source_variants() -> None:
@@ -287,3 +288,115 @@ variants:
     assert build.rendering.rendered.names == {"dynamic", "source"}
     assert build.rendering.rendered["dynamic"].rendered_str == "Ada scored 42"
     assert build.rendering.rendered["source"].rendered_str == "Grace scored 99"
+
+
+def test_build_accepts_template_input_with_local_schema_and_inline_variants(tmp_path) -> None:
+    schema_file = tmp_path / "schema.yaml"
+    schema_file.write_text(
+        """
+schema:
+  name: str
+  score: int
+""",
+        encoding="utf-8",
+    )
+    templater = TemplaterFactory().create(diagnostic_policy=DiagnosticPolicy.IGNORE)
+
+    build = templater.build(
+        template=TemplateInput(template="{{ name }} scored {{ score }}"),
+        schema=SourceSettings.create(kind="local", path=str(schema_file)),
+        variants=inline_source(
+            """
+variants:
+  name: inline
+  bindings:
+    name: Ada
+    score: 42
+""",
+            ContentType.YAML,
+        ),
+    )
+
+    assert build.outcome == 0
+    assert build.rendering.rendered["inline"].rendered_str == "Ada scored 42"
+
+
+def test_build_accepts_json_schema_source_and_dynamic_variant() -> None:
+    templater = TemplaterFactory().create(diagnostic_policy=DiagnosticPolicy.IGNORE)
+
+    build = templater.build(
+        template=TemplateInput(template="{{ user }}={{ score }}"),
+        schema=inline_source(
+            """
+{
+  "schema": {
+    "user": "str",
+    "score": {
+      "type": "int",
+      "constraints": {
+        "gt": 0
+      }
+    }
+  }
+}
+""",
+            ContentType.JSON,
+        ),
+        variants=VariantInput(name="dynamic", bindings={"user": "Ada", "score": 42}),
+    )
+
+    assert build.outcome == 0
+    assert build.rendering.rendered["dynamic"].rendered_str == "Ada=42"
+
+
+def test_build_accepts_schema_input_with_source_and_dynamic_variants() -> None:
+    templater = TemplaterFactory().create(diagnostic_policy=DiagnosticPolicy.IGNORE)
+
+    build = templater.build(
+        template=inline_source("{{ user }}:{{ label }}", ContentType.TEXT),
+        schema=SchemaInput(
+            schema={
+                "user": "str",
+                "label": VariableInput(type="str", default="stable"),
+            }
+        ),
+        variants=[
+            VariantSetInput(variants={"dynamic": {"user": "Ada"}}),
+            inline_source(
+                """
+variants:
+  name: source
+  bindings:
+    user: Grace
+""",
+                ContentType.YAML,
+            ),
+        ],
+    )
+
+    assert build.outcome == 0
+    assert build.rendering.rendered.names == {"dynamic", "source"}
+    assert build.rendering.rendered["dynamic"].rendered_str == "Ada:stable"
+    assert build.rendering.rendered["source"].rendered_str == "Grace:stable"
+
+
+def test_duplicate_variant_names_across_dynamic_and_source_inputs_raise() -> None:
+    templater = TemplaterFactory().create(diagnostic_policy=DiagnosticPolicy.IGNORE)
+
+    with pytest.raises(IllegalVariantError):
+        templater.build(
+            template=TemplateInput(template="{{ user }}"),
+            schema=SchemaInput(schema={"user": "str"}),
+            variants=[
+                VariantInput(name="duplicate", bindings={"user": "Ada"}),
+                inline_source(
+                    """
+variants:
+  name: duplicate
+  bindings:
+    user: Grace
+""",
+                    ContentType.YAML,
+                ),
+            ],
+        )

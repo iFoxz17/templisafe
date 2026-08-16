@@ -13,9 +13,6 @@ from templisafe.settings.variant_parser_settings import VariantParserSettings
 # -----------------------------
 
 VARIANT_PARSER_SETTINGS_DICT: dict[str, Any] = {
-    "variants_key": "variants",
-    "variant_name_key": "name",
-    "bindings_key": "bindings",
     "default_variants_name": "default",
 }
 

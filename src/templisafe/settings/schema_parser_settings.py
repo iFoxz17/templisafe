@@ -1,31 +1,15 @@
 from abc import ABC
-from typing import Any, TypeVar
+from typing import Any
 
 from pydantic import Field, model_validator
 
 from templisafe.core.collections import dict_to_frozenset
 from templisafe.settings.settings import Settings, SettingsKind
 
-T = TypeVar("T", bound="SchemaParserSettings")
-
 
 class SchemaParserSettings(Settings, ABC):
     """Settings class for defining schema parsers."""
 
-    schema_key: str = Field("schema", description="The top-level key in the schema configuration")
-    type_key: str = Field("type", description="The key for variable types in the schema configuration")
-    default_key: str = Field(
-        "default",
-        description="The key for variable defaults in the schema configuration",
-    )
-    constraints_key: str = Field(
-        "constraints",
-        description="The key for variable constraints in the schema configuration",
-    )
-    metadata_key: str = Field(
-        "metadata",
-        description="The key for variable metadata in the schema configuration",
-    )
     index_key: str = Field(
         "_index",
         description="The reserved key used to store variable indexes in the Pydantic model metadata",

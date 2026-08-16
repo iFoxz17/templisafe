@@ -20,6 +20,11 @@ from templisafe.template.template_model import Schema
 
 PYDANTIC_METADATA_KEYS: frozenset[str] = frozenset({"title", "description", "example", "examples", "alias"})
 _NO_DEFAULT: object = object()
+SCHEMA_KEY = "schema"
+TYPE_KEY = "type"
+DEFAULT_KEY = "default"
+CONSTRAINTS_KEY = "constraints"
+METADATA_KEY = "metadata"
 
 
 class TypeParser:
@@ -203,12 +208,11 @@ class SchemaParser:
 
     def _parse_raw_var_mapping(self, name: str, schema: dict[str, Any]) -> RawVar:
         """Parse the verbose mapping form for a variable definition."""
-        settings = self._settings
-        if settings.type_key not in schema:
-            raise IllegalSchemaError(f"Variable '{name}' is missing '{settings.type_key}' key")
+        if TYPE_KEY not in schema:
+            raise IllegalSchemaError(f"Variable '{name}' is missing '{TYPE_KEY}' key")
 
         type_str = self._parse_raw_var_type(name, schema)
-        default = schema[settings.default_key] if settings.default_key in schema else _NO_DEFAULT
+        default = schema[DEFAULT_KEY] if DEFAULT_KEY in schema else _NO_DEFAULT
         constraints = self._parse_raw_var_constraints(name, schema)
         metadata = self._parse_raw_var_metadata(name, schema)
 
@@ -216,21 +220,21 @@ class SchemaParser:
 
     def _parse_raw_var_type(self, name: str, schema: dict[str, Any]) -> str:
         """Extract and validate the configured type string for a variable."""
-        type_str = schema[self._settings.type_key]
+        type_str = schema[TYPE_KEY]
         if not isinstance(type_str, str):
             raise IllegalSchemaError(f"Variable '{name}' has invalid type: {type_str}")
         return type_str
 
     def _parse_raw_var_constraints(self, name: str, schema: dict[str, Any]) -> dict[str, Any]:
         """Extract and validate field constraints for a variable."""
-        constraints = schema.get(self._settings.constraints_key, {})
+        constraints = schema.get(CONSTRAINTS_KEY, {})
         if not isinstance(constraints, dict):
             raise IllegalSchemaError(f"Variable '{name}' has invalid constraints: {constraints}")
         return constraints
 
     def _parse_raw_var_metadata(self, name: str, schema: dict[str, Any]) -> dict[str, Any]:
         """Extract and validate user metadata for a variable."""
-        metadata = schema.get(self._settings.metadata_key, {})
+        metadata = schema.get(METADATA_KEY, {})
         if not isinstance(metadata, dict):
             raise IllegalSchemaError(f"Variable '{name}' has invalid metadata: {metadata}")
         return metadata
@@ -318,13 +322,10 @@ class SchemaParser:
     def _parse_schema(self, schema_config: dict[str, Any]) -> Schema:
         """Convert a schema configuration into a Pydantic `BaseModel` type."""
 
-        settings: SchemaParserSettings = self._settings
-        schema_key: str = settings.schema_key
+        if SCHEMA_KEY not in schema_config:
+            raise IllegalSchemaError(f"Missing top-level schema key '{SCHEMA_KEY}'")
 
-        if schema_key not in schema_config:
-            raise IllegalSchemaError(f"Missing top-level schema key '{schema_key}'")
-
-        vars_dict: dict[str, Any] = schema_config[schema_key]
+        vars_dict: dict[str, Any] = schema_config[SCHEMA_KEY]
         if not isinstance(vars_dict, dict):
             raise IllegalSchemaError(f"Expected the schema definition to be a dict, found: {vars_dict}")
 
@@ -337,7 +338,7 @@ class SchemaParser:
             self._validate_default(var=var)
             fields[var.name] = (var.annotation, var.field())
 
-        model_name: str = settings.model_name
+        model_name: str = self._settings.model_name
         ModelSchema = create_model(
             model_name,
             __base__=BaseModel,

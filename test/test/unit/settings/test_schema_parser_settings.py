@@ -3,17 +3,13 @@ import json
 import pytest
 import yaml
 
+from templisafe.exceptions.settings_error import SettingsError
 from templisafe.settings.schema_parser_settings import SchemaParserSettings, Settings
 
 # ---------------------------------------------------------------------------
 # Sample configuration data
 # ---------------------------------------------------------------------------
 MINIMAL_CONFIG = {
-    "schema_key": "schema",
-    "type_key": "type",
-    "default_key": "default",
-    "constraints_key": "constraints",
-    "metadata_key": "metadata",
     "index_key": "index",
     "model_name": "MyModel",
 }
@@ -34,8 +30,8 @@ FULL_CONFIG = {
 def test_create_base_defaults():
     settings = Settings.create(kind="schema_parser_settings")
     assert isinstance(settings, SchemaParserSettings)
-    assert settings.schema_key == "schema"
-    assert settings.type_key == "type"
+    assert settings.index_key == "_index"
+    assert settings.model_name == "ModelSchema"
     assert settings.allowed_types == ()
     assert settings.type_aliases == frozenset()
 
@@ -43,7 +39,8 @@ def test_create_base_defaults():
 def test_create_base_minimal():
     settings = Settings.create(kind="schema_parser_settings", **MINIMAL_CONFIG)
     assert isinstance(settings, SchemaParserSettings)
-    assert settings.schema_key == "schema"
+    assert settings.index_key == "index"
+    assert settings.model_name == "MyModel"
     assert settings.allowed_types == ()
     assert settings.type_aliases == frozenset()
 
@@ -51,7 +48,8 @@ def test_create_base_minimal():
 def test_create_minimal():
     settings = SchemaParserSettings.create(**MINIMAL_CONFIG)
     assert isinstance(settings, SchemaParserSettings)
-    assert settings.schema_key == "schema"
+    assert settings.index_key == "index"
+    assert settings.model_name == "MyModel"
     assert settings.allowed_types == ()
     assert settings.type_aliases == frozenset()
 
@@ -96,3 +94,12 @@ def test_invalid_allowed_types():
     settings = SchemaParserSettings.create(**config)
     # Pydantic converts string to tuple of characters
     assert settings.allowed_types == tuple("not-a-list")
+
+
+@pytest.mark.parametrize(
+    "legacy_key",
+    ["schema_key", "type_key", "default_key", "constraints_key", "metadata_key"],
+)
+def test_legacy_custom_document_key_settings_raise(legacy_key):
+    with pytest.raises(SettingsError):
+        SchemaParserSettings.create(**{legacy_key: "custom"})

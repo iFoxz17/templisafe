@@ -3,7 +3,10 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from templisafe.exceptions.variant_error import IllegalVariantError
-from templisafe.settings.variant_parser_settings import VariantParserSettings
+
+VARIANTS_KEY = "variants"
+VARIANT_NAME_KEY = "name"
+VARIANT_BINDINGS_KEY = "bindings"
 
 
 class TemplateInput(BaseModel):
@@ -14,16 +17,27 @@ class TemplateInput(BaseModel):
     model_config = ConfigDict(frozen=True)
 
 
-class SchemaInput(BaseModel):
-    """Public input model for a schema configuration document."""
+class VariableInput(BaseModel):
+    """Public input model for one schema variable definition."""
 
-    schema_: dict[str, Any] = Field(alias="schema")
+    type: str
+    default: Any = None
+    constraints: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class SchemaInput(BaseModel):
+    """Public input model for a canonical schema document."""
+
+    schema_: dict[str, str | VariableInput] = Field(alias="schema")
 
     model_config = ConfigDict(frozen=True, populate_by_name=True)
 
     def to_config(self) -> dict[str, Any]:
         """Return the canonical schema configuration mapping."""
-        return self.model_dump(by_alias=True)
+        return self.model_dump(by_alias=True, exclude_unset=True)
 
 
 class VariantInput(BaseModel):
@@ -49,20 +63,17 @@ class VariantSetInput(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     @classmethod
-    def from_config(cls, config: dict[str, Any], settings: VariantParserSettings) -> "VariantSetInput":
-        """Create variant set input by adapting configurable field names to canonical names."""
+    def from_config(cls, config: dict[str, Any]) -> "VariantSetInput":
+        """Create variant set input from the canonical variant document shape."""
 
-        variants_key = settings.variants_key
-        if variants_key not in config:
-            raise IllegalVariantError(f"Missing top-level variants key '{variants_key}' in definition {config}")
+        if VARIANTS_KEY not in config:
+            raise IllegalVariantError(f"Missing top-level variants key '{VARIANTS_KEY}' in definition {config}")
 
         try:
             return cls.model_validate(
                 {
                     "variants": cls._normalize_context(
-                        config[variants_key],
-                        variant_name_key=settings.variant_name_key,
-                        bindings_key=settings.bindings_key,
+                        config[VARIANTS_KEY],
                     )
                 }
             )
@@ -72,36 +83,29 @@ class VariantSetInput(BaseModel):
     @staticmethod
     def _normalize_context(
         context: Any,
-        *,
-        variant_name_key: str,
-        bindings_key: str,
     ) -> Any:
         if isinstance(context, list):
-            return [
-                VariantSetInput._normalize_explicit_variant(item, variant_name_key, bindings_key) for item in context
-            ]
+            return [VariantSetInput._normalize_explicit_variant(item) for item in context]
         if isinstance(context, dict):
-            if variant_name_key in context or bindings_key in context:
-                return VariantSetInput._normalize_explicit_variant(context, variant_name_key, bindings_key)
+            if VARIANT_NAME_KEY in context or VARIANT_BINDINGS_KEY in context:
+                return VariantSetInput._normalize_explicit_variant(context)
             return context
         return context
 
     @staticmethod
     def _normalize_explicit_variant(
         value: Any,
-        variant_name_key: str,
-        bindings_key: str,
     ) -> dict[str, Any]:
         if not isinstance(value, dict):
             raise ValueError(f"Illegal variant definition: {value}")
 
-        if variant_name_key not in value:
-            raise ValueError(f"Missing variant name key '{variant_name_key}' in definition {value}")
-        if bindings_key not in value:
-            raise ValueError(f"Missing variant bindings key '{bindings_key}' in definition {value}")
+        if VARIANT_NAME_KEY not in value:
+            raise ValueError(f"Missing variant name key '{VARIANT_NAME_KEY}' in definition {value}")
+        if VARIANT_BINDINGS_KEY not in value:
+            raise ValueError(f"Missing variant bindings key '{VARIANT_BINDINGS_KEY}' in definition {value}")
 
-        name = value[variant_name_key]
-        bindings = value[bindings_key]
+        name = value[VARIANT_NAME_KEY]
+        bindings = value[VARIANT_BINDINGS_KEY]
         if not isinstance(name, str) or not name:
             raise ValueError(f"Illegal variant name: {name}")
         if not isinstance(bindings, dict):
@@ -132,6 +136,7 @@ class VariantSetInput(BaseModel):
 
 __all__ = [
     "TemplateInput",
+    "VariableInput",
     "SchemaInput",
     "VariantInput",
     "VariantSetInput",

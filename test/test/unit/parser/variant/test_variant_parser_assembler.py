@@ -40,10 +40,7 @@ def test_assemble_with_custom_manager_settings():
 def test_assemble_with_custom_variant_parser_settings():
     assembler = VariantParserAssembler()
     custom_settings = VariantParserSettings.create(
-        variants_key="vars",
-        variant_name_key="name",
-        bindings_key="bindings",
-        default_variants_name="default",
+        default_variants_name="case",
     )
     resolver = assembler.assemble(default_variant_parser_settings=custom_settings)
 
@@ -54,10 +51,7 @@ def test_assemble_with_all_custom_settings():
     assembler = VariantParserAssembler()
     manager_settings = ManagerSettings.from_yaml(CUSTOM_MANAGER_SETTINGS_YAML)
     custom_variant_parser_settings = VariantParserSettings.create(
-        variants_key="vars",
-        variant_name_key="name",
-        bindings_key="bindings",
-        default_variants_name="default",
+        default_variants_name="case",
     )
 
     resolver = assembler.assemble(
