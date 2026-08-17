@@ -1,7 +1,7 @@
 import logging
 from asyncio import Lock, Semaphore
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from aiohttp import ClientSession
 
@@ -122,7 +122,7 @@ class HttpAsyncSessionPool:
                     return
 
     @asynccontextmanager
-    async def session(self) -> AsyncGenerator[ClientSession]:
+    async def session(self) -> AsyncIterator[ClientSession]:
         """
         Async context manager to safely acquire and release a session.
 
@@ -197,7 +197,7 @@ class HttpAsyncSessionPoolThrottled(HttpAsyncSessionPool):
         self._semaphore.release()
 
     @asynccontextmanager
-    async def session(self) -> AsyncGenerator[ClientSession]:
+    async def session(self) -> AsyncIterator[ClientSession]:
         """
         Async context manager for safe acquire/release with global concurrency control.
 

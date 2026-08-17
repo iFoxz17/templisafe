@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from templisafe.content.content import ContentType
@@ -36,9 +38,8 @@ def test_create_http_source(mock_source_settings):
     source = factory.create(mock_source_settings)
 
     assert isinstance(source, HttpSource)
-    # Check that sync and async pools exist
     assert hasattr(source._session_pool, "sync_pool")
-    assert hasattr(source._session_pool, "async_pool")
+    assert source._session_pool.async_pool is None
 
 
 @pytest.mark.parametrize("sync_concurrency, async_concurrency", [(None, None), (2, 3)])
@@ -78,15 +79,17 @@ def test_create_with_throttled_pools(sync_concurrency, async_concurrency):
 
         assert isinstance(source._session_pool.sync_pool, HttpSyncSessionPool)
 
+    async_manager = Mock()
+    async_pool = factory._create_async_pool(async_manager, async_settings)
     if async_concurrency is not None:
         from templisafe.source.http.async_.http_async_session_pool import (
             HttpAsyncSessionPoolThrottled,
         )
 
-        assert isinstance(source._session_pool.async_pool, HttpAsyncSessionPoolThrottled)
+        assert isinstance(async_pool, HttpAsyncSessionPoolThrottled)
     else:
         from templisafe.source.http.async_.http_async_session_pool import (
             HttpAsyncSessionPool,
         )
 
-        assert isinstance(source._session_pool.async_pool, HttpAsyncSessionPool)
+        assert isinstance(async_pool, HttpAsyncSessionPool)

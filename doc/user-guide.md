@@ -14,6 +14,12 @@ The public API is intentionally small: most users only need
 pip install templisafe
 ```
 
+Install the async HTTP extra only when using async HTTP sources:
+
+```bash
+pip install "templisafe[http-async]"
+```
+
 ## Quick Start
 
 ```python

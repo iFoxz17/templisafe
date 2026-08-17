@@ -1,20 +1,23 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from templisafe.settings.source.http.http_session_settings import (
     HttpAsyncSessionSettings,
     HttpSyncSessionSettings,
 )
 from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
 
-from .async_.http_async_session_manager import HttpAsyncSessionManager
-from .async_.http_async_session_pool import (
-    HttpAsyncSessionPool,
-    HttpAsyncSessionPoolThrottled,
-)
 from .http_source import HttpSessionPool, HttpSource
 from .sync.http_sync_session_manager import HttpSyncSessionManager
 from .sync.http_sync_session_pool import (
     HttpSyncSessionPool,
     HttpSyncSessionPoolThrottled,
 )
+
+if TYPE_CHECKING:
+    from .async_.http_async_session_manager import HttpAsyncSessionManager
+    from .async_.http_async_session_pool import HttpAsyncSessionPool
 
 
 class HttpSourceFactory:
@@ -75,6 +78,10 @@ class HttpSourceFactory:
         HttpAsyncSessionPool
             A fully configured asynchronous session pool.
         """
+        from .async_.http_async_session_pool import (
+            HttpAsyncSessionPool,
+            HttpAsyncSessionPoolThrottled,
+        )
 
         max_connections: int = min(async_settings.max_connections, async_settings.max_connections_per_host)
 
@@ -113,14 +120,11 @@ class HttpSourceFactory:
         """
 
         sync_settings: HttpSyncSessionSettings = settings.sync_session_settings
-        async_settings: HttpAsyncSessionSettings = settings.async_session_settings
 
         sync_manager: HttpSyncSessionManager = HttpSyncSessionManager(sync_settings)
-        async_manager: HttpAsyncSessionManager = HttpAsyncSessionManager(async_settings)
 
         sync_pool: HttpSyncSessionPool = self._create_sync_pool(sync_manager, sync_settings)
-        async_pool: HttpAsyncSessionPool = self._create_async_pool(async_manager, async_settings)
 
-        pool: HttpSessionPool = HttpSessionPool(sync_pool=sync_pool, async_pool=async_pool)
+        pool: HttpSessionPool = HttpSessionPool(sync_pool=sync_pool)
 
         return HttpSource(settings=settings, session_pool=pool)
