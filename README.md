@@ -1,6 +1,6 @@
 # templisafe
 
-[![Develop CI/CD](https://github.com/iFoxz17/templisafe/actions/workflows/develop.yml/badge.svg?branch=develop)](https://github.com/iFoxz17/templisafe/actions/workflows/develop.yml)
+[![Dev CI/CD](https://github.com/iFoxz17/templisafe/actions/workflows/dev.yml/badge.svg?branch=dev)](https://github.com/iFoxz17/templisafe/actions/workflows/dev.yml)
 [![Main CI/CD](https://github.com/iFoxz17/templisafe/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/iFoxz17/templisafe/actions/workflows/main.yml)
 [![Release CI/CD](https://github.com/iFoxz17/templisafe/actions/workflows/release.yml/badge.svg?branch=release)](https://github.com/iFoxz17/templisafe/actions/workflows/release.yml)
 

@@ -1,9 +1,9 @@
-name: Develop CI/CD
+name: Dev CI/CD
 
 on:
   push:
     branches:
-      - develop
+      - dev
     paths:
       - "src/**"
       - "test/**"
@@ -11,7 +11,7 @@ on:
       - ".github/workflows/**"
   pull_request:
     branches:
-      - develop
+      - dev
     paths:
       - "src/**"
       - "test/**"

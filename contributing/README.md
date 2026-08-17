@@ -93,10 +93,10 @@ python -m pytest -c test/pytest.ini test/test/integration/test_templater_basic_w
 
 ## Branches And CI
 
-- Use `develop` for integration work.
+- Use `dev` for integration work.
 - Use `main` for stable releases.
 - Use `release` for release publication.
-- Pull requests into `develop` or `main` run GitHub Actions quality checks and
+- Pull requests into `dev` or `main` run GitHub Actions quality checks and
   tests.
 - Pushes to the `release` branch run the release pipeline: quality checks,
   tests, package build, tag and GitHub release creation, then PyPI publishing.
