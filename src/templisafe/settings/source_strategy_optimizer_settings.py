@@ -3,7 +3,10 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from templisafe.source import *
+from templisafe.source.http.http_source import HttpSource
+from templisafe.source.inline_source import InlineSource
+from templisafe.source.local_source import LocalSource
+from templisafe.source.source import Source
 
 
 class SourceLatencyProfile(Enum):
@@ -19,10 +22,6 @@ _SOURCE_LATENCY_MAP: MappingProxyType[type[Source], SourceLatencyProfile] = Mapp
         InlineSource: SourceLatencyProfile.NONE,
         LocalSource: SourceLatencyProfile.LOW,
         HttpSource: SourceLatencyProfile.HIGH,
-        AwsS3BucketSource: SourceLatencyProfile.HIGH,
-        AwsSecretsManagerSource: SourceLatencyProfile.HIGH,
-        AwsSsmParameterSource: SourceLatencyProfile.HIGH,
-        AwsDynamoDBSource: SourceLatencyProfile.HIGH,
     }
 )
 

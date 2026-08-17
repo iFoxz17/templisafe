@@ -7,7 +7,6 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## High Priority
 
-- [ ] Release the library on PyPI
 - [ ] Add support for user-defined Python objects in schemas and variants
 - [ ] Document supported settings fields, schema types, constraints and metadata
 
@@ -16,7 +15,6 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 - [ ] Add TestPyPI staging publishing before production PyPI releases
 - [ ] Improve error messages
 - [ ] Clarify and refactor `TemplateEngineSettings.config` input semantics
-- [ ] Extend stress tests for local sources
 - [ ] Extend stress tests for synchronous HTTP sources
 - [ ] Add a benchmark/performance baseline for compile, validate, render and build
 - [ ] Develop LLM templating use case

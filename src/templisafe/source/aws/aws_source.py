@@ -3,10 +3,9 @@ from importlib import import_module
 from threading import Lock
 from typing import Any
 
+from templisafe.exceptions.source_error import MissingOptionalSourceDependencyError
 from templisafe.settings.source.aws.aws_source_settings import AwsSourceSettings
 from templisafe.source.source import Source
-
-boto3: Any = import_module("boto3")
 
 
 class AwsSource(Source, ABC):
@@ -25,9 +24,21 @@ class AwsSource(Source, ABC):
         assert isinstance(self._settings, AwsSourceSettings)
         return self._settings
 
+    def _load_optional_dependency(self, dependency: str) -> Any:
+        try:
+            return import_module(dependency)
+        except ModuleNotFoundError as e:
+            if e.name == dependency:
+                raise MissingOptionalSourceDependencyError(dependency, "s3") from e
+            raise
+
+    def _client_error_type(self) -> type[Exception]:
+        return self._load_optional_dependency("botocore.exceptions").ClientError
+
     def _get_client(self, aws_service: str, **kwargs) -> Any:
         """Initialize the boto3 client."""
 
+        boto3: Any = self._load_optional_dependency("boto3")
         boto3_kwargs: dict[str, str] = {k: v for k, v in self.settings.boto3_kwargs.items() if v is not None}
         boto3_kwargs.update(kwargs)
 

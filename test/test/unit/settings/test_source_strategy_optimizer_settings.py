@@ -71,10 +71,6 @@ def test_source_latency_map_profiles(default_settings: StrategyOptimizerSettings
     assert mapping[InlineSource] == SourceLatencyProfile.NONE
     assert mapping[LocalSource] == SourceLatencyProfile.LOW
     assert mapping[HttpSource] == SourceLatencyProfile.HIGH
-    assert mapping[AwsS3BucketSource] == SourceLatencyProfile.HIGH
-    assert mapping[AwsSecretsManagerSource] == SourceLatencyProfile.HIGH
-    assert mapping[AwsSsmParameterSource] == SourceLatencyProfile.HIGH
-    assert mapping[AwsDynamoDBSource] == SourceLatencyProfile.HIGH
 
 
 # ---------------------------------------------------------------------------

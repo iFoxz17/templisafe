@@ -7,7 +7,11 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from overrides import overrides
 from requests import RequestException, Response, Session
 
-from templisafe.exceptions.source_error import HttpSourceError, UninitializedSourceError
+from templisafe.exceptions.source_error import (
+    HttpSourceError,
+    MissingOptionalSourceDependencyError,
+    UninitializedSourceError,
+)
 from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
 from templisafe.source.source import AsyncSource
 
@@ -75,8 +79,13 @@ class HttpSource(AsyncSource):
 
     def _get_async_pool(self) -> HttpAsyncSessionPool:
         if self._session_pool.async_pool is None:
-            from .async_.http_async_session_manager import HttpAsyncSessionManager
-            from .http_source_factory import HttpSourceFactory
+            try:
+                from .async_.http_async_session_manager import HttpAsyncSessionManager
+                from .http_source_factory import HttpSourceFactory
+            except ModuleNotFoundError as e:
+                if e.name == "aiohttp":
+                    raise MissingOptionalSourceDependencyError("aiohttp", "http-async") from e
+                raise
 
             factory = HttpSourceFactory()
             async_manager = HttpAsyncSessionManager(self.settings.async_session_settings)
@@ -145,7 +154,12 @@ class HttpSource(AsyncSource):
             raise UninitializedSourceError()
 
         try:
-            from aiohttp import ClientError, ClientTimeout
+            try:
+                from aiohttp import ClientError, ClientTimeout
+            except ModuleNotFoundError as e:
+                if e.name == "aiohttp":
+                    raise MissingOptionalSourceDependencyError("aiohttp", "http-async") from e
+                raise
 
             timeout: ClientTimeout = ClientTimeout(total=self.settings.timeout)
             async with session.get(self.url, timeout=timeout) as response:

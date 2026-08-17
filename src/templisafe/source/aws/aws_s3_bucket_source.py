@@ -1,4 +1,3 @@
-from importlib import import_module
 from typing import Any
 
 from overrides import overrides
@@ -8,8 +7,6 @@ from templisafe.settings.source.aws.aws_s3_bucket_source_settings import (
     AwsS3BucketSourceSettings,
 )
 from templisafe.source.aws.aws_source import AwsSource
-
-ClientError: type[Exception] = import_module("botocore.exceptions").ClientError
 
 
 class AwsS3BucketSource(AwsSource):
@@ -31,6 +28,7 @@ class AwsS3BucketSource(AwsSource):
     @overrides
     def read(self) -> str:
         client: Any = self._get_client("s3")
+        ClientError = self._client_error_type()
         try:
             resp = client.get_object(Bucket=self.bucket, Key=self.key)
             body: Any = resp.get("Body")
