@@ -218,7 +218,7 @@ variants, configurable sources or repeatable workflows.
   and diagnostics.
 - [Architecture](doc/architecture.md): internal modules, task pipeline,
   services, providers and extension points.
-- [Use cases](use_case): practical examples.
+- [Examples](example): practical examples.
 - [Contributing](contributing): development setup, tests and contribution
   workflow.
 
