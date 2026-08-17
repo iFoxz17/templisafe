@@ -227,5 +227,4 @@ python -m mypy src
 
 ## License
 
-templisafe is open-source software licensed under the MIT License. See
-[LICENSE](LICENSE) for details.
+templisafe is open-source software licensed under the MIT License. See [the license](LICENSE) for more details.
