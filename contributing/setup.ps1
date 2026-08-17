@@ -1,12 +1,24 @@
-# Script to set up editable install and run pytest in PowerShell
-
-# Exit on any error
 $ErrorActionPreference = "Stop"
 
-Write-Host "Installing package in editable mode with dev dependencies..."
-pip install -e ".[dev, notebook]"
+Write-Host "Upgrading pip..."
+python -m pip install --upgrade pip
 
-Write-Host "Running tests..."
-python -m pytest -c test/pytest.ini -v
+Write-Host "Installing package in editable mode with development and notebook dependencies..."
+python -m pip install -e ".[dev,notebook]"
 
-Write-Host "Project setup completed successfully"
+Write-Host "Installing pre-commit hooks..."
+python -m pre_commit install
+
+Write-Host "Running Ruff lint checks..."
+python -m ruff check .
+
+Write-Host "Checking formatting with Ruff..."
+python -m ruff format --check .
+
+Write-Host "Running mypy..."
+python -m mypy src
+
+Write-Host "Running tests with coverage..."
+python -m pytest -c test/pytest.ini -q --cov=templisafe --cov-report=term-missing --cov-report=xml:coverage.xml
+
+Write-Host "Contributor setup completed successfully."

@@ -6,22 +6,26 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 ---
 
 ## High Priority
-- [ ] Develop architectural, consumer and developer documentations
-- [ ] Release the library on pip
-- [ ] Add a test for Templater concurrency
-- [ ] Develop LLM templating use case
-- [ ] Develop email template use case
-- [ ] Document pydantic fields (In particular of Settings)
+
+- [ ] Release the library on PyPI
+- [ ] Add support for user-defined Python objects in schemas and variants
+- [ ] Document supported settings fields, schema types, constraints and metadata
 
 ## Medium Priority
+
 - [ ] Add TestPyPI staging publishing before production PyPI releases
-- [ ] Add CI coverage reporting
-- [ ] Refactor TemplateEngineSettings config parameter, which actually can be also a json or yaml string
 - [ ] Improve error messages
-- [ ] Implement async sources and SourceExecutorLine concept (dividing sources in three lines)  
-- [ ] Implement a min heap for the HttpSession Management
+- [ ] Clarify and refactor `TemplateEngineSettings.config` input semantics
+- [ ] Extend stress tests for local sources
+- [ ] Extend stress tests for synchronous HTTP sources
+- [ ] Add a benchmark/performance baseline for compile, validate, render and build
+- [ ] Develop LLM templating use case
+- [ ] Develop email template use case
 
 ## Low Priority
-- [ ] Add schema inference during the rendering when no schema is specified
-- [ ] Add support for GCP (GCPSource)
-- [ ] Add support for Azure (AzureSource)
+
+- [ ] Implement async sources and `SourceExecutorLine` concept
+- [ ] Optimize HTTP session reuse strategy after profiling
+- [ ] Add schema inference during rendering when no schema is specified
+- [ ] Add support for GCP sources
+- [ ] Add support for Azure sources

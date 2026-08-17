@@ -12,6 +12,11 @@ When the diagram, code and this document diverge, update them together.
 `templisafe` separates the user-facing templating workflow from the mechanics
 required to load, parse, validate and render resources.
 
+The architecture deliberately follows strictly the **single responsibility principle**.
+This makes the design slightly more explicit and formal than a minimal
+implementation would be, but it gives each component a clear role, keeps
+responsibilities easy to reason about and makes the library easier to extend.
+
 At the highest level, public API methods create a validated task. The task then
 flows through a deterministic service pipeline until it becomes a domain result:
 
@@ -339,17 +344,11 @@ selection.
 3. Register it in `ConfigParserFactory`.
 4. Add parser and source integration tests.
 
-### Add Parser Settings
-
-1. Extend the corresponding settings model.
-2. Update the parser default.
-3. Add tests for default behavior and override behavior.
-
 ## Architectural Invariants
 
 - Public API methods construct tasks; they do not perform low-level work.
 - Services transform bundles and delegate specialized work to providers.
-- Providers stay thin and deterministic.
+- Providers apply components methods on appropriate resources and return the results.
 - Sources only read content.
 - Executors only coordinate source reads.
 - Parsers only parse content or configuration.

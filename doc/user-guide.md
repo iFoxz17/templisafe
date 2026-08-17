@@ -17,8 +17,8 @@ pip install templisafe
 Install optional extras only when needed:
 
 ```bash
-pip install "templisafe[http-async]"
-pip install "templisafe[s3]"
+pip install "templisafe[http-async]"    # Async sources support
+pip install "templisafe[s3]"            # S3 sources support
 ```
 
 The development extra includes test and quality tooling:
@@ -129,7 +129,7 @@ templater = TemplaterFactory().create(template_engine_settings=engine_settings)
 The engine is responsible for extracting variable names from the template and
 for rendering the final string. Engine-specific features remain available
 through engine settings. For example, a Jinja loader can be passed through
-`TemplateEngineSettings.config`.
+`TemplateEngineSettings.config` (see [this use case](example\1_safe-query-parameterization) for more details).
 
 ## Schemas
 
