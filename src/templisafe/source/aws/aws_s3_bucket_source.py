@@ -1,3 +1,4 @@
+from importlib import import_module
 from typing import Any
 
 from overrides import overrides
@@ -7,6 +8,8 @@ from templisafe.settings.source.aws.aws_s3_bucket_source_settings import (
     AwsS3BucketSourceSettings,
 )
 from templisafe.source.aws.aws_source import AwsSource
+
+ClientError: type[Exception] = import_module("botocore.exceptions").ClientError
 
 
 class AwsS3BucketSource(AwsSource):

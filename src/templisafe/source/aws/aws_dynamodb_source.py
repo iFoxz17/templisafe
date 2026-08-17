@@ -1,4 +1,5 @@
 import json
+from importlib import import_module
 from typing import Any
 
 from overrides import overrides
@@ -9,6 +10,8 @@ from templisafe.settings.source.aws.aws_dynamodb_source_settings import (
 )
 from templisafe.settings.source.aws.aws_source_settings import AwsSourceSettings
 from templisafe.source.aws.aws_source import AwsSource
+
+ClientError: type[Exception] = import_module("botocore.exceptions").ClientError
 
 
 class AwsDynamoDBSource(AwsSource):

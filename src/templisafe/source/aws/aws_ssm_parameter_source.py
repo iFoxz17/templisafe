@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from overrides import overrides
 
 from templisafe.exceptions.source_error import AwsSourceError
@@ -6,6 +8,8 @@ from templisafe.settings.source.aws.aws_ssm_parameter_source_settings import (
 )
 from templisafe.settings.source.source_settings import SourceSettings
 from templisafe.source.aws.aws_source import AwsSource
+
+ClientError: type[Exception] = import_module("botocore.exceptions").ClientError
 
 
 class AwsSsmParameterSource(AwsSource):

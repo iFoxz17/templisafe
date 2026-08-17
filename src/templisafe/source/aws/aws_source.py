@@ -7,6 +7,8 @@ from templisafe.exceptions.source_error import MissingOptionalSourceDependencyEr
 from templisafe.settings.source.aws.aws_source_settings import AwsSourceSettings
 from templisafe.source.source import Source
 
+boto3: Any = import_module("boto3")
+
 
 class AwsSource(Source, ABC):
     """Abstract base class representing a AWS data source."""
@@ -38,7 +40,6 @@ class AwsSource(Source, ABC):
     def _get_client(self, aws_service: str, **kwargs) -> Any:
         """Initialize the boto3 client."""
 
-        boto3: Any = self._load_optional_dependency("boto3")
         boto3_kwargs: dict[str, str] = {k: v for k, v in self.settings.boto3_kwargs.items() if v is not None}
         boto3_kwargs.update(kwargs)
 
