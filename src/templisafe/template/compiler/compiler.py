@@ -1,15 +1,18 @@
 from typing import Any
+
 from pydantic import BaseModel
 
+from templisafe.core.metadata import metadata_value
 from templisafe.settings.compiler_settings import CompilerSettings
 from templisafe.template.template_model import (
+    Compilation,
     CompilationSpec,
-    Template,
-    Schema,
-    Outcome,
     Diagnostic,
-    Compilation
+    Outcome,
+    Schema,
+    Template,
 )
+
 
 class Compiler:
     """Compiles a template against a schema, producing a compilation result with diagnostics."""
@@ -21,15 +24,14 @@ class Compiler:
 
     def _extract_index(self, model_type: type[BaseModel], var_name: str) -> int | None:
         field = model_type.model_fields[var_name]
-        json_dict = field.json_schema_extra
-        index_value = json_dict.get(self._settings.index_key) if isinstance(json_dict, dict) else None
+        index_value = metadata_value(field.metadata, self._settings.index_key)
         index: int | None = index_value if isinstance(index_value, int) else None
         return index
 
     def _create_empty_schema(self, var_names: set[str]) -> Schema:
-        """Create a schema with an empty Pydantic model having all variables as Optional[object]."""
-        
-        from pydantic import create_model, Field
+        # Lazy imports since this method could be used rarely
+        from pydantic import Field, create_model
+
         fields: dict[str, Any] = {name: (object, Field(None)) for name in var_names}
         model_cls: type = create_model("EmptySchema", **fields)
         return Schema(model_cls=model_cls)
@@ -39,7 +41,7 @@ class Compiler:
         template: Template,
         schema: Schema | None = None,
     ) -> Compilation:
-        """Compile a template with an optional schema, returning a Compilation with diagnostics."""
+        """Compile a template with an optional schema, returning a `Compilation` with diagnostics."""
 
         template_vars: set[str] = template.vars
 
@@ -60,13 +62,7 @@ class Compiler:
         unused_vars: set[str] = schema_vars - template_vars
 
         diagnostics: list[Diagnostic] = []
-        outcome = (
-            Outcome.ERROR
-            if undeclared_vars
-            else Outcome.WARNING
-            if unused_vars
-            else Outcome.SUCCESS
-        )
+        outcome = Outcome.ERROR if undeclared_vars else Outcome.WARNING if unused_vars else Outcome.SUCCESS
 
         # Unused variables (provided in schema but not in template)
         for var_name in sorted(unused_vars):
@@ -75,7 +71,7 @@ class Compiler:
                     level=Outcome.WARNING,
                     message=f"Unused variable: '{var_name}'",
                     name=var_name,
-                    index=self._extract_index(model_cls, var_name)
+                    index=self._extract_index(model_cls, var_name),
                 )
             )
 
@@ -85,7 +81,7 @@ class Compiler:
                 Diagnostic(
                     level=Outcome.ERROR,
                     message=f"Undeclared variable: '{var_name}'",
-                    name=var_name
+                    name=var_name,
                 )
             )
 
@@ -103,6 +99,3 @@ class Compiler:
             _spec=CompilationSpec(template=template, schema=schema),
             diagnostics=tuple(diagnostics),
         )
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}()"

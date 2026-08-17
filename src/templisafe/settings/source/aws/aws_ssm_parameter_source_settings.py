@@ -1,16 +1,18 @@
 from overrides import overrides
+from pydantic import Field
 
 from templisafe.settings.source.aws.aws_source_settings import AwsSourceSettings
-from templisafe.settings.source.source_settings import SourceSettings, SourceKind
+from templisafe.settings.source.source_settings import SourceKind, SourceSettings
 
 
 class AwsSsmParameterSourceSettings(AwsSourceSettings):
     """
     Settings for reading a parameter from AWS SSM Parameter Store.
+    The source `content_type` can be inferred from the `parameter_name` extension, if present.
     """
 
-    parameter_name: str
-    with_decryption: bool = True  # default to decrypt secure strings
+    parameter_name: str = Field(..., description="The name of the SSM parameter")
+    with_decryption: bool = Field(default=True, description="Whether to decrypt secure string parameters")
 
     @property
     @overrides
@@ -18,5 +20,4 @@ class AwsSsmParameterSourceSettings(AwsSourceSettings):
         return SourceKind.AWS_SSM_PARAMETER
 
 
-# Register subclass
 SourceSettings.register_source_kind(SourceKind.AWS_SSM_PARAMETER, AwsSsmParameterSourceSettings)

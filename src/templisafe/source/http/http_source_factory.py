@@ -1,0 +1,130 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from templisafe.settings.source.http.http_session_settings import (
+    HttpAsyncSessionSettings,
+    HttpSyncSessionSettings,
+)
+from templisafe.settings.source.http.http_source_settings import HttpSourceSettings
+
+from .http_source import HttpSessionPool, HttpSource
+from .sync.http_sync_session_manager import HttpSyncSessionManager
+from .sync.http_sync_session_pool import (
+    HttpSyncSessionPool,
+    HttpSyncSessionPoolThrottled,
+)
+
+if TYPE_CHECKING:
+    from .async_.http_async_session_manager import HttpAsyncSessionManager
+    from .async_.http_async_session_pool import HttpAsyncSessionPool
+
+
+class HttpSourceFactory:
+    """
+    Factory for creating `HttpSource` instances with properly configured
+    synchronous and asynchronous session pools.
+    """
+
+    def _create_sync_pool(
+        self, manager: HttpSyncSessionManager, sync_settings: HttpSyncSessionSettings
+    ) -> HttpSyncSessionPool:
+        """
+        Create a synchronous session pool for a given manager and settings.
+
+        Parameters
+        ----------
+        manager : HttpSyncSessionManager
+            Manager responsible for creating and resetting sync sessions.
+        sync_settings : HttpSyncSessionSettings
+            Settings defining pool connections, max slots and concurrency.
+
+        Returns
+        -------
+        HttpSyncSessionPool
+            A fully configured synchronous session pool.
+        """
+
+        max_connections: int = sync_settings.pool_connections * sync_settings.pool_maxsize
+        if sync_settings.max_concurrency is not None:
+            return HttpSyncSessionPoolThrottled(
+                manager=manager,
+                max_connections=max_connections,
+                max_concurrency=sync_settings.max_concurrency,
+                max_slots=sync_settings.max_slots,
+            )
+
+        return HttpSyncSessionPool(
+            manager=manager,
+            max_connections=max_connections,
+            max_slots=sync_settings.max_slots,
+        )
+
+    def _create_async_pool(
+        self, manager: HttpAsyncSessionManager, async_settings: HttpAsyncSessionSettings
+    ) -> HttpAsyncSessionPool:
+        """
+        Create an asynchronous session pool for a given manager and settings.
+
+        Parameters
+        ----------
+        manager : HttpAsyncSessionManager
+            Manager responsible for creating and resetting async sessions.
+        async_settings : HttpAsyncSessionSettings
+            Settings defining max connections, concurrency and max slots.
+
+        Returns
+        -------
+        HttpAsyncSessionPool
+            A fully configured asynchronous session pool.
+        """
+        from .async_.http_async_session_pool import (
+            HttpAsyncSessionPool,
+            HttpAsyncSessionPoolThrottled,
+        )
+
+        max_connections: int = min(async_settings.max_connections, async_settings.max_connections_per_host)
+
+        if async_settings.max_concurrency is not None:
+            return HttpAsyncSessionPoolThrottled(
+                manager=manager,
+                max_connections=max_connections,
+                max_concurrency=async_settings.max_concurrency,
+                max_slots=async_settings.max_slots,
+            )
+
+        return HttpAsyncSessionPool(
+            manager=manager,
+            max_connections=async_settings.max_connections,
+            max_slots=async_settings.max_slots,
+        )
+
+    def create(self, settings: HttpSourceSettings) -> HttpSource:
+        """
+        Create a `HttpSource` instance from the provided settings.
+
+        This method will:
+        1. Create sync and async managers from the settings.
+        2. Create appropriate session pools.
+        3. Combine them into a `HttpSessionPool` and return a `HttpSource`.
+
+        Parameters
+        ----------
+        settings : HttpSourceSettings
+            The HTTP source settings used to configure managers and pools.
+
+        Returns
+        -------
+        HttpSource
+            A fully initialized HTTP source with session pools ready to use.
+        """
+
+        sync_settings: HttpSyncSessionSettings = settings.sync_session_settings
+
+        sync_manager: HttpSyncSessionManager = HttpSyncSessionManager(sync_settings)
+
+        sync_pool: HttpSyncSessionPool = self._create_sync_pool(sync_manager, sync_settings)
+
+        pool: HttpSessionPool = HttpSessionPool(sync_pool=sync_pool)
+
+        return HttpSource(settings=settings, session_pool=pool)

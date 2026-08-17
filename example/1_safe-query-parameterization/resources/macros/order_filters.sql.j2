@@ -1,0 +1,6 @@
+{% macro customer_id_filter(customer_ids) -%}
+{% if customer_ids %}  AND customer_id IN (
+{% for customer_id in customer_ids %}    {{ customer_id }}{% if not loop.last %},{% endif %}
+{% endfor %}  )
+{% endif -%}
+{%- endmacro %}

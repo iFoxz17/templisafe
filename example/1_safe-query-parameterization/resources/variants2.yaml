@@ -1,0 +1,13 @@
+variants:
+  all_paid_orders:
+    columns:
+      - order_id
+      - customer_id
+      - total_amount
+      - created_at
+
+    # status -> defaulted
+    # min_total -> defaulted
+    start_date: "2024-01-01"
+    end_date: "2024-02-01"
+    # customer_ids -> defaulted

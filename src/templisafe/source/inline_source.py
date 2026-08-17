@@ -1,9 +1,12 @@
 from overrides import overrides
 
-from templisafe.source.source import Source
 from templisafe.settings.source.inline_source_settings import InlineSourceSettings
+from templisafe.source.source import Source
+
 
 class InlineSource(Source):
+    """A proxy source for an inline string."""
+
     def __init__(self, settings: InlineSourceSettings) -> None:
         super().__init__(settings)
 

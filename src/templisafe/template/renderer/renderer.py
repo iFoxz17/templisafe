@@ -1,21 +1,24 @@
 from typing import Any
+
 from pydantic import BaseModel, ValidationError
 
+from templisafe.core.metadata import metadata_value
 from templisafe.engine.template_engine import TemplateEngine
 from templisafe.settings.renderer_settings import RendererSettings
 from templisafe.template.template_model import (
     CompilationSpec,
+    Diagnostic,
+    Outcome,
+    Parameterization,
+    Rendering,
+    RenderingSpec,
     Schema,
     VariantSet,
-    Parameterization,
-    RenderingSpec,
-    Outcome,
-    Diagnostic,
-    Rendering
 )
 
+
 class Renderer:
-    """Renders compiled templates using Jinja2 Environment, with diagnostics."""
+    """Renders compiled templates using a template engine."""
 
     __slots__: tuple[str, ...] = ("_settings",)
 
@@ -24,13 +27,12 @@ class Renderer:
 
     def _extract_index(self, model_type: type[BaseModel], var_name: str) -> int | None:
         field = model_type.model_fields[var_name]
-        json_dict = field.json_schema_extra
-        index_value = json_dict.get(self._settings.index_key) if isinstance(json_dict, dict) else None
+        index_value = metadata_value(field.metadata, self._settings.index_key)
         index: int | None = index_value if isinstance(index_value, int) else None
         return index
 
     def _diagnostic_message(self, variant_name: str, msg: str) -> str:
-        return f"'{variant_name}' - {msg}"
+        return f"Variant '{variant_name}' - {msg}"
 
     def validate(
         self,
@@ -38,6 +40,7 @@ class Renderer:
         variants_set: VariantSet,
     ) -> Rendering:
         """Validate multiple variants against the compiled query schema."""
+
         all_diagnostics: list[Diagnostic] = []
         overall_outcome: Outcome = Outcome.SUCCESS
 
@@ -57,9 +60,7 @@ class Renderer:
                 diagnostics.append(
                     Diagnostic(
                         level=Outcome.WARNING,
-                        message=self._diagnostic_message(
-                            variant_name, f"Extra binding provided: '{b_name}'"
-                        ),
+                        message=self._diagnostic_message(variant_name, f"Extra binding provided: '{b_name}'"),
                         name=b_name,
                         index=variant[b_name].index,
                     )
@@ -67,19 +68,15 @@ class Renderer:
 
             # Missing bindings (required but not provided)
             missing_bindings: set[str] = {
-                name
-                for name in var_names - bindings_names
-                if model_cls.model_fields[name].is_required()
+                name for name in var_names - bindings_names if model_cls.model_fields[name].is_required()
             }
             for b_name in sorted(missing_bindings):
                 diagnostics.append(
                     Diagnostic(
                         level=Outcome.ERROR,
-                        message=self._diagnostic_message(
-                            variant_name, f"Missing required binding: '{b_name}'"
-                        ),
+                        message=self._diagnostic_message(variant_name, f"Missing required binding: '{b_name}'"),
                         name=b_name,
-                        index=self._extract_index(model_cls, b_name)
+                        index=self._extract_index(model_cls, b_name),
                     )
                 )
 
@@ -95,7 +92,7 @@ class Renderer:
                             level=Outcome.ERROR,
                             message=self._diagnostic_message(
                                 variant_name,
-                                f"Invalid value for binding '{name}': {err['msg']}"
+                                f"Invalid value for binding '{name}': {err['msg']}",
                             ),
                             name=name,
                             index=variant[name].index if name in variant else None,
@@ -118,9 +115,11 @@ class Renderer:
         message = (
             "Validation successful"
             if overall_outcome == Outcome.SUCCESS
-            else "Validation completed with warnings"
-            if overall_outcome == Outcome.WARNING
-            else "Validation failed due to errors"
+            else (
+                "Validation completed with warnings"
+                if overall_outcome == Outcome.WARNING
+                else "Validation failed due to errors"
+            )
         )
 
         return Rendering(
@@ -136,7 +135,8 @@ class Renderer:
         variants_set: VariantSet,
         engine: TemplateEngine,
     ) -> Rendering:
-        
+        """Render multiple variants against the compiled query schema."""
+
         validation: Rendering = self.validate(compiled, variants_set)
         if validation.outcome == Outcome.ERROR:
             return validation  # Do not render if validation failed
@@ -152,7 +152,6 @@ class Renderer:
             # Fill in default values for missing fields
             for var_name in var_names - variant.names:
                 field = model_cls.model_fields[var_name]
-                assert field.default is not None
                 binding_value_map[var_name] = field.default
 
             # Render template
@@ -162,9 +161,7 @@ class Renderer:
 
         rendered_query = RenderingSpec(parameterizations)
         message = (
-            "Rendering successful"
-            if validation.outcome == Outcome.SUCCESS
-            else "Rendering completed with warnings"
+            "Rendering successful" if validation.outcome == Outcome.SUCCESS else "Rendering completed with warnings"
         )
 
         return Rendering(
@@ -173,6 +170,3 @@ class Renderer:
             _spec=rendered_query,
             diagnostics=validation.diagnostics,
         )
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(_settings={self._settings!r})"

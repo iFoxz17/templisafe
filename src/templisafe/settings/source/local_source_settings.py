@@ -1,8 +1,16 @@
 from overrides import overrides
-from templisafe.settings.source.source_settings import SourceSettings, SourceKind
+from pydantic import Field
+
+from templisafe.settings.source.source_settings import SourceKind, SourceSettings
+
 
 class LocalSourceSettings(SourceSettings):
-    path: str
+    """
+    Settings for local filesystem sources.
+    The source `content_type` can be inferred from the `path` extension, if present.
+    """
+
+    path: str = Field(..., description="The path of the file")
 
     @property
     @overrides
@@ -10,6 +18,4 @@ class LocalSourceSettings(SourceSettings):
         return SourceKind.LOCAL
 
 
-# Register subclass
 SourceSettings.register_source_kind(SourceKind.LOCAL, LocalSourceSettings)
-

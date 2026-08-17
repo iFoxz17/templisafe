@@ -1,55 +1,38 @@
-from typing import Any, Callable, Type, TypeVar, cast
-from pydantic import ValidationError
 from enum import Enum
-from overrides import overrides
+from typing import Any, TypeVar, cast
 
-from templisafe.settings.settings import Settings
+from overrides import overrides
+from pydantic import Field, ValidationError
+
+from templisafe.parser.config.config_parser import Config
+from templisafe.settings.settings import Settings, SettingsKind
 
 T = TypeVar("T", bound="TemplateEngineSettings")
+
 
 class TemplateEngineKind(str, Enum):
     JINJA = "jinja"
     DJANGO = "django"
     CUSTOM = "custom"
 
+
 class TemplateEngineSettings(Settings):
-    kind: TemplateEngineKind
-    config: dict[str, Any]
+    """Settings class for defining template engines."""
+
+    engine_kind: TemplateEngineKind = Field(TemplateEngineKind.JINJA, description="The template engine kind")
+    config: dict[str, Any] = Field(default={}, description="The configurations of the engine")
 
     @classmethod
-    def _prepare_kwargs(cls: Type[T], kwargs: dict[str, Any]) -> dict[str, Any]:
-        """
-        Normalize 'kind' and 'config', perform subclass dispatch for CUSTOM kind,
-        and return (target_cls, normalized_kwargs).
+    def _prepare_kwargs(cls: type[T], kwargs: dict[str, Any]) -> dict[str, Any]:
 
-        Raises if multiple config sources are provided.
-        """
+        engine_kind: Any = kwargs.pop("engine_kind", None)
+        if isinstance(engine_kind, str):
+            try:
+                engine_kind = TemplateEngineKind(engine_kind.lower())
+            except ValueError:
+                raise ValueError(f"Invalid kind: {engine_kind!r}")
+            kwargs["engine_kind"] = engine_kind
 
-        target_cls: Type[T] = cls
-        if "kind" in kwargs:
-            kind: Any = kwargs["kind"]
-            if isinstance(kind, str):
-                try:
-                    kind = TemplateEngineKind(kind.lower())
-                except ValueError:
-                    raise ValueError(f"Invalid settings kind: {kind!r}")
-
-                if not isinstance(kind, TemplateEngineKind):
-                    raise ValueError(f"Invalid settings kind: {kind!r}")
-                
-                match kind:
-                    case TemplateEngineKind.JINJA | TemplateEngineKind.DJANGO:
-                        target_cls = TemplateEngineSettings             # type: ignore
-                    case TemplateEngineKind.CUSTOM:
-                        target_cls = CustomTemplateEngineSettings       # type: ignore
-
-        # Subclass dispatch for CUSTOM kind
-        if target_cls == TemplateEngineKind.CUSTOM:
-            if "extract_variables_func" not in kwargs or "render_func" not in kwargs:
-                raise ValueError(
-                    "CustomTemplateEngineSettings requires 'extract_variables_func' and 'render_func'."
-                )
-                
         # Check for multiple config sources
         config_sources = ["config", "config_yaml", "config_json"]
         provided = [key for key in config_sources if key in kwargs]
@@ -78,41 +61,30 @@ class TemplateEngineSettings(Settings):
             cfg = cls._load_json(cfg_json)
 
         kwargs["config"] = cfg
-    
-        return {"target_cls": target_cls, "kwargs": kwargs}
-
+        return {"kwargs": kwargs}
 
     @classmethod
     @overrides
-    def _parse_config(cls: Type[T], config: dict[str, Any]) -> T:
-        prepared: dict[str, Any] = cls._prepare_kwargs(config)
-        target_cls: Type[T] = prepared["target_cls"]
+    def _parse_config(cls: type[T], config: Config) -> T:
+        prepared: dict[str, Any] = cls._prepare_kwargs(cls._validate_config(config))
         kwargs: dict[str, Any] = prepared["kwargs"]
 
-        # Pydantic validation
         try:
-            return cast(T, target_cls.model_validate(kwargs))
+            return cast(T, cls.model_validate(kwargs))
         except ValidationError as e:
-            raise ValueError(f"Invalid fields for {target_cls.__name__}: {e}") from e
+            raise ValueError(f"Invalid fields for {cls.__name__}: {e}") from e
 
     @classmethod
     @overrides
-    def create(cls: Type[T], **kwargs) -> T:
-        """Factory method to create the correct TemplateEngineSettings subclass."""
+    def create(cls: type[T], **kwargs) -> T:
+        """Factory method to create a TemplateEngineSettings instance."""
         prepared: dict[str, Any] = cls._prepare_kwargs(kwargs)
-        target_cls: Type[T] = prepared["target_cls"]
         kwargs = prepared["kwargs"]
 
         try:
-            return cast(T, target_cls.model_validate(kwargs))
+            return cast(T, cls.model_validate(kwargs))
         except ValidationError as e:
-            raise ValueError(f"Invalid fields for {target_cls.__name__}: {e}") from e
+            raise ValueError(f"Invalid fields for {cls.__name__}: {e}") from e
 
 
-class CustomTemplateEngineSettings(TemplateEngineSettings):
-    """
-    Settings for a custom template engine backed by user-provided callables.
-    """
-
-    extract_variables_func: Callable[[str, dict[str, Any]], set[str]]
-    render_func: Callable[[str, dict[str, Any], dict[str, Any]], str]
+Settings.register_kind(SettingsKind.TEMPLATE_ENGINE_SETTINGS, TemplateEngineSettings)

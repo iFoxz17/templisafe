@@ -1,29 +1,35 @@
 from abc import ABC
-from typing import Type, TypeVar, Any, cast, ClassVar
-from pydantic import BaseModel, ConfigDict, ValidationError
 from enum import Enum
+from typing import Any, ClassVar, Type, TypeVar, cast
 
+from pydantic import BaseModel, ConfigDict, ValidationError
+
+from templisafe.exceptions.config_error import ConfigError
 from templisafe.exceptions.settings_error import SettingsError
-from templisafe.exceptions.load_error import LoadError
-from templisafe.loader.loader import *
+from templisafe.parser.config.config_parser import *
+
 
 class SettingsKind(str, Enum):
-    TEMPLATE_PARSER_SETTINGS = "template_parser_settings" 
+    SOURCE_SETTINGS = "source_settings"
+    HTTP_SYNC_SESSION_SETTINGS = "http_sync_session_settings"
+    HTTP_ASYNC_SESSION_SETTINGS = "http_async_session_settings"
+    MANAGER_SETTINGS = "manager_settings"
+    TEMPLATE_PARSER_SETTINGS = "template_parser_settings"
     SCHEMA_PARSER_SETTINGS = "schema_parser_settings"
     VARIANT_PARSER_SETTINGS = "variant_parser_settings"
-    SOURCE_RESOLVER_SETTINGS = "source_loader_settings"
+    SOURCE_EXECUTOR_SETTINGS = "source_loader_settings"
+    TEMPLATE_ENGINE_SETTINGS = "template_engine_settings"
     COMPILER_SETTINGS = "compiler_settings"
     RENDERER_SETTINGS = "renderer_settings"
-    
+
+
 T = TypeVar("T", bound="Settings")
 
-class Settings(BaseModel, ABC):
-    """Abstract base class for all settings with centralized loading."""
 
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid"
-    )
+class Settings(BaseModel, ABC):
+    """Abstract base class for all settings with centralized creation."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
 
     # -----------------------------
     # Factory for polymorphic creation
@@ -36,9 +42,7 @@ class Settings(BaseModel, ABC):
 
     @classmethod
     def create(cls: Type[T], **kwargs) -> T:
-        """
-        Factory to create Settings instances.
-        """
+        """Factory to create Settings instances."""
 
         target_cls: Type[T] = cls
         if "kind" in kwargs:
@@ -47,59 +51,60 @@ class Settings(BaseModel, ABC):
                 try:
                     kind = SettingsKind(kind.lower())
                 except ValueError:
-                    raise ValueError(f"Invalid settings kind: {kind!r}")
+                    raise SettingsError(f"Invalid settings kind: {kind!r}")
 
                 if not isinstance(kind, SettingsKind):
-                    raise ValueError(f"Invalid settings kind: {kind!r}")
-                
+                    raise SettingsError(f"Invalid settings kind: {kind!r}")
+
                 maybe_target_cls: type | None = cls._KIND_MAP.get(kind)
                 if maybe_target_cls is None:
-                    raise ValueError(f"Unknown settings kind: {kind!r}")
+                    raise SettingsError(
+                        f"Unregistered settings kind: {kind!r}. Use the correct settings subclass create method"
+                    )
                 target_cls = maybe_target_cls
         try:
             return cast(T, target_cls.model_validate(kwargs))
         except ValidationError as e:
-            raise ValueError(f"Invalid fields for {cls.__name__}: {e}") from e
+            raise SettingsError(f"Invalid fields for {cls.__name__}: {e}") from e
 
     @classmethod
-    def _parse_config(cls: Type[T], config: dict[str, Any]) -> T:
-        """Convert a parsed config dict into a concrete Settings instance."""
+    def _validate_config(cls, config: Config) -> dict[str, Any]:
         if not isinstance(config, dict):
-            raise ValueError(f"Expected a dict, got {type(config).__name__}")
-        return cls.create(**config)
+            raise SettingsError(f"Expected a dict, got {type(config).__name__}")
+        return config
+
+    @classmethod
+    def _parse_config(cls: Type[T], config: Config) -> T:
+        return cls.create(**cls._validate_config(config))
 
     @classmethod
     def _load_yaml(cls, config_str: str) -> dict[str, Any]:
-        """Load settings from a YAML string."""
         try:
-            return YamlLoader().load(config_str)    
-        except LoadError as e:
+            return cls._validate_config(YamlParser().parse(config_str))
+        except ConfigError as e:
             raise SettingsError("Cannot parse YAML configuration") from e
-        
+
     @classmethod
     def _load_json(cls, config_str: str) -> dict[str, Any]:
-        """Load settings from a JSON string."""
         try:
-            return JsonLoader().load(config_str)    
-        except LoadError as e:
+            return cls._validate_config(JsonParser().parse(config_str))
+        except ConfigError as e:
             raise SettingsError("Cannot parse JSON configuration") from e
-        
+
     @classmethod
     def _load_toml(cls, config_str: str) -> dict[str, Any]:
-        """Load settings from a TOML string."""
         try:
-            return TomlLoader().load(config_str)    
-        except LoadError as e:
+            return cls._validate_config(TomlParser().parse(config_str))
+        except ConfigError as e:
             raise SettingsError("Cannot parse TOML configuration") from e
-        
+
     @classmethod
     def _load_xml(cls, config_str: str) -> dict[str, Any]:
-        """Load settings from a XML string."""
         try:
-            return XmlLoader().load(config_str)    
-        except LoadError as e:
+            return cls._validate_config(XmlParser().parse(config_str))
+        except ConfigError as e:
             raise SettingsError("Cannot parse XML configuration") from e
-    
+
     @classmethod
     def from_yaml(cls: Type[T], config_str: str) -> T:
         """Load settings from a YAML string."""
@@ -109,20 +114,18 @@ class Settings(BaseModel, ABC):
     def from_json(cls: Type[T], config_str: str) -> T:
         """Load settings from a JSON string."""
         return cls._parse_config(cls._load_json(config_str))
-    
+
     @classmethod
     def from_toml(cls: Type[T], config_str: str) -> T:
         """Load settings from a TOML string."""
         return cls._parse_config(cls._load_toml(config_str))
-    
+
     @classmethod
     def from_xml(cls: Type[T], config_str: str) -> T:
         """Load settings from a XML string."""
         return cls._parse_config(cls._load_xml(config_str))
 
     @classmethod
-    def from_dict(cls: Type[T], config: dict[str, Any]) -> T:
+    def from_dict(cls: Type[T], config: Config) -> T:
         """Load settings directly from a dictionary."""
-        if not isinstance(config, dict):
-            raise SettingsError("Provided config must be a dictionary")
-        return cls._parse_config(config)
+        return cls._parse_config(cls._validate_config(config))

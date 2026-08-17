@@ -1,9 +1,10 @@
 class VariantError(Exception):
     """Base class for variant-related exceptions."""
 
+
 class IllegalVariantError(VariantError):
     """Raised when a variant definition is illegal."""
-    
+
     __slots__: tuple[str, ...] = ("msg",)
 
     def __init__(self, msg: str) -> None:

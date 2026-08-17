@@ -6,21 +6,26 @@ Do **not** include completed work - that goes in [`CHANGELOG.md`](CHANGELOG.md).
 ---
 
 ## High Priority
-- [ ] Complete AwsSecretsManagerSource with tests
-- [ ] Setup github repo: automate release pipeline to create tags on release branch
-- [ ] Add a test for Templater concurrency
-- [ ] Develop contribuiting section
-- [ ] Develop IaC use case
-- [ ] Release the library on pip
-- [ ] Document pydantic fields (In particular of Settings)
+
+- [ ] Release the library on PyPI
+- [ ] Add support for user-defined Python objects in schemas and variants
+- [ ] Document supported settings fields, schema types, constraints and metadata
 
 ## Medium Priority
+
+- [ ] Add TestPyPI staging publishing before production PyPI releases
 - [ ] Improve error messages
-- [ ] Advertise library on r/python
-- [ ] Advertise library on hackernews
-- [ ] Advertise library on medium
+- [ ] Clarify and refactor `TemplateEngineSettings.config` input semantics
+- [ ] Extend stress tests for local sources
+- [ ] Extend stress tests for synchronous HTTP sources
+- [ ] Add a benchmark/performance baseline for compile, validate, render and build
+- [ ] Develop LLM templating use case
+- [ ] Develop email template use case
 
 ## Low Priority
-- [ ] Add schema inference during the rendering when no schema is specified
-- [ ] Add support for GCP (GCPSource)
-- [ ] Add support for Azure (AzureSource)
+
+- [ ] Implement async sources and `SourceExecutorLine` concept
+- [ ] Optimize HTTP session reuse strategy after profiling
+- [ ] Add schema inference during rendering when no schema is specified
+- [ ] Add support for GCP sources
+- [ ] Add support for Azure sources

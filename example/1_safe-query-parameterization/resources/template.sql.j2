@@ -1,0 +1,10 @@
+{% import "order_filters.sql.j2" as order_filters -%}
+SELECT
+{% for column in columns %}  {{ column }}{% if not loop.last %},{% endif %}
+{% endfor %}FROM orders
+WHERE TRUE
+  AND status = '{{ status }}'
+  AND total_amount >= {{ min_total }}
+  AND created_at >= '{{ start_date }}'
+  AND created_at < '{{ end_date }}'
+{{ order_filters.customer_id_filter(customer_ids) }}

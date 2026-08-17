@@ -86,3 +86,6 @@ test-reports/
 
 # draw.io 
 doc/.$architecture.drawio.bkp
+
+# Ruff
+.ruff_cache/

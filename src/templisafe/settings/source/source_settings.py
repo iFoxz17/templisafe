@@ -1,38 +1,41 @@
 from abc import ABC, abstractmethod
-from typing import Type, Any, ClassVar, cast
-from pydantic import ValidationError
 from enum import Enum
-from overrides import overrides
+from typing import Any, ClassVar, Type, cast
 
+from overrides import overrides
+from pydantic import ValidationError
+
+from templisafe.content.content import ContentType
+from templisafe.parser.config.config_parser import Config
 from templisafe.settings.settings import Settings
-from templisafe.util.util import ContentType
+
 
 class SourceKind(str, Enum):
     INLINE = "inline"
     LOCAL = "local"
+    HTTP = "http"
     AWS_S3_BUCKET = "aws_s3_bucket"
-    AWS_SECRETS_MANAGER ="aws_secrets_manager"
+    AWS_SECRETS_MANAGER = "aws_secrets_manager"
     AWS_SSM_PARAMETER = "aws_ssm_parameter"
     AWS_DYNAMODB = "aws_dynamodb"
+    CUSTOM = "custom"
 
 
 class SourceSettings(Settings, ABC):
-    """Base class for all source settings."""
+    """Base abstract class for defining source settings."""
 
     content_type: ContentType | None = None
 
-    # -----------------------------
-    # Polymorphic kind
-    # -----------------------------
+    @property
+    def has_content_type(self) -> bool:
+        return self.content_type is not None
+
     @property
     @abstractmethod
     def kind(self) -> SourceKind:
         """Return the kind of the source."""
         pass
 
-    # -----------------------------
-    # Factory for polymorphic creation
-    # -----------------------------
     _SOURCE_KIND_MAP: ClassVar[dict[SourceKind, Type["SourceSettings"]]] = {}
 
     @classmethod
@@ -41,10 +44,6 @@ class SourceSettings(Settings, ABC):
 
     @classmethod
     def _prepare_kwargs(cls, kwargs: dict[str, Any]) -> dict[str, Any]:
-        """
-        Normalize 'kind', validate presence and select target subclass.
-        Returns {'target_cls': <subclass>, 'kwargs': normalized kwargs}.
-        """
         kind: Any = kwargs.pop("kind", None)
         if kind is None:
             raise ValueError("Missing 'kind' field to determine source type")
@@ -63,11 +62,8 @@ class SourceSettings(Settings, ABC):
 
     @classmethod
     @overrides
-    def _parse_config(cls, config: dict[str, Any]) -> "SourceSettings":
-        """
-        Convert a dict from YAML/JSON/dict into the correct SourceSettings subclass.
-        """
-        prepared: dict[str, Any] = cls._prepare_kwargs(config)
+    def _parse_config(cls, config: Config) -> "SourceSettings":
+        prepared: dict[str, Any] = cls._prepare_kwargs(cls._validate_config(config))
         target_cls: Type[SourceSettings] = prepared["target_cls"]
         kwargs: dict[str, Any] = prepared["kwargs"]
 
@@ -79,9 +75,7 @@ class SourceSettings(Settings, ABC):
     @classmethod
     @overrides
     def create(cls, **kwargs) -> "SourceSettings":
-        """
-        Public factory to instantiate the correct SourceSettings subclass.
-        """
+        """Factory method to instantiate the correct `SourceSettings` subclass."""
         prepared: dict[str, Any] = cls._prepare_kwargs(kwargs)
         target_cls: Type[SourceSettings] = prepared["target_cls"]
         kwargs = prepared["kwargs"]

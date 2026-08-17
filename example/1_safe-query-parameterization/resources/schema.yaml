@@ -1,0 +1,32 @@
+schema:
+  columns:
+    type: list[str]
+    default:
+      - order_id
+      - customer_id
+      - status
+      - total_amount
+      - created_at
+    metadata:
+      description: Columns to project in the generated report query
+      title: SELECT columns
+
+  status:
+    type: str
+    default: PAID
+    constraints:
+      max_length: 20
+
+  min_total:
+    type: float
+    default: 0.0
+    constraints:
+      ge: 0
+
+  start_date: str
+
+  end_date: str
+
+  customer_ids:
+    type: list[int]
+    default: []

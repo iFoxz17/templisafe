@@ -1,14 +1,12 @@
-from typing import TypeVar
+from pydantic import Field
 
 from templisafe.settings.settings import Settings, SettingsKind
 
-T = TypeVar("T", bound="VariantParserSettings")
 
 class VariantParserSettings(Settings):
-    """Settings for parsers that handle variants."""
-    variants_key: str
-    default_variants_name: str
-    variant_name_key: str
-    bindings_key: str
+    """Settings class for defining variant parsers."""
+
+    default_variants_name: str = Field("default", description="The default name assigned to implicit unnamed variants")
+
 
 Settings.register_kind(SettingsKind.VARIANT_PARSER_SETTINGS, VariantParserSettings)
