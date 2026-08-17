@@ -104,12 +104,6 @@ provided for every component, so simple workflows require little configuration.
 pip install templisafe
 ```
 
-Async HTTP source support is optional:
-
-```bash
-pip install "templisafe[http-async]"
-```
-
 ## Quick Start
 
 ```python
