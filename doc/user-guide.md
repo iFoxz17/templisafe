@@ -14,10 +14,17 @@ The public API is intentionally small: most users only need
 pip install templisafe
 ```
 
-Install the async HTTP extra only when using async HTTP sources:
+Install optional extras only when needed:
 
 ```bash
 pip install "templisafe[http-async]"
+pip install "templisafe[s3]"
+```
+
+The development extra includes test and quality tooling:
+
+```bash
+pip install -e ".[dev]"
 ```
 
 ## Quick Start
@@ -63,16 +70,16 @@ print(build.rendering.rendered["world"].rendered_str)
 
 - `compile(template, schema=None)`: loads a template and optional schema,
   extracts variables and returns a `Compilation`.
-- `render(compiled, variants)`: loads variants, validates them against a
-  `CompilationSpec`, renders successful variants and returns a `Rendering`.
 - `validate(compiled, variants)`: loads variants and validates them without
   rendering.
+- `render(compiled, variants)`: loads variants, validates them against a
+  `CompilationSpec`, renders successful variants and returns a `Rendering`.
 - `build(template, variants, schema=None)`: performs compile and render in a
   single call and returns a `Build`.
 
-Every workflow accepts concrete objects or settings objects. The stable public
-entry point is the `SourceSettings` based API because it keeps inputs
-serializable and portable.
+Every workflow accepts direct values, public input models, concrete sources or
+settings objects. `SourceSettings` is the most portable API because it keeps
+inputs serializable and easy to move to files later.
 
 ## Sources
 
@@ -90,9 +97,9 @@ Available source settings:
   Parameter Store.
 - `AwsDynamoDBSourceSettings`: content read from DynamoDB.
 
-Inline and local sources are the simplest and most stable path for local usage.
-HTTP and AWS sources are available for remote configuration and cloud-hosted
-templates.
+Inline and local sources are the simplest path. HTTP and AWS sources are useful
+when templates, schemas, variants or settings are stored remotely. Async HTTP
+support is optional and loaded lazily.
 
 ## Content Types
 
@@ -120,7 +127,9 @@ templater = TemplaterFactory().create(template_engine_settings=engine_settings)
 ```
 
 The engine is responsible for extracting variable names from the template and
-for rendering the final string.
+for rendering the final string. Engine-specific features remain available
+through engine settings. For example, a Jinja loader can be passed through
+`TemplateEngineSettings.config`.
 
 ## Schemas
 
@@ -151,6 +160,9 @@ During compilation:
 - a missing schema creates an implicit permissive schema from the template
   variables.
 
+Schemas can also be built dynamically with `SchemaInput` and `VariableInput`
+instead of being read from configuration files.
+
 ## Variants
 
 A variant is a named set of bindings for template variables. A variant file can
@@ -178,6 +190,13 @@ variants:
     name: Italia
 ```
 
+Implicit unnamed form:
+
+```yaml
+variants:
+  name: World
+```
+
 During validation and rendering:
 
 - missing required bindings produce errors.
@@ -185,12 +204,16 @@ During validation and rendering:
 - extra bindings produce warnings.
 - defaults from the schema are used for omitted optional/defaulted fields.
 
+Variants can also be built dynamically with `VariantInput` and
+`VariantSetInput`.
+
 ## Results
 
 The main result objects are:
 
-- `Compilation`: compilation outcome, diagnostics and `CompilationSpec`.
-- `Rendering`: rendering or validation outcome, diagnostics and rendered
+- `Compilation`: compilation outcome, diagnostics and `CompilationSpec` when
+  compilation succeeds.
+- `Rendering`: validation/rendering outcome, diagnostics and rendered
   parameterizations when rendering succeeds.
 - `Build`: combined compilation and rendering result.
 - `Outcome`: `SUCCESS`, `WARNING` or `ERROR`.
@@ -200,6 +223,10 @@ Access a successful compilation with `compilation.compiled` and a successful
 rendering with `rendering.rendered`. If the result failed, those accessors raise
 the corresponding failure exception.
 
+When `build` compilation fails and the diagnostic policy allows returning error
+outcomes, rendering is skipped and the returned `Build` carries the compilation
+diagnostics.
+
 ## Diagnostics
 
 `TemplaterFactory().create(diagnostic_policy=...)` controls how warning and
@@ -207,17 +234,25 @@ error outcomes are handled.
 
 Supported policies:
 
-- `log`: log diagnostics.
-- `warn`: emit Python warnings.
-- `raise`: raise failures for error outcomes.
-- `ignore`: do not emit diagnostics.
+- `ignore`: never raise for warning/error outcomes; return diagnostics.
+- `log`: warn on warnings, raise on errors.
+- `strict`: raise on warnings and errors.
 
-## Configuration
+Use `ignore` when programmatic access to diagnostics is more useful than
+exceptions.
 
-Factory-level settings configure defaults for a `Templater` instance. Per-call
-settings can override those defaults.
+```python
+templater = TemplaterFactory().create(diagnostic_policy="ignore")
+compilation = templater.compile(template=template, schema=schema)
 
-Configurable areas:
+if compilation.outcome.name == "ERROR":
+    for diagnostic in compilation.diagnostics:
+        print(diagnostic.message)
+```
+
+## Settings
+
+Settings configure library components:
 
 - source execution strategy and retry policy.
 - template engine.
@@ -228,8 +263,38 @@ Configurable areas:
 - renderer.
 - diagnostic policy.
 
-Settings can be provided directly as settings objects or loaded from sources
-when a workflow accepts per-call settings.
+Factory-level settings configure defaults for a `Templater` instance. Per-call
+settings can override those defaults. Settings can be provided directly as
+settings objects or loaded from sources when a workflow accepts per-call
+settings.
+
+Defaults are provided for every component, so simple workflows require little
+configuration. Advanced workflows can move settings into versioned files or
+remote sources.
+
+## Dynamic Inputs
+
+Configuration files are not required. Public input models can be used when
+templates, schemas or variants are generated at runtime.
+
+```python
+from templisafe import SchemaInput, VariableInput, VariantInput
+
+schema = SchemaInput(
+    schema={
+        "name": "str",
+        "score": VariableInput(type="int", constraints={"ge": 0}),
+    }
+)
+
+variant = VariantInput(name="run_1", bindings={"name": "Ada", "score": 42})
+
+build = templater.build(
+    template="Name={{ name }} Score={{ score }}",
+    schema=schema,
+    variants=variant,
+)
+```
 
 ## When To Use Templisafe
 
@@ -240,3 +305,6 @@ Use templisafe when templates are part of a repeatable system and you want:
 - reusable variant files.
 - pluggable storage for templates and configuration.
 - clear diagnostics before rendering reaches production workflows.
+
+For a one-off template rendered from an in-memory dictionary, calling the
+template engine directly is usually enough.

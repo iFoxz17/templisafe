@@ -1,17 +1,19 @@
 # Architecture
 
-This document describes the intended internal architecture of `templisafe`.
-It is written for maintainers and contributors. The companion
-[user guide](user-guide.md) focuses on public usage.
+This document describes the internal architecture of `templisafe`. It is written
+for maintainers and contributors. The companion [user guide](user-guide.md)
+focuses on public usage.
+
+The visual companion for this document is [architecture.svg](architecture.svg).
+When the diagram, code and this document diverge, update them together.
 
 ## Architectural Goal
 
-`templisafe` separates user-facing workflows from the mechanics required to
-load, parse, validate and render templates.
+`templisafe` separates the user-facing templating workflow from the mechanics
+required to load, parse, validate and render resources.
 
-At the highest level, public API methods create a validated `Task`. A
-`ServiceOrchestrator` then transforms the task through a sequence of services
-until it becomes a domain result:
+At the highest level, public API methods create a validated task. The task then
+flows through a deterministic service pipeline until it becomes a domain result:
 
 ```text
 Templater API
@@ -31,62 +33,146 @@ Templater API
 The public API should remain small even as source types, template engines,
 parsers and execution strategies grow.
 
-## Module Responsibilities
+## Layers
 
-### `templisafe`
+### Public API
 
-Public library surface. It exports the user-facing `Templater`,
-`TemplaterFactory`, domain models, settings, content types and diagnostic
-policy.
+`Templater` is the user-facing workflow boundary. It exposes `compile`,
+`validate`, `render` and `build`, converts method arguments into task bundles,
+validates them, delegates execution to the service pipeline, and applies the
+configured outcome policy.
 
-Only stable public entry points should live at this level.
+`TemplaterFactory` builds a ready-to-use `Templater` by assembling default
+services, providers, parsers, engines, compilers, renderers, source executors
+and diagnostic handling.
 
-### `templisafe.core`
+Only stable public entry points should live at the top-level `templisafe`
+package.
 
-Shared primitives that support multiple architectural layers:
+### Input
 
-- metadata containers used to classify task bundle fields.
-- collection helpers used by immutable settings models.
-- diagnostic policy and default manager settings.
+Public input models live in `templisafe.input`:
 
-This package should stay small and dependency-light. It must not know about
-sources, parsers, services or template rendering.
+- `TemplateInput`
+- `SchemaInput`
+- `VariableInput`
+- `VariantInput`
+- `VariantSetInput`
 
-### `templisafe.task`
+They let users provide dynamic in-memory definitions without exposing internal
+domain objects such as Pydantic-generated schema classes or `Binding` objects.
+These models mirror the canonical configuration document shapes where useful.
 
-Task abstractions used to move public API calls into the service pipeline:
+### Task
 
-- task models: `Task`, `TaskBundle`, `CompilationBundle`, `RenderingBundle`,
-  `BuildBundle`.
-- task typing: `TaskType`.
-- field categorization: `FieldCategory` and `CategoryMetadata`.
-- task validation: `TaskValidator`.
+Task abstractions live in `templisafe.task`.
 
-The task model is the bridge between the public API and the service pipeline.
+`Task`, `TaskBundle`, `CompilationBundle`, `RenderingBundle` and `BuildBundle`
+are the internal representation of requested work. They preserve user intent
+while classifying fields as resources or components, allowing services to
+transform only the relevant parts of the bundle.
 
-### `templisafe.handler`
+`TaskValidator` validates task shape before execution:
 
-Boundary handlers that apply caller-facing diagnostic behavior:
+- compile tasks need a template.
+- render and validate tasks need a `CompilationSpec` and variants.
+- build tasks need a template and variants.
 
-- `DiagnosticHandler`: reusable diagnostic policy engine.
-- `OutcomeHandler`: converts compilation/rendering outcomes into warnings,
-  logs or exceptions according to `DiagnosticPolicy`.
+The task layer is the bridge between the public API and the service pipeline.
 
-Handlers sit at the edges of workflows. They should not perform resource
-loading, parsing, compilation or rendering themselves.
+### Service Pipeline
 
-### `templisafe.content`
+The service pipeline lives in `templisafe.service`.
 
-Raw loaded data:
+`ServiceOrchestrator` owns workflow sequencing. It runs single tasks through
+the service chain and implements `build` as compile plus render. If compilation
+fails, build returns a failed `Build` and skips rendering; the public outcome
+handler then decides whether to raise or return diagnostics.
 
-- `Content`: string payload plus content type.
-- `ContentType`: `TEXT`, `YAML`, `JSON`, `TOML`, `XML`.
+The service stages are:
 
-Sources produce `Content`; parsers consume it.
+- `SourceService`: resolves `SourceSettings` into concrete `Source` objects.
+- `DataService`: executes sources and replaces them with `Content`.
+- `ConfigService`: parses structured content into configuration dictionaries.
+- `SettingsService`: turns configuration dictionaries for component fields into
+  typed `Settings`.
+- `ComponentService`: resolves settings into executable components.
+- `ResourceService`: turns resolved resources and components into domain
+  objects and executes compile, validate or render.
 
-### `templisafe.settings`
+Services transform task bundles. They should not own low-level creation rules;
+they delegate to providers.
 
-Immutable Pydantic settings objects used to configure the library.
+### Provider
+
+Providers live in `templisafe.provider`.
+
+Providers are thin facades around creation, parsing and domain operations. They
+keep services small and explicit. A provider usually exposes one `provide(...)`
+method and delegates to a resolver, parser, compiler, renderer or source
+executor.
+
+`ResourceProvider` is the aggregate facade for creating configs, settings,
+templates, schemas, variant sets, compilations, validations and renderings.
+
+`ComponentProvider` is the aggregate facade for resolving template engines,
+parsers, compiler and renderer.
+
+### Source
+
+Sources live in `templisafe.source`.
+
+Sources know how to read content from a location. They should not parse,
+validate or render anything.
+
+Current source families:
+
+- inline source: content embedded in settings.
+- local source: content read from the filesystem.
+- HTTP source: content read from HTTP endpoints.
+- AWS sources: cloud-backed sources.
+- custom sources: user-provided implementations.
+
+Async HTTP internals are optional and loaded lazily.
+
+### Content
+
+Content objects live in `templisafe.content`.
+
+`Content` is the boundary object between reading and parsing. It contains a
+string payload plus a `ContentType`. `ContentType` tells later stages whether the
+payload is raw text or structured configuration such as YAML, JSON, TOML or XML.
+
+### Executor
+
+Source executors live in `templisafe.executor`.
+
+Source executors define how multiple sources are read. The executor layer
+chooses sequential or thread-pool execution, applies retry policy, and preserves
+result ordering. It is about reading strategy, not parsing or template logic.
+
+### Parser
+
+Parsers live in `templisafe.parser`.
+
+Parsers convert raw configuration or text into structured internal objects:
+
+- `ConfigParser`: YAML, JSON, TOML or XML text to configuration dictionaries.
+- `SettingsParser`: configuration dictionaries to settings objects.
+- `TemplateParser`: template string plus extracted variables to `Template`.
+- `SchemaParser`: schema configuration to a dynamic Pydantic-backed `Schema`.
+- `VariantParser`: variant configuration to `VariantSet`.
+
+Parsers should not read sources and should not render templates.
+
+### Settings
+
+Settings live in `templisafe.settings`.
+
+Settings are immutable Pydantic configuration models for library components.
+They are the main customization mechanism and can themselves be loaded from
+sources. Defaults keep simple usage small; settings make advanced workflows
+versionable and explicit.
 
 Important settings families:
 
@@ -97,138 +183,62 @@ Important settings families:
 - compiler and renderer settings.
 - manager/cache settings.
 
-Settings are serializable by design. They are the preferred way to pass
-configuration across public boundaries.
+### Engine
 
-### `templisafe.source`
+Template engine adapters live in `templisafe.engine`.
 
-Source abstractions and concrete readers:
+A `TemplateEngine` extracts undeclared variables and renders strings. Engines
+adapt third-party rendering libraries and hide their APIs from the rest of the
+system. Jinja is the default, Django is available, and custom engines can be
+integrated by implementing the engine abstraction.
 
-- `Source`: synchronous open/read/close lifecycle.
-- `AsyncSource`: async lifecycle for async-capable implementations.
-- inline and local sources.
-- HTTP sources.
-- AWS sources.
-- source factories, managers, resolvers and assemblers.
-- content type resolution.
+### Template Domain
 
-A source should know how to read bytes/text from one location, but it should not
-parse configuration or understand templates.
+Domain models and operations live in `templisafe.template`.
 
-### `templisafe.executor`
+The core value objects are:
 
-Strategies for reading multiple sources:
+- `Template`: template string plus referenced variables.
+- `Schema`: Pydantic model representing accepted variables.
+- `CompilationSpec`: successful compiled template and schema.
+- `Compilation`: compile outcome, diagnostics and optional spec.
+- `Binding`: one value for one variable.
+- `Variant`: named collection of bindings.
+- `VariantSet`: collection of variants.
+- `Parameterization`: one rendered output for one variant.
+- `RenderingSpec`: rendered outputs indexed by variant name.
+- `Rendering`: validation/rendering outcome, diagnostics and optional rendered
+  spec.
+- `Build`: combined compilation and rendering result.
+- `Outcome`: `SUCCESS`, `WARNING` or `ERROR`.
+- `Diagnostic`: structured result message.
 
-- `SourceExecutor`: execution abstraction.
-- `SequentialSourceExecutor`: reads sources sequentially.
-- `ThreadPoolSourceExecutor`: reads sources concurrently.
-- retry policy creation through Tenacity.
-- source latency strategy optimization.
-- executor factory, manager, resolver and assembler.
+`Compiler` checks template variables against the schema and produces
+`Compilation`.
 
-Executors preserve request ordering in their results.
+`Renderer` validates variants against the compiled schema, applies defaults, and
+renders parameterizations through a template engine.
 
-### `templisafe.parser`
+The domain layer should operate on already loaded domain models, not on sources
+or raw configuration files.
 
-Conversion from raw content/configuration into structured objects:
+### Handler
 
-- config parsers for YAML, JSON, TOML and XML.
-- settings parsers.
-- template parser.
-- schema parser and type parser.
-- variant parser.
+Handlers live in `templisafe.handler`.
 
-Parsers should not read sources and should not render templates.
+`OutcomeHandler` applies the caller's `DiagnosticPolicy` at the API boundary.
+The supported policies are:
 
-### `templisafe.engine`
+- `ignore`: never raise for warning/error outcomes; return diagnostics.
+- `log`: warn on warnings, raise on errors.
+- `strict`: raise on warnings and errors.
 
-Template engine adapters:
+`DiagnosticHandler` is lower-level diagnostic behavior used by infrastructure
+components such as pools.
 
-- `TemplateEngine`: extracts variables and renders strings.
-- `JinjaTemplateEngine`: default implementation.
-- `DjangoTemplateEngine`: alternate implementation.
-- engine factory, manager, resolver and assembler.
+## Task Flows
 
-Engines hide third-party template engine APIs from the rest of the library.
-
-### `templisafe.template`
-
-Domain model and domain operations:
-
-- `template_model.py`: `Template`, `Schema`, `Compilation`,
-  `VariantSet`, `Rendering`, `Build`, `Outcome`, `Diagnostic` and related
-  value objects.
-- `Compiler`: validates template variables against schema fields.
-- `Renderer`: validates variants and renders parameterizations.
-- compiler and renderer factory/manager/resolver/assembler classes.
-
-This package should operate on already loaded domain models, not on sources or
-raw configuration files.
-
-### `templisafe.provider`
-
-Small facades around resolvers and domain operations.
-
-Provider families:
-
-- source providers: source and content provision.
-- component providers: parsers, template engines, compiler and renderer.
-- resource providers: config, settings, template, schema, variants,
-  compilation and rendering.
-
-Providers make service classes explicit and testable. A provider usually wraps
-one specialized dependency and exposes a narrow `provide(...)` method.
-
-### `templisafe.service`
-
-Task pipeline stages.
-
-Each service receives a task bundle and returns a copied bundle with one kind of
-transformation applied:
-
-- `SourceService`: resolves source settings to sources.
-- `DataService`: opens/reads sources and returns content.
-- `ConfigService`: parses structured content into config objects.
-- `SettingsService`: parses settings configuration into settings objects.
-- `ComponentService`: resolves configured components.
-- `ResourceService`: builds domain resources and executes compilation,
-  validation or rendering.
-- `ServiceOrchestrator`: applies the service sequence for the task type.
-- `ServiceAssembler`: wires the default service graph.
-
-Services should not own low-level creation rules; they delegate to providers.
-
-## Task Flow
-
-The public API creates task bundles:
-
-- `compile(...)` creates a `CompilationBundle`.
-- `render(...)` creates a `RenderingBundle`.
-- `validate(...)` creates a rendering bundle marked for validation only.
-- `build(...)` creates a `BuildBundle`.
-
-The bundle is wrapped in a `Task` and passed through `TaskValidator`.
-Validation should ensure that:
-
-- the task type matches the bundle type.
-- required fields for the task type are present.
-- unsupported raw input shapes are rejected early.
-- rendering tasks receive a `CompilationSpec`.
-- build tasks contain both template and variants.
-
-After validation, `ServiceOrchestrator` executes the required pipeline. The
-service pipeline gradually replaces user input with resolved internal objects:
-
-```text
-SourceSettings | Source | raw config
-  -> Source
-  -> Content
-  -> Config
-  -> Settings / domain model
-  -> Compilation / Rendering / Build
-```
-
-## Compile Flow
+### Compile
 
 ```text
 CompilationBundle
@@ -244,10 +254,10 @@ CompilationBundle
 `ResourceService` creates a `Template`, optionally creates a `Schema`, resolves
 a `Compiler`, and returns `Compilation`.
 
-## Render Flow
+### Validate
 
 ```text
-RenderingBundle
+RenderingBundle(render=False)
   -> SourceService
   -> DataService
   -> ConfigService
@@ -257,13 +267,26 @@ RenderingBundle
   -> Rendering
 ```
 
-`ResourceService` creates a `VariantSet`, resolves a `Renderer`, resolves a
-template engine only for rendering, and returns `Rendering`.
+Validation creates a `VariantSet`, resolves a `Renderer`, and validates variant
+bindings against the compiled schema without rendering template output.
 
-Validation follows the same flow but calls renderer validation instead of full
-rendering.
+### Render
 
-## Build Flow
+```text
+RenderingBundle(render=True)
+  -> SourceService
+  -> DataService
+  -> ConfigService
+  -> SettingsService
+  -> ComponentService
+  -> ResourceService
+  -> Rendering
+```
+
+Rendering follows the validation path, resolves a `TemplateEngine`, and renders
+successful parameterizations.
+
+### Build
 
 ```text
 BuildBundle
@@ -272,27 +295,29 @@ BuildBundle
   -> Build
 ```
 
-Build should reuse the same orchestrated machinery as compile and render rather
-than duplicating their implementation.
+Build reuses the same orchestrated machinery as compile and render. If the
+compile subtask fails, rendering is skipped and the returned `Build` carries the
+compilation diagnostics.
 
-## Core Abstraction Pattern
+## Construction Pattern
 
-Many packages use the same construction pattern:
+For extensible components, the recurring pattern is:
 
 - `Settings`: immutable configuration.
-- `Factory`: creates concrete implementations from settings.
-- `Manager`: optional cache around a factory.
-- `Resolver`: accepts an existing object, settings object or default.
-- `Assembler`: wires a default resolver graph.
-- `Provider`: task/service-facing facade around a resolver or operation.
-- `Service`: transforms a task bundle using providers.
+- `Factory`: creates concrete implementation from settings.
+- `Manager`: optional cache over factory-created objects.
+- `Resolver`: accepts an existing object, settings or default.
+- `Assembler`: wires default resolver graphs.
+- `Provider`: service-facing facade.
+- `Service`: task-bundle transformation stage.
 
-This pattern is intentionally explicit. It makes extension points visible and
-keeps user-facing orchestration separate from implementation selection.
+This explicit pattern is intentionally a little verbose. It makes extension
+points visible and keeps user-facing orchestration separate from implementation
+selection.
 
 ## Extension Points
 
-### Add a source
+### Add a Source
 
 1. Create a `SourceSettings` subclass.
 2. Register its `SourceKind`.
@@ -300,21 +325,21 @@ keeps user-facing orchestration separate from implementation selection.
 4. Add it to `SourceFactory`.
 5. Add tests for content type resolution, lifecycle and executor behavior.
 
-### Add a template engine
+### Add a Template Engine
 
 1. Add a `TemplateEngineKind`.
 2. Implement `TemplateEngine`.
 3. Register it in `TemplateEngineFactory`.
 4. Add extraction and rendering tests.
 
-### Add a config format
+### Add a Config Format
 
 1. Add a `ContentType`.
 2. Implement `ConfigParser`.
 3. Register it in `ConfigParserFactory`.
 4. Add parser and source integration tests.
 
-### Add a parser setting
+### Add Parser Settings
 
 1. Extend the corresponding settings model.
 2. Update the parser default.
@@ -322,18 +347,12 @@ keeps user-facing orchestration separate from implementation selection.
 
 ## Architectural Invariants
 
-- Public API methods should construct tasks, not perform low-level work.
-- Services should transform bundles and delegate specialized work to providers.
-- Providers should stay thin and deterministic.
-- Sources should only read content.
-- Parsers should only parse content/configuration.
-- Compiler and renderer should only operate on domain models.
-- Outcome handling should happen at the API boundary after task execution.
-- Domain models should remain independent from IO concerns.
-
-## Diagram Alignment
-
-The [architecture diagram](architecture.svg) is the visual reference for this
-document. The code should be kept aligned with the diagram before the first
-release. When the diagram and this document diverge, update both in the same
-change.
+- Public API methods construct tasks; they do not perform low-level work.
+- Services transform bundles and delegate specialized work to providers.
+- Providers stay thin and deterministic.
+- Sources only read content.
+- Executors only coordinate source reads.
+- Parsers only parse content or configuration.
+- Compiler and renderer only operate on domain models.
+- Outcome handling happens at the API boundary after task execution.
+- Domain models remain independent from IO concerns.
