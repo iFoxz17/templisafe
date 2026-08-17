@@ -1,11 +1,13 @@
 from collections.abc import Mapping
+from importlib import import_module
 from types import MappingProxyType
+from typing import cast
 
 from templisafe.exceptions.source_error import UnsupportedSourceError
 from templisafe.settings.manager_settings import ManagerSettings
 from templisafe.settings.source import *
 from templisafe.settings.source.source_settings import SourceSettings
-from templisafe.source.aws import *
+from templisafe.source.http.http_source import HttpSource
 from templisafe.source.http.http_source_factory import HttpSourceFactory
 from templisafe.source.inline_source import InlineSource
 from templisafe.source.local_source import LocalSource
@@ -22,14 +24,26 @@ class SourceFactory:
     __slots__: tuple[str, ...] = ("_http_source_factory",)
 
     _SOURCE_MAP: Mapping[type[SourceSettings], type[Source]] = MappingProxyType(
+        {InlineSourceSettings: InlineSource, LocalSourceSettings: LocalSource, HttpSourceSettings: HttpSource}
+    )
+    _LAZY_SOURCE_MAP: Mapping[type[SourceSettings], tuple[str, str]] = MappingProxyType(
         {
-            InlineSourceSettings: InlineSource,
-            LocalSourceSettings: LocalSource,
-            # HttpSource delegated to the specific factory
-            AwsS3BucketSourceSettings: AwsS3BucketSource,
-            AwsSecretsManagerSourceSettings: AwsSecretsManagerSource,
-            AwsSsmParameterSourceSettings: AwsSsmParameterSource,
-            AwsDynamoDBSourceSettings: AwsDynamoDBSource,
+            AwsS3BucketSourceSettings: (
+                "templisafe.source.aws.aws_s3_bucket_source",
+                "AwsS3BucketSource",
+            ),
+            AwsSecretsManagerSourceSettings: (
+                "templisafe.source.aws.aws_secrets_manager_source",
+                "AwsSecretsManagerSource",
+            ),
+            AwsSsmParameterSourceSettings: (
+                "templisafe.source.aws.aws_ssm_parameter_source",
+                "AwsSsmParameterSource",
+            ),
+            AwsDynamoDBSourceSettings: (
+                "templisafe.source.aws.aws_dynamodb_source",
+                "AwsDynamoDBSource",
+            ),
         }
     )
 
@@ -44,8 +58,18 @@ class SourceFactory:
 
         source_type: type[Source] | None = SourceFactory._SOURCE_MAP.get(type(settings))
         if source_type is None:
+            source_type = self._lazy_source_type(settings)
+        if source_type is None:
             raise UnsupportedSourceError(settings)
         return source_type(settings)
+
+    def _lazy_source_type(self, settings: SourceSettings) -> type[Source] | None:
+        source_path = SourceFactory._LAZY_SOURCE_MAP.get(type(settings))
+        if source_path is None:
+            return None
+
+        module_name, class_name = source_path
+        return cast(type[Source], getattr(import_module(module_name), class_name))
 
 
 # ---------------------------------------------------------------------------------------------

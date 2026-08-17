@@ -59,6 +59,17 @@ class AwsSourceError(Exception):
         super().__init__(msg)
 
 
+class MissingOptionalSourceDependencyError(SourceError):
+    """Raised when a source implementation requires an optional dependency."""
+
+    __slots__: tuple[str, ...] = ("dependency", "extra")
+
+    def __init__(self, dependency: str, extra: str) -> None:
+        self.dependency = dependency
+        self.extra = extra
+        super().__init__(f"Missing optional dependency {dependency!r}. Install templisafe with the {extra!r} extra.")
+
+
 class UnsupportedSourceError(SourceError):
     """Raised when trying to instantiate a source that is not supported."""
 

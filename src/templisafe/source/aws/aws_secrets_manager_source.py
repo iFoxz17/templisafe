@@ -1,4 +1,3 @@
-from importlib import import_module
 from typing import Any
 
 from overrides import overrides
@@ -9,8 +8,6 @@ from templisafe.settings.source.aws.aws_secrets_manager_source_settings import (
 )
 from templisafe.settings.source.source_settings import SourceSettings
 from templisafe.source.aws.aws_source import AwsSource
-
-ClientError: type[Exception] = import_module("botocore.exceptions").ClientError
 
 
 class AwsSecretsManagerSource(AwsSource):
@@ -27,6 +24,7 @@ class AwsSecretsManagerSource(AwsSource):
     @overrides
     def read(self) -> str:
         client: Any = self._get_client("secretsmanager")
+        ClientError = self._client_error_type()
 
         try:
             kwargs: dict[str, Any] = {"SecretId": self.secret_id}
